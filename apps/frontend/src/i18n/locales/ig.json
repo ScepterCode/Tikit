@@ -1,0 +1,61 @@
+{
+  "onboarding": {
+    "language": {
+      "title": "Họrọ Asụsụ Gị",
+      "subtitle": "Họrọ asụsụ ị chọrọ iji gaa n'ihu",
+      "continue": "Gaa n'ihu"
+    },
+    "state": {
+      "title": "Họrọ Steeti Gị",
+      "subtitle": "Họrọ steeti gị ka ị hụ ihe omume dị nso",
+      "search": "Chọọ steeti gị...",
+      "continue": "Gaa n'ihu"
+    }
+  },
+  "languages": {
+    "en": "Bekee",
+    "ha": "Hausa",
+    "ig": "Igbo",
+    "yo": "Yoruba",
+    "pcm": "Pidgin"
+  },
+  "states": {
+    "abia": "Abia",
+    "adamawa": "Adamawa",
+    "akwa_ibom": "Akwa Ibom",
+    "anambra": "Anambra",
+    "bauchi": "Bauchi",
+    "bayelsa": "Bayelsa",
+    "benue": "Benue",
+    "borno": "Borno",
+    "cross_river": "Cross River",
+    "delta": "Delta",
+    "ebonyi": "Ebonyi",
+    "edo": "Edo",
+    "ekiti": "Ekiti",
+    "enugu": "Enugu",
+    "fct": "Mpaghara Isi Obodo",
+    "gombe": "Gombe",
+    "imo": "Imo",
+    "jigawa": "Jigawa",
+    "kaduna": "Kaduna",
+    "kano": "Kano",
+    "katsina": "Katsina",
+    "kebbi": "Kebbi",
+    "kogi": "Kogi",
+    "kwara": "Kwara",
+    "lagos": "Lagos",
+    "nasarawa": "Nasarawa",
+    "niger": "Niger",
+    "ogun": "Ogun",
+    "ondo": "Ondo",
+    "osun": "Osun",
+    "oyo": "Oyo",
+    "plateau": "Plateau",
+    "rivers": "Rivers",
+    "sokoto": "Sokoto",
+    "taraba": "Taraba",
+    "yobe": "Yobe",
+    "zamfara": "Zamfara"
+  }
+}

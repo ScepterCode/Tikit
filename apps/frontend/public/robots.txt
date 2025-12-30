@@ -1,0 +1,13 @@
+# Tikit Event Ticketing Platform
+# Allow all crawlers
+
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard/
+
+# Sitemap location
+Sitemap: https://tikit.ng/sitemap.xml

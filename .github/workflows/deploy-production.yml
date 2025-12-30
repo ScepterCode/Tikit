@@ -1,0 +1,185 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-frontend-production:
+    name: Deploy Frontend to Vercel Production
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build frontend
+        run: pnpm --filter @tikit/frontend build
+        env:
+          VITE_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.PRODUCTION_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
+      
+      - name: Deploy to Vercel Production
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: apps/frontend
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+      
+      - name: Run smoke tests
+        run: |
+          sleep 30
+          curl -f https://tikit.ng || exit 1
+          curl -f https://tikit.ng/manifest.json || exit 1
+      
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            https://tikit.ng
+            https://tikit.ng/events
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+  
+  deploy-backend-production:
+    name: Deploy Backend to Railway Production
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build backend
+        run: pnpm --filter @tikit/backend build
+      
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      
+      - name: Deploy to Railway Production
+        run: railway up --service backend-production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        working-directory: apps/backend
+      
+      - name: Run database migrations
+        run: railway run npx prisma migrate deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        working-directory: apps/backend
+      
+      - name: Warm cache
+        run: railway run npm run warm-cache
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        working-directory: apps/backend
+      
+      - name: Run smoke tests
+        run: |
+          sleep 30
+          curl -f https://api.tikit.ng/health || exit 1
+          curl -f https://api.tikit.ng/api/events || exit 1
+  
+  run-integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend-production, deploy-backend-production]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Install Playwright
+        run: pnpm --filter @tikit/frontend exec playwright install --with-deps
+      
+      - name: Run integration tests
+        run: pnpm --filter @tikit/frontend test:integration
+        env:
+          BASE_URL: https://tikit.ng
+          API_URL: https://api.tikit.ng
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: apps/frontend/test-results
+          retention-days: 30
+  
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend-production, deploy-backend-production, run-integration-tests]
+    if: always()
+    
+    steps:
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production deployment ${{ job.status }}
+            Frontend: https://tikit.ng
+            Backend: https://api.tikit.ng
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()
+      
+      - name: Create Sentry release
+        uses: getsentry/action-release@v1
+        if: success()
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: tikit
+        with:
+          environment: production
+          version: ${{ github.sha }}

@@ -1,0 +1,50 @@
+{
+  "name": "@tikit/frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:integration": "playwright test",
+    "test:integration:ui": "playwright test --ui",
+    "test:integration:headed": "playwright test --headed",
+    "playwright:install": "playwright install --with-deps"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
+    "i18next": "^25.7.3",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^16.5.0",
+    "react-router-dom": "^7.11.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^4.0.16",
+    "fake-indexeddb": "^6.2.5",
+    "fast-check": "^4.5.2",
+    "jsdom": "^27.3.0",
+    "playwright": "^1.57.0",
+    "qrcode": "^1.5.4",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "vite-plugin-compression2": "^2.4.0",
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.0.16",
+    "workbox-build": "^7.4.0",
+    "workbox-window": "^7.4.0"
+  }
+}

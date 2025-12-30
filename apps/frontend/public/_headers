@@ -1,0 +1,67 @@
+# Cloudflare/Vercel Headers Configuration
+# This file configures cache headers for static assets
+
+# Cache static assets for 1 year
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+# Cache images for 1 week
+/*.jpg
+  Cache-Control: public, max-age=604800
+  X-Content-Type-Options: nosniff
+
+/*.jpeg
+  Cache-Control: public, max-age=604800
+  X-Content-Type-Options: nosniff
+
+/*.png
+  Cache-Control: public, max-age=604800
+  X-Content-Type-Options: nosniff
+
+/*.webp
+  Cache-Control: public, max-age=604800
+  X-Content-Type-Options: nosniff
+
+/*.svg
+  Cache-Control: public, max-age=604800
+  X-Content-Type-Options: nosniff
+
+# Cache fonts for 1 year
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+/*.ttf
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+# Don't cache HTML files
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Service worker - no cache
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
+
+# Manifest - cache for 1 day
+/manifest.json
+  Cache-Control: public, max-age=86400
+  X-Content-Type-Options: nosniff
+
+# Security headers for all routes
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), camera=(), microphone=()

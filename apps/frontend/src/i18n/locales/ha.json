@@ -1,0 +1,61 @@
+{
+  "onboarding": {
+    "language": {
+      "title": "Zaɓi Harshenka",
+      "subtitle": "Zaɓi harshen da kake so don ci gaba",
+      "continue": "Ci gaba"
+    },
+    "state": {
+      "title": "Zaɓi Jiharku",
+      "subtitle": "Zaɓi jiharku don ganin abubuwan da ke faruwa a yankinku",
+      "search": "Nemo jiharku...",
+      "continue": "Ci gaba"
+    }
+  },
+  "languages": {
+    "en": "Turanci",
+    "ha": "Hausa",
+    "ig": "Igbo",
+    "yo": "Yarbanci",
+    "pcm": "Pidgin"
+  },
+  "states": {
+    "abia": "Abia",
+    "adamawa": "Adamawa",
+    "akwa_ibom": "Akwa Ibom",
+    "anambra": "Anambra",
+    "bauchi": "Bauchi",
+    "bayelsa": "Bayelsa",
+    "benue": "Benue",
+    "borno": "Borno",
+    "cross_river": "Cross River",
+    "delta": "Delta",
+    "ebonyi": "Ebonyi",
+    "edo": "Edo",
+    "ekiti": "Ekiti",
+    "enugu": "Enugu",
+    "fct": "Yankin Tarayya",
+    "gombe": "Gombe",
+    "imo": "Imo",
+    "jigawa": "Jigawa",
+    "kaduna": "Kaduna",
+    "kano": "Kano",
+    "katsina": "Katsina",
+    "kebbi": "Kebbi",
+    "kogi": "Kogi",
+    "kwara": "Kwara",
+    "lagos": "Lagos",
+    "nasarawa": "Nasarawa",
+    "niger": "Niger",
+    "ogun": "Ogun",
+    "ondo": "Ondo",
+    "osun": "Osun",
+    "oyo": "Oyo",
+    "plateau": "Plateau",
+    "rivers": "Rivers",
+    "sokoto": "Sokoto",
+    "taraba": "Taraba",
+    "yobe": "Yobe",
+    "zamfara": "Zamfara"
+  }
+}

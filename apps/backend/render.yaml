@@ -1,0 +1,83 @@
+services:
+  - type: web
+    name: tikit-backend
+    env: node
+    plan: standard
+    region: frankfurt # Closest to Nigeria
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    
+    # Auto-scaling configuration
+    scaling:
+      minInstances: 2
+      maxInstances: 10
+      targetMemoryPercent: 80
+      targetCPUPercent: 70
+    
+    # Health check configuration
+    healthCheckPath: /health
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      
+      - key: PORT
+        value: 3001
+      
+      - key: DATABASE_URL
+        sync: false
+      
+      - key: DIRECT_URL
+        sync: false
+      
+      - key: REDIS_URL
+        sync: false
+      
+      - key: JWT_SECRET
+        generateValue: true
+      
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      
+      - key: AFRICASTALKING_API_KEY
+        sync: false
+      
+      - key: AFRICASTALKING_USERNAME
+        sync: false
+      
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      
+      - key: FLUTTERWAVE_SECRET_KEY
+        sync: false
+      
+      - key: WHATSAPP_API_KEY
+        sync: false
+      
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      
+      - key: APP_VERSION
+        value: 1.0.0
+      
+      - key: BUILD_DATE
+        value: auto
+
+databases:
+  - name: tikit-postgres
+    databaseName: tikit
+    plan: standard
+    region: frankfurt
+    
+  - name: tikit-redis
+    plan: standard
+    region: frankfurt
+    maxmemoryPolicy: allkeys-lru

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { PaymentMethodSelector } from './PaymentMethodSelector';
+import { useState } from 'react';
+import { PaymentMethodSelector, type PaymentMethod } from './PaymentMethodSelector';
 
 interface Event {
   id: string;
@@ -26,7 +26,7 @@ export function TicketSelector({ event, onPurchase }: TicketSelectorProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>(
     event.tiers.reduce((acc, tier) => ({ ...acc, [tier.id]: 0 }), {})
   );
-  const [paymentMethod, setPaymentMethod] = useState('wallet');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');
   const [showBulkOptions, setShowBulkOptions] = useState(false);
   const [bulkQuantity, setBulkQuantity] = useState(50);
 

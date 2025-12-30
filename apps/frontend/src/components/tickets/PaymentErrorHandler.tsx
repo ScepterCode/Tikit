@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
+export interface PaymentError {
+  code: string;
+  message: string;
+  details?: any;
+}
 
 interface PaymentErrorHandlerProps {
   error: string;

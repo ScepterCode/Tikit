@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type PaymentMethod = 'wallet' | 'card' | 'bank_transfer' | 'ussd' | 'airtime';
+export type PaymentMethod = 'wallet' | 'card' | 'bank_transfer' | 'ussd' | 'airtime' | 'opay' | 'palmpay' | 'sponsored';
 
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethod;

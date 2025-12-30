@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SprayMoneyLeaderboard } from '../components/events/SprayMoneyLeaderboard';
 import { WeddingAnalytics } from '../components/events/WeddingAnalytics';
 import { GroupBuyCreator } from '../components/tickets/GroupBuyCreator';
@@ -18,15 +18,18 @@ const mockEvent = {
 const mockGroupBuy = {
   id: 'demo-group-buy',
   eventId: 'demo-wedding-event',
+  initiatorName: 'John Organizer',
   tierId: 'regular',
+  tierName: 'Regular Seat',
+  pricePerPerson: 15000,
   totalParticipants: 5,
   currentParticipants: 3,
   participants: [
-    { userId: 'user1', name: 'Alice Johnson', paid: true },
-    { userId: 'user2', name: 'Bob Smith', paid: true },
-    { userId: 'user3', name: 'Carol Davis', paid: true },
-    { userId: 'user4', name: 'David Wilson', paid: false },
-    { userId: 'user5', name: 'Eve Brown', paid: false }
+    { name: 'Alice Johnson', joined: true, paidAt: '2024-01-15T10:00:00Z' },
+    { name: 'Bob Smith', joined: true, paidAt: '2024-01-15T11:00:00Z' },
+    { name: 'Carol Davis', joined: true, paidAt: '2024-01-15T12:00:00Z' },
+    { name: 'David Wilson', joined: true },
+    { name: 'Eve Brown', joined: false }
   ],
   expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   status: 'active' as const

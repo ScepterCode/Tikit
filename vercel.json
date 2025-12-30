@@ -59,10 +59,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "VITE_API_URL": "@production_api_url",
-    "VITE_SUPABASE_URL": "@production_supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@production_supabase_anon_key"
-  }
+  ]
 }

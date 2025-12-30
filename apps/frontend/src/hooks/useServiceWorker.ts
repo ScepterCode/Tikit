@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
+import { useRegisterSW } from '../lib/pwa-register';
 
 interface ServiceWorkerState {
   needRefresh: boolean;
@@ -20,7 +20,7 @@ export function useServiceWorker(): ServiceWorkerState {
     offlineReady: [offlineReadyReg, setOfflineReadyReg],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(registration) {
+    onRegistered(registration: ServiceWorkerRegistration | undefined) {
       console.log('Service Worker registered:', registration);
       
       // Check for updates every hour
@@ -28,7 +28,7 @@ export function useServiceWorker(): ServiceWorkerState {
         registration?.update();
       }, 60 * 60 * 1000);
     },
-    onRegisterError(error) {
+    onRegisterError(error: any) {
       console.error('Service Worker registration error:', error);
     },
     onNeedRefresh() {

@@ -26,3 +26,19 @@ export const shareViaWhatsApp = (message: string): void => {
   const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
   window.open(whatsappUrl, '_blank');
 };
+
+export const shareTicketViaWhatsApp = (ticketData: { eventName: string; ticketId: string; qrCode: string }): void => {
+  const message = `🎫 My ticket for ${ticketData.eventName}\nTicket ID: ${ticketData.ticketId}\nQR Code: ${ticketData.qrCode}`;
+  shareViaWhatsApp(message);
+};
+
+export const downloadTicketImage = async (canvas: HTMLCanvasElement, filename: string = 'ticket.png'): Promise<void> => {
+  try {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL();
+    link.click();
+  } catch (error) {
+    console.error('Download failed:', error);
+  }
+};

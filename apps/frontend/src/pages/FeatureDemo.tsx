@@ -155,7 +155,10 @@ export function FeatureDemo() {
                 <h2>📈 Group Buy Status Tracker</h2>
                 <p>Real-time tracking of group buy progress</p>
               </div>
-              <GroupBuyStatus groupBuy={mockGroupBuy} />
+              <GroupBuyStatus 
+                groupBuy={mockGroupBuy} 
+                onJoin={() => console.log('Joining group buy')}
+              />
               <div style={styles.featureInfo}>
                 <h4>Status Features:</h4>
                 <ul>

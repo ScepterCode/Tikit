@@ -79,7 +79,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({
           // Stop scanning after successful scan
           stopScanning();
         },
-        (errorMessage) => {
+        (_errorMessage) => {
           // Error callback - no QR code detected (this is normal)
           // We don't show these errors as they happen continuously while scanning
         }

@@ -163,7 +163,10 @@ export function AttendeeDashboard() {
                     />
                   )}
                   {activeFeature === 'group-buy-status' && (
-                    <GroupBuyStatus groupBuy={mockGroupBuy} />
+                    <GroupBuyStatus 
+                      groupBuy={mockGroupBuy} 
+                      onJoin={() => console.log('Joining group buy')}
+                    />
                   )}
                 </div>
               </div>

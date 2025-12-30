@@ -77,7 +77,11 @@ export const QRCodeDisplay = ({ ticket, onClose }: QRCodeDisplayProps) => {
     try {
       setIsSharing(true);
       setShareError(null);
-      await shareTicketViaWhatsApp(ticket);
+      await shareTicketViaWhatsApp({
+        eventName: ticket.eventDetails.title,
+        ticketId: ticket.id,
+        qrCode: ticket.qrCode
+      });
     } catch (error) {
       console.error('Error sharing ticket:', error);
       setShareError('Failed to share ticket. Please try downloading instead.');
@@ -90,7 +94,20 @@ export const QRCodeDisplay = ({ ticket, onClose }: QRCodeDisplayProps) => {
     try {
       setIsSharing(true);
       setShareError(null);
-      await downloadTicketImage(ticket);
+      
+      // Create a canvas from the QR code
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+      
+      const img = new Image();
+      img.onload = async () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        await downloadTicketImage(canvas, `ticket-${ticket.id}.png`);
+      };
+      img.src = qrCodeUrl;
     } catch (error) {
       console.error('Error downloading ticket:', error);
       setShareError('Failed to download ticket image.');

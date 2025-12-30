@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function TestPage() {
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>

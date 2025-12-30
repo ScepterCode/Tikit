@@ -10,7 +10,6 @@ export interface RegisterSWOptions {
 export function useRegisterSW(options: RegisterSWOptions = {}) {
   const {
     immediate = true,
-    onNeedRefresh,
     onOfflineReady,
     onRegistered,
     onRegisterError,
@@ -19,7 +18,7 @@ export function useRegisterSW(options: RegisterSWOptions = {}) {
   const needRefresh = [false, () => {}] as const;
   const offlineReady = [false, () => {}] as const;
 
-  const updateServiceWorker = (reloadPage?: boolean) => {
+  const updateServiceWorker = async (reloadPage?: boolean) => {
     if (reloadPage) {
       window.location.reload();
     }

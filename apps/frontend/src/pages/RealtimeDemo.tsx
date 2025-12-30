@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { EventCapacityDisplay } from '../components/realtime/EventCapacityDisplay';
 import { useAuth } from '../contexts/AuthContext';
 

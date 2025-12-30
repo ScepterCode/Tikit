@@ -56,9 +56,10 @@ export const TicketVerificationPage: React.FC = () => {
     setIsVerifying(true);
     setError(null);
 
+// Remove unused _scanId variables entirely since they're not needed
     // If offline, queue the scan
     if (!navigator.onLine) {
-      const _scanId = offlineScanQueue.queueScan({
+      offlineScanQueue.queueScan({
         qrCode,
         scannedBy: scannerId,
         location: 'Event Entrance',
@@ -98,7 +99,7 @@ export const TicketVerificationPage: React.FC = () => {
       
       // If network error, queue the scan
       if (err.message.includes('fetch') || err.message.includes('network')) {
-        const _scanId = offlineScanQueue.queueScan({
+        offlineScanQueue.queueScan({
           qrCode,
           scannedBy: scannerId,
           location: 'Event Entrance',
@@ -121,7 +122,7 @@ export const TicketVerificationPage: React.FC = () => {
 
     // If offline, queue the scan
     if (!navigator.onLine) {
-      const _scanId = offlineScanQueue.queueScan({
+      offlineScanQueue.queueScan({
         backupCode,
         scannedBy: scannerId,
         location: 'Event Entrance',
@@ -161,7 +162,7 @@ export const TicketVerificationPage: React.FC = () => {
       
       // If network error, queue the scan
       if (err.message.includes('fetch') || err.message.includes('network')) {
-        const _scanId = offlineScanQueue.queueScan({
+        offlineScanQueue.queueScan({
           backupCode,
           scannedBy: scannerId,
           location: 'Event Entrance',

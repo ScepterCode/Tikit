@@ -248,7 +248,7 @@ export const OfflineWallet = () => {
                   </p>
                   <ul className="mt-1 text-xs text-red-700 space-y-1">
                     {syncErrors.map((err, idx) => (
-                      <li key={idx}>{err.error}</li>
+                      <li key={idx}>{err}</li>
                     ))}
                   </ul>
                 </div>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useEventCapacity } from '../../hooks/useSupabaseRealtime';
 
 interface EventCapacityDisplayProps {

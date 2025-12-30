@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --parallel --filter \"./apps/*\" dev",
-    "build": "pnpm --recursive --filter \"./apps/*\" build",
+    "build": "cd apps/frontend && pnpm build",
+    "build:all": "pnpm --recursive --filter \"./apps/*\" build",
     "lint": "pnpm --recursive lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""

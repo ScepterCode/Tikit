@@ -25,14 +25,6 @@ const nigerianStateArb = fc.constantFrom(
   'Abuja'
 );
 
-const _eventTypeArb = fc.constantFrom(
-  'wedding',
-  'crusade',
-  'burial',
-  'festival',
-  'general'
-);
-
 const offlineTicketArb: fc.Arbitrary<OfflineTicket> = fc.record({
   id: fc.uuid(),
   eventId: fc.uuid(),

@@ -68,38 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: true
   });
 
-  // API helper with automatic token refresh
-  const _apiCall = async (url: string, options: RequestInit = {}) => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string> || {})
-    };
-
-    if (state.accessToken) {
-      headers['Authorization'] = `Bearer ${state.accessToken}`;
-    }
-
-    let response = await fetch(`${API_URL}${url}`, {
-      ...options,
-      headers
-    });
-
-    // If token expired, try to refresh
-    if (response.status === 401 && state.refreshToken) {
-      const refreshed = await refreshAuth();
-      if (refreshed) {
-        // Retry with new token
-        headers['Authorization'] = `Bearer ${state.accessToken}`;
-        response = await fetch(`${API_URL}${url}`, {
-          ...options,
-          headers
-        });
-      }
-    }
-
-    return response;
-  };
-
   // Load auth state from storage
   useEffect(() => {
     const loadAuthState = () => {

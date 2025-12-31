@@ -42,6 +42,8 @@ export function useEventCapacity(eventId: string) {
     fetchCapacity();
 
     // Subscribe to real-time updates
+    if (!supabase) return;
+    
     const channel = supabase
       .channel(`event_capacity_${eventId}`)
       .on('postgres_changes', {
@@ -58,7 +60,9 @@ export function useEventCapacity(eventId: string) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [eventId]);
 
@@ -107,6 +111,8 @@ export function useGroupBuyStatus(groupBuyId: string) {
     fetchGroupBuy();
 
     // Subscribe to real-time updates
+    if (!supabase) return;
+    
     const channel = supabase
       .channel(`group_buy_${groupBuyId}`)
       .on('postgres_changes', {
@@ -123,7 +129,9 @@ export function useGroupBuyStatus(groupBuyId: string) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [groupBuyId]);
 
@@ -172,6 +180,8 @@ export function useSprayMoneyLeaderboard(eventId: string) {
     fetchLeaderboard();
 
     // Subscribe to real-time updates
+    if (!supabase) return;
+    
     const channel = supabase
       .channel(`spray_money_${eventId}`)
       .on('postgres_changes', {
@@ -187,7 +197,9 @@ export function useSprayMoneyLeaderboard(eventId: string) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [eventId]);
 
@@ -240,6 +252,8 @@ export function useNotifications(userId: string) {
     fetchNotifications();
 
     // Subscribe to new notifications
+    if (!supabase) return;
+    
     const channel = supabase
       .channel(`notifications_${userId}`)
       .on('postgres_changes', {
@@ -257,7 +271,9 @@ export function useNotifications(userId: string) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [userId]);
 

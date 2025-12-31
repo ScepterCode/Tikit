@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // API helper with automatic token refresh
-  const apiCall = async (url: string, options: RequestInit = {}) => {
+  const _apiCall = async (url: string, options: RequestInit = {}) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string> || {})

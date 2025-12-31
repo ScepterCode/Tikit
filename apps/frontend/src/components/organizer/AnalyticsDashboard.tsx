@@ -67,6 +67,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   // Set up real-time subscription
   useEffect(() => {
+    if (!supabase) return;
+    
     const channel = supabase
       .channel(`event-analytics-${eventId}`)
       .on(
@@ -97,7 +99,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [eventId]);
 

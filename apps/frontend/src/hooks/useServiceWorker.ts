@@ -16,8 +16,6 @@ export function useServiceWorker(): ServiceWorkerState {
   const [offlineReady, setOfflineReady] = useState(false);
 
   const {
-    needRefresh: [needRefreshReg, setNeedRefreshReg],
-    offlineReady: [offlineReadyReg, setOfflineReadyReg],
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(registration: ServiceWorkerRegistration | undefined) {
@@ -33,21 +31,11 @@ export function useServiceWorker(): ServiceWorkerState {
     },
     onNeedRefresh() {
       setNeedRefresh(true);
-      setNeedRefreshReg(true);
     },
     onOfflineReady() {
       setOfflineReady(true);
-      setOfflineReadyReg(true);
     },
   });
-
-  useEffect(() => {
-    setNeedRefresh(needRefreshReg);
-  }, [needRefreshReg]);
-
-  useEffect(() => {
-    setOfflineReady(offlineReadyReg);
-  }, [offlineReadyReg]);
 
   return {
     needRefresh,

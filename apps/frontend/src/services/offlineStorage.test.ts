@@ -25,7 +25,7 @@ const nigerianStateArb = fc.constantFrom(
   'Abuja'
 );
 
-const eventTypeArb = fc.constantFrom(
+const _eventTypeArb = fc.constantFrom(
   'wedding',
   'crusade',
   'burial',

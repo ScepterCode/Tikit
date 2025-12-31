@@ -15,6 +15,7 @@ export function useRegisterSW(options: RegisterSWOptions = {}) {
     onRegisterError,
   } = options;
 
+  // Return proper state and setters instead of tuples
   const needRefresh = [false, () => {}] as const;
   const offlineReady = [false, () => {}] as const;
 

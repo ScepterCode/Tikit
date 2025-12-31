@@ -64,7 +64,7 @@ describe('Property 14: Payment option availability', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 100, max: 100000000 }),
-        (amount) => {
+        (_amount) => {
           const options1 = getAvailableInstallmentOptions();
           const options2 = getAvailableInstallmentOptions();
           

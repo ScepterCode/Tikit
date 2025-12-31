@@ -19,6 +19,12 @@ export function useSprayMoneyLeaderboard(eventId: string) {
     // Fetch initial leaderboard data
     const fetchLeaderboard = async () => {
       try {
+        if (!supabase) {
+          setError('Supabase not configured');
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('spray_money_leaderboard')
           .select('*')
@@ -40,6 +46,8 @@ export function useSprayMoneyLeaderboard(eventId: string) {
     fetchLeaderboard();
 
     // Subscribe to real-time updates
+    if (!supabase) return;
+    
     const channel = supabase
       .channel(`spray-money-${eventId}`)
       .on(
@@ -80,7 +88,9 @@ export function useSprayMoneyLeaderboard(eventId: string) {
 
     // Cleanup subscription on unmount
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [eventId]);
 

@@ -7,6 +7,17 @@ import { GroupBuyStatus } from '../components/tickets/GroupBuyStatus';
 import { SprayMoneyLeaderboard } from '../components/events/SprayMoneyLeaderboard';
 import { WeddingTicketPurchase } from '../components/tickets/WeddingTicketPurchase';
 
+interface AsoEbiTier {
+  name: string;
+  price: number;
+  color: string;
+}
+
+interface FoodOption {
+  name: string;
+  dietaryInfo: string;
+}
+
 interface Event {
   id: string;
   title: string;
@@ -20,7 +31,11 @@ interface Event {
   capacity: number;
   ticketsSold: number;
   tiers: EventTier[];
-  culturalFeatures?: string[];
+  culturalFeatures?: {
+    asoEbiTiers?: AsoEbiTier[];
+    foodOptions?: FoodOption[];
+    sprayMoneyEnabled?: boolean;
+  };
   images?: string[];
   status: string;
   isOnline: boolean;

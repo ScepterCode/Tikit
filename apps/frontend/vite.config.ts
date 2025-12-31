@@ -131,9 +131,7 @@ export default defineConfig({
         manualChunks: {
           // Vendor chunks for better caching
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@headlessui/react', '@heroicons/react'],
           'i18n-vendor': ['i18next', 'react-i18next'],
-          'query-vendor': ['@tanstack/react-query'],
         },
         // Add content hash to filenames for cache busting
         chunkFileNames: 'assets/[name]-[hash].js',

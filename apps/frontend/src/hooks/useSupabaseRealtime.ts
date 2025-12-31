@@ -21,6 +21,12 @@ export function useEventCapacity(eventId: string) {
     // Fetch initial data
     const fetchCapacity = async () => {
       try {
+        if (!supabase) {
+          setError('Supabase not configured');
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('event_capacity')
           .select('*')
@@ -90,6 +96,12 @@ export function useGroupBuyStatus(groupBuyId: string) {
     // Fetch initial data
     const fetchGroupBuy = async () => {
       try {
+        if (!supabase) {
+          setError('Supabase not configured');
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('group_buy_status')
           .select('*')
@@ -158,6 +170,12 @@ export function useSprayMoneyLeaderboard(eventId: string) {
     // Fetch initial data
     const fetchLeaderboard = async () => {
       try {
+        if (!supabase) {
+          setError('Supabase not configured');
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('spray_money_leaderboard')
           .select('*')
@@ -229,6 +247,11 @@ export function useNotifications(userId: string) {
     // Fetch initial notifications
     const fetchNotifications = async () => {
       try {
+        if (!supabase) {
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('realtime_notifications')
           .select('*')

@@ -1,4 +1,4 @@
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/ProductionAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { WeddingAnalytics } from '../../components/events/WeddingAnalytics';

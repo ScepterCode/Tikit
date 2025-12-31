@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { ProductionAuthProvider } from './contexts/ProductionAuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Home } from './pages/Home';
 import { LoginPage } from './pages/LoginPage';
@@ -39,7 +39,7 @@ import { FeatureDemo } from './pages/FeatureDemo';
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
+      <ProductionAuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -301,7 +301,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <PWAUpdatePrompt />
-      </AuthProvider>
+      </ProductionAuthProvider>
     </BrowserRouter>
   );
 }

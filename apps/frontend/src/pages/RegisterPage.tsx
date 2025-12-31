@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/ProductionAuthContext';
 import { nigerianStates } from '../data/nigerianStates';
 
 type UserRole = 'attendee' | 'organizer';

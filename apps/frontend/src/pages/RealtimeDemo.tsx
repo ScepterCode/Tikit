@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { EventCapacityDisplay } from '../components/realtime/EventCapacityDisplay';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/ProductionAuthContext';
 
 export function RealtimeDemo() {
   const { user } = useAuth();

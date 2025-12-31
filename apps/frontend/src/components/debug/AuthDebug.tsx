@@ -1,4 +1,4 @@
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/ProductionAuthContext';
 
 export function AuthDebug() {
   const { user, isAuthenticated, isLoading, accessToken } = useAuth();

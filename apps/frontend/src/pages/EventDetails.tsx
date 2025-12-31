@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/ProductionAuthContext';
 import { TicketSelector } from '../components/tickets/TicketSelector';
 import { GroupBuyCreator } from '../components/tickets/GroupBuyCreator';
 import { GroupBuyStatus } from '../components/tickets/GroupBuyStatus';

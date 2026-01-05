@@ -51,9 +51,10 @@ export function GroupBuyCreator({ event, onGroupBuyCreated }: GroupBuyCreatorPro
       });
       
       // Simulate successful creation for demo
-      const data = { success: true };
-
-      const data = await response.json();
+      const data = { 
+        success: true, 
+        error: null as { message?: string } | null 
+      };
 
       if (!data.success) {
         throw new Error(data.error?.message || 'Failed to create group buy');

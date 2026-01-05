@@ -5,7 +5,37 @@ build
 .env
 .env.local
 .env.*.local
+.env.development.local
+.env.production.local
 coverage
 *.log
 .DS_Store
 pnpm-lock.yaml
+
+# Supabase credentials and sensitive files
+apps/frontend/.env.local
+apps/backend/.env
+apps/backend/.env.local
+apps/backend/.env.production
+apps/backend/.env.supabase
+
+# Temporary debug files
+test-*.js
+test-*.html
+*-debug.*
+*-temp.*
+
+# IDE and editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db

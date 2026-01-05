@@ -1,7 +1,7 @@
-import { useAuth } from '../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 export function DebugPage() {
-  const authState = useAuth();
+  const authState = useSupabaseAuth();
 
   return (
     <div style={{

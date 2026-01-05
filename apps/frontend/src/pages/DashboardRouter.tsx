@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 export function DashboardRouter() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useSupabaseAuth();
 
   if (isLoading) {
     return (

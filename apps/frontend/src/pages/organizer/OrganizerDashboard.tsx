@@ -1,11 +1,11 @@
-import { useAuth } from '../../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { WeddingAnalytics } from '../../components/events/WeddingAnalytics';
 import { SprayMoneyLeaderboard } from '../../components/events/SprayMoneyLeaderboard';
 
 export function OrganizerDashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
 

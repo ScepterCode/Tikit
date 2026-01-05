@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { nigerianStates } from '../data/nigerianStates';
 
 type UserRole = 'attendee' | 'organizer';
@@ -20,7 +20,7 @@ interface FormData {
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const { register, isLoading: authLoading } = useAuth();
+  const { register, isLoading: authLoading } = useSupabaseAuth();
   
   const [formData, setFormData] = useState<FormData>({
     role: 'attendee',

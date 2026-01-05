@@ -1,8 +1,8 @@
-import { useAuth } from '../../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function OrganizerBroadcast() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const navigate = useNavigate();
 
   return (

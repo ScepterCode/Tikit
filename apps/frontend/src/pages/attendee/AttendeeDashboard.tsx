@@ -1,4 +1,4 @@
-import { useAuth } from '../../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { SprayMoneyLeaderboard } from '../../components/events/SprayMoneyLeaderboard';
@@ -6,7 +6,7 @@ import { GroupBuyCreator } from '../../components/tickets/GroupBuyCreator';
 import { GroupBuyStatus } from '../../components/tickets/GroupBuyStatus';
 
 export function AttendeeDashboard() {
-  const { user, logout, isLoading, isAuthenticated } = useAuth();
+  const { user, logout, isLoading, isAuthenticated } = useSupabaseAuth();
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
 

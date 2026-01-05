@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useAuth } from '../../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function Wallet() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const navigate = useNavigate();
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [amount, setAmount] = useState('');

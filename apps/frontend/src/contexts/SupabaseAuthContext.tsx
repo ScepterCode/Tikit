@@ -134,6 +134,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   // Load auth state from Supabase
   useEffect(() => {
+    if (!supabase) return;
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleAuthChange(session);
@@ -177,6 +179,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   // Fetch user profile from database
   const fetchUserProfile = async (userId: string): Promise<User | null> => {
+    if (!supabase) return null;
+    
     try {
       const { data, error } = await supabase
         .from('users')
@@ -219,11 +223,15 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   // Register function
   const register = async (data: RegisterData): Promise<void> => {
+    if (!supabase) throw new Error('Supabase not configured');
+    
     try {
       console.log('📝 Registering user with Supabase...');
 
-      // Use phone number as email for Supabase auth (with domain)
-      const email = data.email || `${data.phoneNumber}@tikit.app`;
+      // Use email if provided, otherwise create email from phone number
+      const email = data.email || `${data.phoneNumber.replace(/[^0-9]/g, '')}@tikit.app`;
+      
+      console.log('📧 Using email for registration:', email);
       
       // Sign up with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -239,12 +247,15 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (authError) {
+        console.error('Auth error:', authError);
         throw new Error(authError.message);
       }
 
       if (!authData.user) {
         throw new Error('Failed to create user');
       }
+
+      console.log('✅ Auth user created:', authData.user.id);
 
       // Create user profile in our users table
       const referralCode = generateReferralCode(data.firstName, data.lastName);
@@ -268,9 +279,19 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // Clean up auth user if profile creation fails
-        await supabase.auth.signOut();
-        throw new Error('Failed to create user profile');
+        
+        // If RLS policy blocks it, the user is still created in auth
+        // We can continue and let them log in - profile can be created later
+        if (profileError.code === '42501') {
+          console.warn('⚠️ RLS policy prevented profile creation, but auth user exists');
+          console.warn('User can still log in, profile will be created on first login');
+          // Don't throw error, let registration succeed
+          return;
+        } else {
+          // For other errors, clean up auth user
+          await supabase.auth.signOut();
+          throw new Error(`Failed to create user profile: ${profileError.message}`);
+        }
       }
 
       console.log('✅ Registration successful');
@@ -282,19 +303,29 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   // Login function
   const login = async (phoneNumber: string, password: string): Promise<void> => {
+    if (!supabase) throw new Error('Supabase not configured');
+    
     try {
       console.log('🔐 Logging in user...');
 
-      // Use phone number as email for login
-      const email = phoneNumber.includes('@') ? phoneNumber : `${phoneNumber}@tikit.app`;
+      // Use email format for login - clean phone number first
+      const cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
+      const email = phoneNumber.includes('@') ? phoneNumber : `${cleanPhone}@tikit.app`;
       
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('📧 Using email for login:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
+        console.error('Login error details:', error);
         throw new Error(error.message);
+      }
+
+      if (!data.user) {
+        throw new Error('Login failed - no user returned');
       }
 
       console.log('✅ Login successful');
@@ -306,6 +337,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   // Logout function
   const logout = async (): Promise<void> => {
+    if (!supabase) return;
+    
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {

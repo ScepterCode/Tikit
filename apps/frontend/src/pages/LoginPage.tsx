@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 interface FormData {
   phoneNumber: string;
@@ -9,7 +9,7 @@ interface FormData {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, isLoading: authLoading } = useAuth();
+  const { login, isLoading: authLoading } = useSupabaseAuth();
   
   const [formData, setFormData] = useState<FormData>({
     phoneNumber: '',

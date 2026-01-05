@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 // import { useEventCapacity } from '../hooks/useSupabaseRealtime';
 
@@ -68,7 +68,7 @@ const mockEvents: Event[] = [
 ];
 
 export function Events() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ProductionAuthProvider } from './contexts/ProductionAuthContext';
+import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Home } from './pages/Home';
 import { LoginPage } from './pages/LoginPage';
@@ -35,16 +35,24 @@ import { AdminSettings } from './pages/admin/AdminSettings';
 import { PWAUpdatePrompt } from './components/common/PWAUpdatePrompt';
 import { RealtimeDemo } from './pages/RealtimeDemo';
 import { FeatureDemo } from './pages/FeatureDemo';
+import { EnvDebug } from './pages/EnvDebug';
+import { SupabaseTest } from './pages/SupabaseTest';
+import { EnvTest } from './pages/EnvTest';
 
 function App() {
   return (
     <BrowserRouter>
-      <ProductionAuthProvider>
+      <SupabaseAuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
+          
+          {/* Debug Routes */}
+          <Route path="/debug/env" element={<EnvDebug />} />
+          <Route path="/debug/supabase" element={<SupabaseTest />} />
+          <Route path="/debug/env-test" element={<EnvTest />} />
           
           {/* Admin Login - Separate route for security */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -301,7 +309,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <PWAUpdatePrompt />
-      </ProductionAuthProvider>
+      </SupabaseAuthProvider>
     </BrowserRouter>
   );
 }

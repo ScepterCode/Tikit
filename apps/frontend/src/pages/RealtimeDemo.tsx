@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { EventCapacityDisplay } from '../components/realtime/EventCapacityDisplay';
-import { useAuth } from '../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 export function RealtimeDemo() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [eventId, setEventId] = useState('demo-event-1');
   const [ticketsSold, setTicketsSold] = useState(25);
   const [capacity, setCapacity] = useState(100);

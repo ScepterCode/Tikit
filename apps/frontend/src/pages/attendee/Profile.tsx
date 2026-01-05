@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfileData {
@@ -24,7 +24,7 @@ interface ProfileData {
 }
 
 export function Profile() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);

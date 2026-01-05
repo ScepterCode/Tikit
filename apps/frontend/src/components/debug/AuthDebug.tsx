@@ -1,7 +1,7 @@
-import { useAuth } from '../../contexts/ProductionAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 
 export function AuthDebug() {
-  const { user, isAuthenticated, isLoading, accessToken } = useAuth();
+  const { user, isAuthenticated, isLoading, session } = useSupabaseAuth();
 
   return (
     <div style={{
@@ -20,7 +20,7 @@ export function AuthDebug() {
       <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
       <p>Authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
       <p>User: {user ? `${user.firstName} (${user.role})` : 'None'}</p>
-      <p>Token: {accessToken ? 'Present' : 'None'}</p>
+      <p>Token: {session?.access_token ? 'Present' : 'None'}</p>
     </div>
   );
 }

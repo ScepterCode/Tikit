@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from './supabaseClient'; // We'll create this next
 
 // Types
 interface User {
@@ -19,8 +20,6 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -30,7 +29,6 @@ interface AuthContextType extends AuthState {
   adminLogin: (phoneNumber: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
-  refreshAuth: () => Promise<boolean>;
 }
 
 interface RegisterData {
@@ -45,16 +43,6 @@ interface RegisterData {
   organizationType?: string;
 }
 
-// API Configuration
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-
-// Storage keys
-const STORAGE_KEYS = {
-  ACCESS_TOKEN: 'tikit_access_token',
-  REFRESH_TOKEN: 'tikit_refresh_token',
-  USER: 'tikit_user'
-} as const;
-
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -62,247 +50,213 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
-    accessToken: null,
-    refreshToken: null,
     isAuthenticated: false,
     isLoading: true
   });
 
-  // Load auth state from storage
+  // Load auth state and listen for changes
   useEffect(() => {
-    const loadAuthState = () => {
-      try {
-        const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-        const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-        const userStr = localStorage.getItem(STORAGE_KEYS.USER);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      } else {
+        setState({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false
+        });
+      }
+    });
 
-        if (accessToken && refreshToken && userStr) {
-          const user = JSON.parse(userStr);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        } else {
           setState({
-            user,
-            accessToken,
-            refreshToken,
-            isAuthenticated: true,
+            user: null,
+            isAuthenticated: false,
             isLoading: false
           });
-          console.log('🔄 Auth state loaded from storage:', user.firstName);
-        } else {
-          console.log('🔄 No auth data in storage, setting unauthenticated state');
-          setState(prev => ({ 
-            ...prev, 
-            isLoading: false,
-            isAuthenticated: false,
-            user: null,
-            accessToken: null,
-            refreshToken: null
-          }));
         }
-      } catch (error) {
-        console.error('❌ Error loading auth state:', error);
-        clearAuthState();
       }
-    };
+    );
 
-    loadAuthState();
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Save auth state to storage
-  const saveAuthState = (user: User, accessToken: string, refreshToken: string) => {
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+  // Load user profile from database
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    setState({
-      user,
-      accessToken,
-      refreshToken,
-      isAuthenticated: true,
-      isLoading: false
-    });
+      if (error) throw error;
 
-    console.log('✅ Auth state saved:', user.firstName);
-  };
-
-  // Clear auth state
-  const clearAuthState = () => {
-    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-
-    setState({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      isLoading: false
-    });
-
-    console.log('🧹 Auth state cleared');
+      if (profile) {
+        setState({
+          user: profile as User,
+          isAuthenticated: true,
+          isLoading: false
+        });
+        console.log('✅ User profile loaded:', profile.firstName);
+      }
+    } catch (error) {
+      console.error('❌ Error loading user profile:', error);
+      setState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
+    }
   };
 
   // Register function
   const register = async (data: RegisterData): Promise<void> => {
     try {
       console.log('📝 Registering user...');
+
+      // Generate a referral code
+      const referralCode = `TKT${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+      // Sign up with Supabase Auth using phone number as email
+      // We'll use phone@tikit.app format since Supabase requires email
+      const email = data.email || `${data.phoneNumber}@tikit.app`;
       
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        // Extract the specific error message from the backend
-        const errorMessage = result.error?.message || result.message || 'Registration failed';
-        throw new Error(errorMessage);
-      }
-
-      if (result.success && result.data) {
-        const { user, accessToken, refreshToken } = result.data;
-        saveAuthState(user, accessToken, refreshToken);
-        console.log('✅ Registration successful');
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
-      console.error('❌ Registration error:', error);
-      throw error;
-    }
-  };
-
-  // Admin login function - only allows admin users
-  const adminLogin = async (phoneNumber: string, password: string): Promise<void> => {
-    try {
-      console.log('🔐 Admin login attempt...');
-      
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, password })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        // Extract the specific error message from the backend
-        const errorMessage = result.error?.message || result.message || 'Login failed';
-        throw new Error(errorMessage);
-      }
-
-      if (result.success && result.data) {
-        const { user, accessToken, refreshToken } = result.data;
-        
-        // Check if user is admin
-        if (user.role !== 'admin') {
-          throw new Error('Access denied. Admin credentials required.');
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: data.password,
+        options: {
+          data: {
+            phone_number: data.phoneNumber,
+            first_name: data.firstName,
+            last_name: data.lastName
+          }
         }
-        
-        saveAuthState(user, accessToken, refreshToken);
-        console.log('✅ Admin login successful');
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
-      console.error('❌ Admin login error:', error);
-      throw error;
+      });
+
+      if (signUpError) throw signUpError;
+      if (!authData.user) throw new Error('Registration failed');
+
+      // Create user profile in database
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          phone_number: data.phoneNumber,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          role: data.role || 'attendee',
+          state: data.state,
+          organization_name: data.organizationName,
+          organization_type: data.organizationType,
+          referral_code: referralCode,
+          wallet_balance: 0,
+          is_verified: false
+        });
+
+      if (profileError) throw profileError;
+
+      // Load the user profile
+      await loadUserProfile(authData.user.id);
+      console.log('✅ Registration successful');
+    } catch (error: any) {
+      console.error('❌ Registration error:', error);
+      throw new Error(error.message || 'Registration failed');
     }
   };
+
+  // Login function
   const login = async (phoneNumber: string, password: string): Promise<void> => {
     try {
       console.log('🔐 Logging in user...');
-      
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, password })
+
+      // First, get the email associated with this phone number
+      const { data: userData, error: fetchError } = await supabase
+        .from('users')
+        .select('email, phone_number, role')
+        .eq('phone_number', phoneNumber)
+        .single();
+
+      if (fetchError || !userData) {
+        throw new Error('Invalid phone number or password');
+      }
+
+      // Prevent admin users from logging in through regular login
+      if (userData.role === 'admin') {
+        throw new Error('Admin users must use the admin login portal at /admin/login');
+      }
+
+      // Sign in with email
+      const email = userData.email || `${phoneNumber}@tikit.app`;
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
-      const result = await response.json();
+      if (signInError) throw signInError;
+      if (!authData.user) throw new Error('Login failed');
 
-      if (!response.ok) {
-        // Extract the specific error message from the backend
-        const errorMessage = result.error?.message || result.message || 'Login failed';
-        throw new Error(errorMessage);
-      }
-
-      if (result.success && result.data) {
-        const { user, accessToken, refreshToken } = result.data;
-        
-        // Prevent admin users from logging in through regular login
-        if (user.role === 'admin') {
-          throw new Error('Admin users must use the admin login portal at /admin/login');
-        }
-        
-        saveAuthState(user, accessToken, refreshToken);
-        console.log('✅ Login successful');
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
+      // Profile will be loaded automatically by onAuthStateChange
+      console.log('✅ Login successful');
+    } catch (error: any) {
       console.error('❌ Login error:', error);
-      throw error;
+      throw new Error(error.message || 'Login failed');
     }
   };
 
-  // Refresh auth function
-  const refreshAuth = async (): Promise<boolean> => {
+  // Admin login function
+  const adminLogin = async (phoneNumber: string, password: string): Promise<void> => {
     try {
-      if (!state.refreshToken) {
-        return false;
+      console.log('🔐 Admin login attempt...');
+
+      // First, get the email associated with this phone number
+      const { data: userData, error: fetchError } = await supabase
+        .from('users')
+        .select('email, phone_number, role')
+        .eq('phone_number', phoneNumber)
+        .single();
+
+      if (fetchError || !userData) {
+        throw new Error('Invalid phone number or password');
       }
 
-      console.log('🔄 Refreshing auth tokens...');
+      // Check if user is admin
+      if (userData.role !== 'admin') {
+        throw new Error('Access denied. Admin credentials required.');
+      }
 
-      const response = await fetch(`${API_URL}/api/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: state.refreshToken })
+      // Sign in with email
+      const email = userData.email || `${phoneNumber}@tikit.app`;
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
-      const result = await response.json();
+      if (signInError) throw signInError;
+      if (!authData.user) throw new Error('Login failed');
 
-      if (response.ok && result.success && result.accessToken) {
-        // Update access token while keeping user data and refresh token
-        if (state.user) {
-          localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, result.accessToken);
-          setState(prev => ({
-            ...prev,
-            accessToken: result.accessToken
-          }));
-          console.log('✅ Access token refreshed');
-          return true;
-        }
-      }
-
-      // If refresh fails, clear auth state
-      clearAuthState();
-      return false;
-    } catch (error) {
-      console.error('❌ Token refresh error:', error);
-      clearAuthState();
-      return false;
+      // Profile will be loaded automatically by onAuthStateChange
+      console.log('✅ Admin login successful');
+    } catch (error: any) {
+      console.error('❌ Admin login error:', error);
+      throw new Error(error.message || 'Admin login failed');
     }
   };
 
   // Logout function
   const logout = async () => {
     try {
-      if (state.accessToken) {
-        await fetch(`${API_URL}/api/auth/logout`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.accessToken}`
-          }
-        });
-      }
+      await supabase.auth.signOut();
+      console.log('👋 User logged out');
     } catch (error) {
       console.error('❌ Logout error:', error);
-    } finally {
-      clearAuthState();
-      console.log('👋 User logged out');
     }
   };
 
@@ -311,8 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     adminLogin,
     register,
-    logout,
-    refreshAuth
+    logout
   };
 
   return (

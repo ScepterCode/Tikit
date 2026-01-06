@@ -24,8 +24,8 @@ export function DebugPage() {
               role: authState.user.role,
               phoneNumber: authState.user.phoneNumber
             } : null,
-            hasAccessToken: !!authState.accessToken,
-            hasRefreshToken: !!authState.refreshToken
+            hasAccessToken: false, // Not applicable for Supabase auth
+            hasRefreshToken: false // Not applicable for Supabase auth
           }, null, 2)}
         </pre>
       </div>

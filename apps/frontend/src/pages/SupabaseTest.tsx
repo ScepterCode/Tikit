@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function SupabaseTest() {
@@ -22,8 +22,8 @@ export function SupabaseTest() {
     // Test 2: Supabase Client
     results.client = {
       exists: !!supabase,
-      url: supabase?.supabaseUrl || 'N/A',
-      key: supabase?.supabaseKey?.substring(0, 10) || 'N/A'
+      url: import.meta.env.VITE_SUPABASE_URL || 'N/A',
+      key: import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 10) || 'N/A'
     };
 
     // Test 3: Basic Connection Test

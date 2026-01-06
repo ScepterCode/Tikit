@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { SupabaseAuthProvider } from './SupabaseAuthContext';
 
 // PRODUCTION MODE: Always use Supabase, never localhost
-const IS_PRODUCTION = import.meta.env.PROD || window.location.hostname !== 'localhost';
+// const IS_PRODUCTION = import.meta.env.PROD || window.location.hostname !== 'localhost';
 
 // Production Auth Provider - Supabase Only
 export function ProductionAuthProvider({ children }: { children: ReactNode }) {

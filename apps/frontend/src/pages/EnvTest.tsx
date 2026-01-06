@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not needed for this component
 
 export function EnvTest() {
   const envVars = {

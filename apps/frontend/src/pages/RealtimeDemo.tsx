@@ -21,7 +21,7 @@ export function RealtimeDemo() {
       });
 
       // Simulate successful update
-      const result = { success: true };
+      const result: { success: boolean; error?: string } = { success: true };
       
       if (result.success) {
         alert('✅ Event capacity updated! Check the real-time display above.');

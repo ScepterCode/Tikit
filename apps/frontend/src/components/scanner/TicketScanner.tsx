@@ -20,9 +20,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({
   // Get available cameras on mount
   useEffect(() => {
     Html5Qrcode.getCameras()
-      .then((devices) => {
+      .then((devices: any[]) => {
         if (devices && devices.length > 0) {
-          const cameraList = devices.map((device) => ({
+          const cameraList = devices.map((device: any) => ({
             id: device.id,
             label: device.label || `Camera ${device.id}`,
           }));
@@ -33,7 +33,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({
           setError('No cameras found on this device');
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.error('Error getting cameras:', err);
         setError('Failed to access camera. Please grant camera permissions.');
         onScanError?.('Failed to access camera');
@@ -44,7 +44,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({
       if (scannerRef.current && isScanning) {
         scannerRef.current
           .stop()
-          .catch((err) => console.error('Error stopping scanner:', err));
+          .catch((err: any) => console.error('Error stopping scanner:', err));
       }
     };
   }, []);
@@ -71,7 +71,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({
           fps: 10, // Frames per second
           qrbox: { width: 250, height: 250 }, // QR code scanning box
         },
-        (decodedText) => {
+        (decodedText: string) => {
           // Success callback - QR code detected
           console.log('QR Code detected:', decodedText);
           onScanSuccess(decodedText);
@@ -79,7 +79,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({
           // Stop scanning after successful scan
           stopScanning();
         },
-        (_errorMessage) => {
+        (_errorMessage: any) => {
           // Error callback - no QR code detected (this is normal)
           // We don't show these errors as they happen continuously while scanning
         }

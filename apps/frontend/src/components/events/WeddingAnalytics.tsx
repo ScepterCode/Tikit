@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 interface WeddingAnalyticsData {
   foodCounts: Record<string, number>;
@@ -19,17 +20,58 @@ export function WeddingAnalytics({ eventId }: WeddingAnalyticsProps) {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await fetch(`/api/events/${eventId}/wedding-analytics`);
-        const data = await response.json();
-
-        if (data.success) {
-          setAnalytics(data.analytics);
-          setError(null);
-        } else {
-          setError(data.message || 'Failed to load analytics');
+        if (!supabase) {
+          throw new Error('Database connection not available');
         }
-      } catch (err) {
-        setError('Failed to load analytics');
+
+        // Fetch wedding analytics data from Supabase
+        // This is a demo implementation - in production you'd have proper wedding analytics tables
+        
+        // Get tickets for this event
+        const { data: tickets, error: ticketsError } = await supabase
+          .from('tickets')
+          .select('*')
+          .eq('event_id', eventId);
+
+        if (ticketsError) throw ticketsError;
+
+        // Get spray money data
+        const { data: sprayMoney, error: sprayError } = await supabase
+          .from('spray_money')
+          .select('amount')
+          .eq('event_id', eventId);
+
+        if (sprayError) {
+          console.warn('Spray money data not available:', sprayError);
+        }
+
+        // Calculate analytics
+        const totalSprayMoney = sprayMoney?.reduce((sum, entry) => sum + (entry.amount || 0), 0) || 0;
+        const totalTickets = tickets?.length || 0;
+
+        // Mock food counts and aso-ebi sales for demo
+        const foodCounts = {
+          'Jollof Rice': Math.floor(totalTickets * 0.8),
+          'Fried Rice': Math.floor(totalTickets * 0.6),
+          'Pounded Yam': Math.floor(totalTickets * 0.4),
+          'Vegetarian Option': Math.floor(totalTickets * 0.2),
+        };
+
+        const asoEbiSales = {
+          'Premium Tier': Math.floor(totalTickets * 0.3),
+          'Standard Tier': Math.floor(totalTickets * 0.5),
+          'Basic Tier': Math.floor(totalTickets * 0.2),
+        };
+
+        setAnalytics({
+          foodCounts,
+          asoEbiSales,
+          totalSprayMoney,
+          totalTickets,
+        });
+        setError(null);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load analytics');
         console.error('Analytics fetch error:', err);
       } finally {
         setLoading(false);

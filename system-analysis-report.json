@@ -1,0 +1,141 @@
+{
+  "timestamp": "2026-01-07T11:09:49.261Z",
+  "architecture": {
+    "structure": {
+      "hasBackend": true,
+      "hasFrontend": true,
+      "hasDatabase": true,
+      "hasTests": true,
+      "hasDocumentation": false
+    }
+  },
+  "backend": {
+    "framework": "Express.js",
+    "version": "1.0.0",
+    "dependencies": [
+      "@prisma/client",
+      "@supabase/supabase-js",
+      "africastalking",
+      "bcryptjs",
+      "connect-redis",
+      "cors",
+      "dotenv",
+      "express",
+      "express-session",
+      "jsonwebtoken",
+      "node-fetch",
+      "qrcode",
+      "redis",
+      "zod"
+    ],
+    "scripts": {
+      "dev": "tsx watch src/index.ts",
+      "build": "tsc",
+      "start": "node dist/index.js",
+      "test": "vitest --run",
+      "test:watch": "vitest",
+      "test:ui": "vitest --ui",
+      "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
+      "prisma:generate": "prisma generate",
+      "prisma:migrate": "prisma migrate dev",
+      "prisma:studio": "prisma studio"
+    },
+    "type": "module",
+    "routes": [
+      "admin",
+      "auth",
+      "event",
+      "groupbuy",
+      "health",
+      "notification",
+      "organizer",
+      "payment",
+      "realtime",
+      "recommendation",
+      "referral",
+      "security",
+      "ticket",
+      "ussd"
+    ]
+  },
+  "database": {
+    "type": "PostgreSQL (Supabase)",
+    "schema": "supabase-schema.sql",
+    "tables": [
+      "users",
+      "events",
+      "tickets",
+      "payments",
+      "group_buys",
+      "referrals",
+      "scan_history",
+      "event_organizers",
+      "sponsorships"
+    ],
+    "tableCount": 9,
+    "indexes": 41,
+    "rlsPolicies": 24,
+    "features": {
+      "rls": true,
+      "triggers": true,
+      "functions": true,
+      "extensions": true
+    }
+  },
+  "frontend": {
+    "framework": "React",
+    "bundler": "Vite",
+    "version": "1.0.0",
+    "dependencies": [
+      "@supabase/supabase-js",
+      "date-fns",
+      "html5-qrcode",
+      "i18next",
+      "i18next-browser-languagedetector",
+      "react",
+      "react-dom",
+      "react-i18next",
+      "react-router-dom"
+    ],
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc && vite build",
+      "preview": "vite preview",
+      "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+      "test": "vitest --run",
+      "test:watch": "vitest",
+      "test:integration": "playwright test",
+      "test:integration:ui": "playwright test --ui",
+      "test:integration:headed": "playwright test --headed",
+      "playwright:install": "playwright install --with-deps"
+    },
+    "authContexts": [
+      "AuthContext.tsx",
+      "MockAuthContext.tsx",
+      "ProductionAuthContext.tsx",
+      "SupabaseAuthContext.tsx"
+    ]
+  },
+  "deployment": {
+    "vercel": true,
+    "netlify": false,
+    "docker": false,
+    "github": true,
+    "render": true
+  },
+  "issues": [
+    {
+      "type": "frontend",
+      "severity": "low",
+      "message": "Multiple auth contexts detected - may cause confusion"
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "architecture",
+      "priority": "high",
+      "message": "Consider serverless architecture with Supabase-only backend",
+      "benefit": "Simplified deployment and better scalability"
+    }
+  ]
+}

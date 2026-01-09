@@ -5,6 +5,8 @@
  * and processes them when connectivity is restored
  */
 
+import { supabase } from '../lib/supabase';
+
 interface QueuedScan {
   id: string;
   qrCode?: string;
@@ -72,7 +74,7 @@ class OfflineScanQueueService {
   queueScan(scan: Omit<QueuedScan, 'id' | 'timestamp' | 'status'>): string {
     const queuedScan: QueuedScan = {
       ...scan,
-      id: `scan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `scan-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
       timestamp: Date.now(),
       status: 'pending',
     };
@@ -124,47 +126,144 @@ class OfflineScanQueueService {
   }
 
   /**
-   * Process a single scan
+   * Process a single scan using Supabase
    */
   private async processScan(scan: QueuedScan): Promise<void> {
     scan.status = 'processing';
     this.saveQueue();
 
     try {
+      if (!supabase) {
+        throw new Error('Database connection not available');
+      }
+
       let result;
 
       if (scan.qrCode) {
-        // Verify by QR code
-        const response = await fetch('/api/tickets/verify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            qrCode: scan.qrCode,
-            scannedBy: scan.scannedBy,
-            location: scan.location,
-            deviceInfo: scan.deviceInfo,
-          }),
-        });
+        // Verify by QR code using Supabase
+        const { data: ticket, error: ticketError } = await supabase
+          .from('tickets')
+          .select(`
+            *,
+            events (
+              id,
+              title,
+              date,
+              venue
+            ),
+            users (
+              id,
+              first_name,
+              last_name,
+              phone_number
+            )
+          `)
+          .eq('qr_code', scan.qrCode)
+          .single();
 
-        result = await response.json();
+        if (ticketError || !ticket) {
+          throw new Error('Invalid QR code - ticket not found');
+        }
+
+        // Check if ticket is already used
+        if (ticket.status === 'used') {
+          result = {
+            valid: false,
+            message: 'This ticket has already been used',
+            ticket: ticket,
+            usedAt: ticket.used_at,
+          };
+        } else if (ticket.status !== 'confirmed') {
+          result = {
+            valid: false,
+            message: `Ticket is ${ticket.status} - not valid for entry`,
+            ticket: ticket,
+          };
+        } else {
+          // Record the scan
+          const { error: scanError } = await supabase
+            .from('ticket_scans')
+            .insert({
+              ticket_id: ticket.id,
+              scanned_by: scan.scannedBy,
+              scanned_at: new Date().toISOString(),
+              location: scan.location || 'Event Entrance',
+              device_info: scan.deviceInfo,
+            });
+
+          if (scanError) {
+            console.warn('Failed to record scan:', scanError);
+          }
+
+          result = {
+            valid: true,
+            message: 'Valid ticket - entry allowed',
+            ticket: ticket,
+          };
+        }
       } else if (scan.backupCode) {
-        // Verify by backup code
-        const response = await fetch('/api/tickets/verify-backup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            backupCode: scan.backupCode,
-            scannedBy: scan.scannedBy,
-            location: scan.location,
-            deviceInfo: scan.deviceInfo,
-          }),
-        });
+        // Verify by backup code using Supabase
+        const { data: ticket, error: ticketError } = await supabase
+          .from('tickets')
+          .select(`
+            *,
+            events (
+              id,
+              title,
+              date,
+              venue
+            ),
+            users (
+              id,
+              first_name,
+              last_name,
+              phone_number
+            )
+          `)
+          .eq('backup_code', scan.backupCode)
+          .single();
 
-        result = await response.json();
+        if (ticketError || !ticket) {
+          throw new Error('Invalid backup code - ticket not found');
+        }
+
+        // Check if ticket is already used
+        if (ticket.status === 'used') {
+          result = {
+            valid: false,
+            message: 'This ticket has already been used',
+            ticket: ticket,
+            usedAt: ticket.used_at,
+          };
+        } else if (ticket.status !== 'confirmed') {
+          result = {
+            valid: false,
+            message: `Ticket is ${ticket.status} - not valid for entry`,
+            ticket: ticket,
+          };
+        } else {
+          // Record the scan
+          const { error: scanError } = await supabase
+            .from('ticket_scans')
+            .insert({
+              ticket_id: ticket.id,
+              scanned_by: scan.scannedBy,
+              scanned_at: new Date().toISOString(),
+              location: scan.location || 'Event Entrance',
+              device_info: scan.deviceInfo,
+              scan_method: 'backup_code',
+            });
+
+          if (scanError) {
+            console.warn('Failed to record scan:', scanError);
+          }
+
+          result = {
+            valid: true,
+            message: 'Valid ticket - entry allowed (backup code)',
+            ticket: ticket,
+          };
+        }
       } else {
         throw new Error('No QR code or backup code provided');
       }

@@ -182,15 +182,61 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return null;
     
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
+        if (error.code === 'PGRST116') {
+          // No profile found - this can happen if registration was interrupted
+          console.warn('⚠️ No user profile found for authenticated user');
+          console.warn('This might be from an interrupted registration');
+          
+          // Get user info from auth metadata
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.user_metadata) {
+            console.log('🔧 Attempting to create missing user profile...');
+            
+            // Try to create profile from auth metadata
+            const referralCode = generateReferralCode(
+              user.user_metadata.first_name || 'User',
+              user.user_metadata.last_name || 'Profile'
+            );
+            
+            const { data: newProfile, error: createError } = await supabase
+              .from('users')
+              .insert({
+                id: userId,
+                phone_number: user.user_metadata.phone_number || user.phone || '',
+                first_name: user.user_metadata.first_name || 'User',
+                last_name: user.user_metadata.last_name || 'Profile',
+                email: user.email,
+                role: 'attendee',
+                state: 'Lagos', // Default state
+                referral_code: referralCode,
+                wallet_balance: 0,
+                is_verified: false
+              })
+              .select()
+              .single();
+              
+            if (createError) {
+              console.error('Failed to create missing profile:', createError);
+              return null;
+            }
+            
+            console.log('✅ Created missing user profile');
+            data = newProfile;
+          } else {
+            console.error('No user metadata available to create profile');
+            return null;
+          }
+        } else {
+          console.error('Error fetching user profile:', error);
+          return null;
+        }
       }
 
       return {
@@ -260,6 +306,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       // Create user profile in our users table
       const referralCode = generateReferralCode(data.firstName, data.lastName);
       
+      // Try to create user profile, but handle conflicts gracefully
       const { error: profileError } = await supabase
         .from('users')
         .insert({
@@ -280,15 +327,34 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       if (profileError) {
         console.error('Profile creation error:', profileError);
         
-        // If RLS policy blocks it, the user is still created in auth
-        // We can continue and let them log in - profile can be created later
+        // Handle different error types
         if (profileError.code === '42501') {
+          // RLS policy prevented creation
           console.warn('⚠️ RLS policy prevented profile creation, but auth user exists');
           console.warn('User can still log in, profile will be created on first login');
-          // Don't throw error, let registration succeed
           return;
+        } else if (profileError.code === '23505') {
+          // Unique constraint violation (duplicate phone/email)
+          console.warn('⚠️ User profile already exists (duplicate phone/email)');
+          console.warn('This might be a re-registration attempt');
+          
+          // Check if profile already exists for this auth user
+          const { data: existingProfile } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', authData.user.id)
+            .single();
+            
+          if (existingProfile) {
+            console.log('✅ User profile already exists, registration successful');
+            return;
+          } else {
+            // Profile exists for different user - this is a real conflict
+            await supabase.auth.signOut();
+            throw new Error('An account with this phone number or email already exists. Please use different credentials or try logging in.');
+          }
         } else {
-          // For other errors, clean up auth user
+          // Other errors - clean up auth user
           await supabase.auth.signOut();
           throw new Error(`Failed to create user profile: ${profileError.message}`);
         }

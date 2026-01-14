@@ -4,7 +4,7 @@ import { VerificationResult } from './VerificationResult';
 import { BackupCodeInput } from './BackupCodeInput';
 import { offlineScanQueue } from '../../services/offlineScanQueue';
 import { supabase } from '../../lib/supabase';
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 
 interface VerificationResponse {
   valid: boolean;
@@ -15,7 +15,7 @@ interface VerificationResponse {
 }
 
 export const TicketVerificationPage: React.FC = () => {
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   const [verificationResult, setVerificationResult] =
     useState<VerificationResponse | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);

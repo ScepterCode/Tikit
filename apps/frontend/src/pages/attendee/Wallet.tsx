@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function Wallet() {
-  const { user, logout } = useSupabaseAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [amount, setAmount] = useState('');
@@ -24,7 +24,7 @@ export function Wallet() {
           <span style={styles.userName}>
             {user?.firstName} {user?.lastName}
           </span>
-          <button onClick={logout} style={styles.logoutButton}>
+          <button onClick={() => signOut()} style={styles.logoutButton}>
             Logout
           </button>
         </div>

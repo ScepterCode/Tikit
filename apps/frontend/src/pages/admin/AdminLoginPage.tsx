@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function AdminLoginPage() {
@@ -10,7 +10,7 @@ export function AdminLoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useSupabaseAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,10 +34,14 @@ export function AdminLoginPage() {
     });
 
     try {
-      await login(formData.phoneNumber, formData.password);
-      console.log('✅ Admin login successful, redirecting to dashboard');
-      // Redirect to admin dashboard after successful login
-      navigate('/admin/dashboard');
+      const result = await signIn(formData.phoneNumber, formData.password);
+      if (result.success) {
+        console.log('✅ Admin login successful, redirecting to dashboard');
+        // Redirect to admin dashboard after successful login
+        navigate('/admin/dashboard');
+      } else {
+        throw new Error(result.error || 'Login failed');
+      }
     } catch (err: any) {
       console.error('❌ Admin login error:', err);
       setError(err.message || 'Login failed. Please check your credentials.');

@@ -1,8 +1,8 @@
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function MyTickets() {
-  const { user, logout } = useSupabaseAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -14,7 +14,7 @@ export function MyTickets() {
           <span style={styles.userName}>
             {user?.firstName} {user?.lastName}
           </span>
-          <button onClick={logout} style={styles.logoutButton}>
+          <button onClick={() => signOut()} style={styles.logoutButton}>
             Logout
           </button>
         </div>

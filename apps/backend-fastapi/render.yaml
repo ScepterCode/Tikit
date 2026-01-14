@@ -1,0 +1,41 @@
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: tikit-fastapi-backend
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn simple_main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://tikit.vercel.app
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tikit-redis
+          property: connectionString
+
+  # Redis Cache Service
+  - type: redis
+    name: tikit-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru

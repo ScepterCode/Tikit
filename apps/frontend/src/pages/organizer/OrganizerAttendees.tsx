@@ -1,8 +1,8 @@
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function OrganizerAttendees() {
-  const { user, logout } = useSupabaseAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -12,7 +12,7 @@ export function OrganizerAttendees() {
         <h1 style={styles.logo}>Tikit</h1>
         <div style={styles.userMenu}>
           <span style={styles.userName}>{user?.organizationName || user?.firstName}</span>
-          <button onClick={logout} style={styles.logoutButton}>
+          <button onClick={() => signOut()} style={styles.logoutButton}>
             Logout
           </button>
         </div>

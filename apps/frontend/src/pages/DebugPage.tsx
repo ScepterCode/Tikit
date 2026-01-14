@@ -1,7 +1,7 @@
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useAuth } from '../contexts/FastAPIAuthContext';
 
 export function DebugPage() {
-  const authState = useSupabaseAuth();
+  const authState = useAuth();
 
   return (
     <div style={{
@@ -15,8 +15,8 @@ export function DebugPage() {
         <h2>Authentication State</h2>
         <pre style={{ backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '4px' }}>
           {JSON.stringify({
-            isLoading: authState.isLoading,
-            isAuthenticated: authState.isAuthenticated,
+            isLoading: authState.loading,
+            isAuthenticated: !!authState.user,
             user: authState.user ? {
               id: authState.user.id,
               firstName: authState.user.firstName,

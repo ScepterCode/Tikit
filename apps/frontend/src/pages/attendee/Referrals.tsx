@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface ReferralData {
@@ -20,7 +20,7 @@ interface ReferralHistory {
 }
 
 export function Referrals() {
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [referralHistory, setReferralHistory] = useState<ReferralHistory[]>([]);

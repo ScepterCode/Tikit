@@ -1,11 +1,11 @@
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { WeddingAnalytics } from '../../components/events/WeddingAnalytics';
 import { SprayMoneyLeaderboard } from '../../components/events/SprayMoneyLeaderboard';
 
 export function OrganizerDashboard() {
-  const { user, logout } = useSupabaseAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
 
@@ -37,7 +37,7 @@ export function OrganizerDashboard() {
         <h1 style={styles.logo}>Tikit</h1>
         <div style={styles.userMenu}>
           <span style={styles.userName}>{user?.organizationName || user?.firstName}</span>
-          <button onClick={logout} style={styles.logoutButton}>
+          <button onClick={() => signOut()} style={styles.logoutButton}>
             Logout
           </button>
         </div>

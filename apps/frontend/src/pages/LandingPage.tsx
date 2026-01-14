@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useAuth } from '../contexts/FastAPIAuthContext';
 import { useEffect } from 'react';
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (user) {

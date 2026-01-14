@@ -1,8 +1,8 @@
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function AdminDashboard() {
-  const { user, logout } = useSupabaseAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -12,7 +12,7 @@ export function AdminDashboard() {
         <h1 style={styles.logo}>Tikit Admin</h1>
         <div style={styles.userMenu}>
           <span style={styles.userName}>Admin: {user?.firstName}</span>
-          <button onClick={logout} style={styles.logoutButton}>
+          <button onClick={() => signOut()} style={styles.logoutButton}>
             Logout
           </button>
         </div>

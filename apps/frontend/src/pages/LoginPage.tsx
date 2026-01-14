@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useAuth } from '../contexts/FastAPIAuthContext';
 
 interface FormData {
   phoneNumber: string;
@@ -9,7 +9,7 @@ interface FormData {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, isLoading: authLoading } = useSupabaseAuth();
+  const { signIn, loading: authLoading } = useAuth();
   
   const [formData, setFormData] = useState<FormData>({
     phoneNumber: '',
@@ -59,10 +59,14 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      await login(formData.phoneNumber.trim(), formData.password);
+      const result = await signIn(formData.phoneNumber.trim(), formData.password);
       
-      // Login successful - navigate to dashboard
-      navigate('/dashboard');
+      if (result.success) {
+        // Login successful - navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        throw new Error(result.error || 'Login failed');
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'Login failed. Please try again.';
       setError(errorMessage);

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
+import { FastAPIAuthProvider } from './contexts/FastAPIAuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Home } from './pages/Home';
 import { LoginPage } from './pages/LoginPage';
@@ -18,6 +18,7 @@ import { OrganizerEvents } from './pages/organizer/OrganizerEvents';
 import { CreateEvent } from './pages/organizer/CreateEvent';
 import { OrganizerAttendees } from './pages/organizer/OrganizerAttendees';
 import { OrganizerFinancials } from './pages/organizer/OrganizerFinancials';
+import { FastAPITestPage } from './pages/FastAPITestPage';
 import { OrganizerBroadcast } from './pages/organizer/OrganizerBroadcast';
 import { OrganizerScanner } from './pages/organizer/OrganizerScanner';
 import { OrganizerSettings } from './pages/organizer/OrganizerSettings';
@@ -37,12 +38,12 @@ import { RealtimeDemo } from './pages/RealtimeDemo';
 import { FeatureDemo } from './pages/FeatureDemo';
 import { EnvDebug } from './pages/EnvDebug';
 import { SupabaseTest } from './pages/SupabaseTest';
-import { EnvTest } from './pages/EnvTest';
+import { ApiStatusIndicator } from './components/common/ApiStatusIndicator';
 
 function App() {
   return (
     <BrowserRouter>
-      <SupabaseAuthProvider>
+      <FastAPIAuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -52,7 +53,7 @@ function App() {
           {/* Debug Routes */}
           <Route path="/debug/env" element={<EnvDebug />} />
           <Route path="/debug/supabase" element={<SupabaseTest />} />
-          <Route path="/debug/env-test" element={<EnvTest />} />
+          <Route path="/debug/fastapi" element={<FastAPITestPage />} />
           
           {/* Admin Login - Separate route for security */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -309,7 +310,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <PWAUpdatePrompt />
-      </SupabaseAuthProvider>
+        <ApiStatusIndicator />
+      </FastAPIAuthProvider>
     </BrowserRouter>
   );
 }

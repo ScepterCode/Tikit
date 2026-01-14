@@ -1,7 +1,7 @@
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 
 export function AuthDebug() {
-  const { user, isAuthenticated, isLoading, session } = useSupabaseAuth();
+  const { user, loading, session } = useAuth();
 
   return (
     <div style={{
@@ -17,8 +17,8 @@ export function AuthDebug() {
       maxWidth: '300px'
     }}>
       <h4>Auth Debug</h4>
-      <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
-      <p>Authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
+      <p>Loading: {loading ? 'Yes' : 'No'}</p>
+      <p>Authenticated: {user ? 'Yes' : 'No'}</p>
       <p>User: {user ? `${user.firstName} (${user.role})` : 'None'}</p>
       <p>Token: {session?.access_token ? 'Present' : 'None'}</p>
     </div>

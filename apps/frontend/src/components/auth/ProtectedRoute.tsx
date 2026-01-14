@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,9 +7,10 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user } = useSupabaseAuth();
+  const { user, loading } = useAuth();
+  const isAuthenticated = !!user;
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div style={styles.loading}>
         <div style={styles.spinner}></div>
@@ -23,7 +24,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   // Check role-based access
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && !allowedRoles.includes(user.role as "attendee" | "organizer" | "admin")) {
     return <Navigate to="/unauthorized" replace />;
   }
 

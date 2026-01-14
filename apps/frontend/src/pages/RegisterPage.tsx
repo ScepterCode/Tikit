@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useAuth } from '../contexts/FastAPIAuthContext';
 import { nigerianStates } from '../data/nigerianStates';
 
 type UserRole = 'attendee' | 'organizer';
@@ -20,7 +20,7 @@ interface FormData {
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const { register, isLoading: authLoading } = useSupabaseAuth();
+  const { signUp, loading: authLoading } = useAuth();
   
   const [formData, setFormData] = useState<FormData>({
     role: 'attendee',
@@ -90,7 +90,7 @@ export function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({
+      const result = await signUp({
         phoneNumber: formData.phoneNumber.trim(),
         password: formData.password,
         firstName: formData.firstName.trim(),
@@ -99,11 +99,14 @@ export function RegisterPage() {
         state: formData.state,
         role: formData.role,
         organizationName: formData.role === 'organizer' ? formData.organizationName.trim() : undefined,
-        organizationType: formData.role === 'organizer' ? formData.organizationType : undefined,
       });
 
-      // Registration successful - navigate to dashboard
-      navigate('/dashboard');
+      if (result.success) {
+        // Registration successful - navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        throw new Error(result.error || 'Registration failed');
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'Registration failed. Please try again.';
       setError(errorMessage);

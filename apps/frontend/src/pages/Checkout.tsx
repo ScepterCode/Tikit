@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useAuth } from '../contexts/FastAPIAuthContext';
 import { PaymentMethodSelector, PaymentMethod } from '../components/tickets/PaymentMethodSelector';
 import { PaymentErrorHandler } from '../components/tickets/PaymentErrorHandler';
 
@@ -27,7 +27,7 @@ interface PaymentResult {
 export function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   const [purchaseData, setPurchaseData] = useState<PurchaseData | null>(null);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');

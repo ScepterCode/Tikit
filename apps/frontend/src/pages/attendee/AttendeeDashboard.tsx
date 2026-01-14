@@ -1,4 +1,4 @@
-import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
+import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { SprayMoneyLeaderboard } from '../../components/events/SprayMoneyLeaderboard';
@@ -6,7 +6,7 @@ import { GroupBuyCreator } from '../../components/tickets/GroupBuyCreator';
 import { GroupBuyStatus } from '../../components/tickets/GroupBuyStatus';
 
 export function AttendeeDashboard() {
-  const { user, logout, isLoading, isAuthenticated } = useSupabaseAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
 
@@ -42,7 +42,7 @@ export function AttendeeDashboard() {
   };
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/');
   };
 
@@ -67,9 +67,9 @@ export function AttendeeDashboard() {
   };
 
   // Debug logging
-  // console.log('AttendeeDashboard - Auth State:', { user, isLoading, isAuthenticated });
+  // console.log('AttendeeDashboard - Auth State:', { user, loading });
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.spinner}></div>
@@ -78,7 +78,7 @@ export function AttendeeDashboard() {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!user) {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.errorMessage}>

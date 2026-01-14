@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useAuth } from '../contexts/FastAPIAuthContext';
 import { TicketSelector } from '../components/tickets/TicketSelector';
 import { GroupBuyCreator } from '../components/tickets/GroupBuyCreator';
 import { GroupBuyStatus } from '../components/tickets/GroupBuyStatus';
@@ -60,7 +60,7 @@ interface EventTier {
 export function EventDetails() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'tickets' | 'groupbuy' | 'spray'>('details');

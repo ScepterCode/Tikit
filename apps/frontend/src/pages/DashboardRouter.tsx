@@ -1,10 +1,10 @@
 import { Navigate } from 'react-router-dom';
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
+import { useAuth } from '../contexts/FastAPIAuthContext';
 
 export function DashboardRouter() {
-  const { user, isLoading } = useSupabaseAuth();
+  const { user, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div style={styles.loading}>
         <div style={styles.spinner}></div>

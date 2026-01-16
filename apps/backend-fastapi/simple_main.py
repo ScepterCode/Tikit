@@ -1,9 +1,10 @@
 """
 Simple FastAPI app for testing integration
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
+import uuid
 
 app = FastAPI(
     title="Grooovy API - Simple",
@@ -52,50 +53,112 @@ async def test_endpoint():
 
 # Mock auth endpoints
 @app.post("/api/auth/register")
-async def register():
-    return {
-        "success": True,
-        "message": "Registration endpoint working",
-        "data": {
-            "user": {
-                "id": "test-user-id",
-                "phoneNumber": "1234567890",
-                "firstName": "Test",
-                "lastName": "User",
-                "role": "attendee"
+async def register(request: Request):
+    try:
+        # Get the request body
+        body = await request.json()
+        
+        # Extract role from request, default to attendee if not provided
+        role = body.get('role', 'attendee')
+        
+        # Validate role
+        if role not in ['attendee', 'organizer', 'admin']:
+            role = 'attendee'
+        
+        # Generate a more realistic user ID
+        user_id = str(uuid.uuid4())
+        
+        return {
+            "success": True,
+            "message": "Registration successful",
+            "data": {
+                "user": {
+                    "id": user_id,
+                    "phone_number": body.get("phone_number", "1234567890"),
+                    "first_name": body.get("first_name", "Test"),
+                    "last_name": body.get("last_name", "User"),
+                    "email": body.get("email"),
+                    "state": body.get("state", "Lagos"),
+                    "role": role,  # Use the actual role from request
+                    "wallet_balance": 0.0,
+                    "referral_code": f"REF{user_id[:8].upper()}",
+                    "organization_name": body.get("organization_name"),
+                    "organization_type": body.get("organization_type"),
+                    "is_verified": False,
+                    "created_at": time.time()
+                },
+                "access_token": "mock_access_token",
+                "refresh_token": "mock_refresh_token"
             }
         }
-    }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": {
+                "code": "REGISTRATION_ERROR",
+                "message": str(e)
+            }
+        }
 
 @app.post("/api/auth/login")
-async def login():
-    return {
-        "success": True,
-        "message": "Login endpoint working",
-        "data": {
-            "user": {
-                "id": "test-user-id",
-                "phoneNumber": "1234567890",
-                "firstName": "Test",
-                "lastName": "User",
-                "role": "attendee"
+async def login(request: Request):
+    try:
+        body = await request.json()
+        phone_number = body.get("phoneNumber") or body.get("phone_number", "1234567890")
+        
+        # Generate a realistic user for login
+        user_id = str(uuid.uuid4())
+        
+        return {
+            "success": True,
+            "message": "Login successful",
+            "data": {
+                "user": {
+                    "id": user_id,
+                    "phone_number": phone_number,
+                    "first_name": "Test",
+                    "last_name": "User",
+                    "email": body.get("email"),
+                    "state": "Lagos",
+                    "role": "attendee",  # Default for login
+                    "wallet_balance": 0.0,
+                    "referral_code": f"REF{user_id[:8].upper()}",
+                    "is_verified": False,
+                    "created_at": time.time()
+                },
+                "access_token": "mock_access_token",
+                "refresh_token": "mock_refresh_token"
             }
         }
-    }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": {
+                "code": "LOGIN_ERROR",
+                "message": str(e)
+            }
+        }
 
 @app.get("/api/auth/me")
 async def get_current_user():
+    # Generate a realistic user for current user endpoint
+    user_id = str(uuid.uuid4())
+    
     return {
         "success": True,
-        "message": "Get current user endpoint working",
+        "message": "Current user retrieved",
         "data": {
-            "user": {
-                "id": "test-user-id",
-                "phoneNumber": "1234567890",
-                "firstName": "Test",
-                "lastName": "User",
-                "role": "attendee"
-            }
+            "id": user_id,
+            "phone_number": "1234567890",
+            "first_name": "Test",
+            "last_name": "User",
+            "email": "test@example.com",
+            "state": "Lagos",
+            "role": "attendee",  # Default for current user
+            "wallet_balance": 0.0,
+            "referral_code": f"REF{user_id[:8].upper()}",
+            "is_verified": False,
+            "created_at": time.time()
         }
     }
 

@@ -2,8 +2,8 @@
   # Build command - use npm since Netlify doesn't support pnpm workspaces well
   command = "npm install && npm run build"
   
-  # Publish directory (relative to repo root)
-  publish = "apps/frontend/dist"
+  # Publish directory (relative to base directory)
+  publish = "dist"
   
   # Base directory for build
   base = "apps/frontend"

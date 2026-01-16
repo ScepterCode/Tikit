@@ -190,6 +190,7 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
 
       // Then create Supabase auth user
       if (supabase) {
+        console.log('🔍 Creating Supabase user with metadata...');
         const { error } = await supabase.auth.signUp({
         email: userData.email || `${userData.phoneNumber}@grooovy.temp`,
         password: userData.password,
@@ -199,7 +200,7 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
             firstName: userData.firstName,
             lastName: userData.lastName,
             state: userData.state,
-            role: userData.role || 'attendee',
+            role: userData.role || 'attendee', // Ensure role is always set
             organizationName: userData.organizationName
           }
         }
@@ -209,6 +210,8 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
           console.error('Supabase signup error:', error);
           // API registration succeeded but Supabase failed
           // This is okay for hybrid mode
+        } else {
+          console.log('✅ Supabase user created successfully');
         }
       }
 
@@ -231,6 +234,7 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
           createdAt: backendUser.created_at
         };
         console.log('✅ Setting user after registration:', mappedUser);
+        console.log('- Final user role:', mappedUser.role);
         setUser(mappedUser);
       }
 

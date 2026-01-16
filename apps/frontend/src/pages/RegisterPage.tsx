@@ -23,7 +23,7 @@ export function RegisterPage() {
   const { signUp, loading: authLoading } = useAuth();
   
   const [formData, setFormData] = useState<FormData>({
-    role: 'attendee',
+    role: 'attendee', // Explicitly set default role
     phoneNumber: '',
     password: '',
     confirmPassword: '',
@@ -90,6 +90,11 @@ export function RegisterPage() {
     setLoading(true);
 
     try {
+      console.log('🔍 Registration Form Debug:');
+      console.log('- Form data:', formData);
+      console.log('- Selected role:', formData.role);
+      console.log('- Organization name:', formData.organizationName);
+      
       const result = await signUp({
         phoneNumber: formData.phoneNumber.trim(),
         password: formData.password,
@@ -97,11 +102,14 @@ export function RegisterPage() {
         lastName: formData.lastName.trim(),
         email: formData.email.trim() || undefined,
         state: formData.state,
-        role: formData.role,
+        role: formData.role, // Ensure role is always provided
         organizationName: formData.role === 'organizer' ? formData.organizationName.trim() : undefined,
       });
 
+      console.log('- SignUp result:', result);
+
       if (result.success) {
+        console.log('✅ Registration successful, navigating to dashboard');
         // Registration successful - navigate to dashboard
         navigate('/dashboard');
       } else {

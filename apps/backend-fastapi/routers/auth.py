@@ -142,6 +142,42 @@ async def refresh_token(refresh_data: RefreshTokenRequest):
             }
         )
 
+@router.get("/verify-role", response_model=UserResponse)
+async def verify_user_role(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Verify current user's role (debugging endpoint)
+    """
+    try:
+        user = current_user["user"]
+        return {
+            "id": user["id"],
+            "phone_number": user["phone_number"],
+            "first_name": user["first_name"],
+            "last_name": user["last_name"],
+            "email": user.get("email"),
+            "state": user["state"],
+            "role": user["role"],
+            "wallet_balance": user.get("wallet_balance", 0.0),
+            "referral_code": user.get("referral_code", ""),
+            "organization_name": user.get("organization_name"),
+            "organization_type": user.get("organization_type"),
+            "is_verified": user.get("is_verified", False),
+            "created_at": user["created_at"]
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Failed to verify user role",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        )
+
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_current_user)):
     """

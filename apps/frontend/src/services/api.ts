@@ -144,6 +144,11 @@ class ApiService {
     role?: string;
     organizationName?: string;
   }) {
+    // Debug logging
+    console.log('🔍 API Service Register Debug:');
+    console.log('- Input userData:', userData);
+    console.log('- Role from input:', userData.role);
+    
     // Convert camelCase to snake_case for backend
     const backendData = {
       phone_number: userData.phoneNumber,
@@ -156,11 +161,21 @@ class ApiService {
       organization_name: userData.organizationName
     };
     
-    return this.request('/auth/register', {
+    console.log('- Backend data being sent:', backendData);
+    console.log('- Role in backend data:', backendData.role);
+    
+    const response = await this.request('/auth/register', {
       method: 'POST',
       body: backendData,
       requireAuth: false
     });
+    
+    console.log('- Backend response:', response);
+    if (response.data?.user) {
+      console.log('- User role in response:', response.data.user.role);
+    }
+    
+    return response;
   }
 
   async login(credentials: { phoneNumber: string; password: string }) {

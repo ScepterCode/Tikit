@@ -14,7 +14,7 @@ class UserBase(BaseModel):
     email: Optional[EmailStr] = None
     state: str
     preferred_language: Optional[Literal["en", "ha", "ig", "yo", "pcm"]] = "en"
-    role: Literal["attendee", "organizer"] = "attendee"
+    role: Literal["attendee", "organizer"]  # No default - role must be explicitly provided
     organization_name: Optional[str] = None
     organization_type: Optional[Literal["individual", "company", "religious", "educational", "ngo", "other"]] = None
 

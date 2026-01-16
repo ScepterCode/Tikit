@@ -95,6 +95,27 @@ class AuthService:
                         }
                     }
             
+            # Validate required role field
+            if not user_data.get('role'):
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'MISSING_ROLE',
+                        'message': 'User role is required'
+                    }
+                }
+            
+            # Validate role value
+            valid_roles = ['attendee', 'organizer']
+            if user_data['role'] not in valid_roles:
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'INVALID_ROLE',
+                        'message': f'Role must be one of: {", ".join(valid_roles)}'
+                    }
+                }
+            
             # Hash password
             hashed_password = self.hash_password(user_data['password'])
             
@@ -111,7 +132,7 @@ class AuthService:
                 'email': user_data.get('email'),
                 'state': user_data['state'],
                 'preferred_language': user_data.get('preferred_language', 'en'),
-                'role': user_data.get('role', 'attendee'),
+                'role': user_data['role'],  # Use direct access since we validated it exists
                 'organization_name': user_data.get('organization_name'),
                 'organization_type': user_data.get('organization_type'),
                 'referral_code': referral_code,

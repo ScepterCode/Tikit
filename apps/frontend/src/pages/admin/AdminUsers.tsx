@@ -29,7 +29,7 @@ export function AdminUsers() {
         phoneNumber: '+2348012345678',
         firstName: 'John',
         lastName: 'Doe',
-        email: 'admin@tikit.com',
+        email: 'admin@grooovy.com',
         role: 'admin',
         state: 'Lagos',
         isVerified: true,

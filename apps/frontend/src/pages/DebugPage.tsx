@@ -34,9 +34,9 @@ export function DebugPage() {
         <h2>LocalStorage Contents</h2>
         <pre style={{ backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '4px' }}>
           {JSON.stringify({
-            accessToken: localStorage.getItem('tikit_access_token'),
-            refreshToken: localStorage.getItem('tikit_refresh_token'),
-            user: localStorage.getItem('tikit_user')
+            accessToken: localStorage.getItem('grooovy_access_token'),
+            refreshToken: localStorage.getItem('grooovy_refresh_token'),
+            user: localStorage.getItem('grooovy_user')
           }, null, 2)}
         </pre>
       </div>

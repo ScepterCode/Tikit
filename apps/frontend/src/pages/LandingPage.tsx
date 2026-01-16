@@ -25,7 +25,7 @@ export function LandingPage() {
     }}>
       <div style={{ maxWidth: '600px', textAlign: 'center' }}>
         <h1 style={{ fontSize: '48px', marginBottom: '20px', fontWeight: '800' }}>
-          Welcome to Tikit
+          Welcome to Grooovy
         </h1>
         <p style={{ fontSize: '20px', marginBottom: '40px', opacity: 0.9 }}>
           Your gateway to amazing events across Nigeria. Book tickets, manage events, and connect with experiences.

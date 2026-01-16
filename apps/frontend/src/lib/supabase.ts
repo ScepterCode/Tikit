@@ -45,7 +45,7 @@ export const supabase = isConfigured
       },
       global: {
         headers: {
-          'X-Client-Info': 'tikit-frontend@1.0.0',
+          'X-Client-Info': 'grooovy-frontend@1.0.0',
         },
       },
     })

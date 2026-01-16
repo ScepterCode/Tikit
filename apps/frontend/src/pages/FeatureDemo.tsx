@@ -58,9 +58,9 @@ export function FeatureDemo() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>🎉 Tikit Feature Demonstration</h1>
+        <h1 style={styles.title}>🎵 Grooovy Feature Demonstration</h1>
         <p style={styles.subtitle}>
-          Explore the key features that make Tikit special for Nigerian events
+          Explore the key features that make Grooovy special for Nigerian events
         </p>
       </div>
 

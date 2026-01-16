@@ -19,7 +19,7 @@ export function PWAUpdatePrompt() {
             <div className="flex-1">
               <h3 className="font-semibold mb-1">Update Available</h3>
               <p className="text-sm mb-3">
-                A new version of Tikit is available. Refresh to update.
+                A new version of Grooovy is available. Refresh to update.
               </p>
               <div className="flex gap-2">
                 <button
@@ -46,7 +46,7 @@ export function PWAUpdatePrompt() {
             <div className="flex-1">
               <h3 className="font-semibold mb-1">Ready for Offline Use</h3>
               <p className="text-sm">
-                Tikit is now available offline. You can access your tickets without internet.
+                Grooovy is now available offline. You can access your tickets without internet.
               </p>
             </div>
             <button

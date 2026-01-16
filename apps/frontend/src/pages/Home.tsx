@@ -12,8 +12,8 @@ export function Home() {
       <nav style={styles.nav}>
         <div style={styles.navContent}>
           <div style={styles.logo}>
-            <span style={styles.logoIcon}>🎫</span>
-            <span style={styles.logoText}>Tikit</span>
+            <span style={styles.logoIcon}>🎵</span>
+            <span style={styles.logoText}>Grooovy</span>
           </div>
           <div style={styles.navButtons}>
             <a href="/demo" style={styles.navButton}>🎉 Demo</a>
@@ -89,7 +89,7 @@ export function Home() {
       {/* Features Section */}
       <section style={styles.features}>
         <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Why Choose Tikit?</h2>
+          <h2 style={styles.sectionTitle}>Why Choose Grooovy?</h2>
           <p style={styles.sectionSubtitle}>
             Built specifically for the Nigerian market with features that matter
           </p>
@@ -275,11 +275,11 @@ export function Home() {
       <footer style={styles.footer}>
         <div style={styles.footerContent}>
           <div style={styles.footerBrand}>
-            <span style={styles.logoIcon}>🎫</span>
-            <span style={styles.logoText}>Tikit</span>
+            <span style={styles.logoIcon}>🎵</span>
+            <span style={styles.logoText}>Grooovy</span>
           </div>
           <p style={styles.footerText}>
-            © 2024 Tikit. Making events accessible to everyone in Nigeria.
+            © 2024 Grooovy. Making events accessible to everyone in Nigeria.
           </p>
         </div>
       </footer>

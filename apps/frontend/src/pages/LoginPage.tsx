@@ -99,7 +99,7 @@ export function LoginPage() {
       <div style={styles.card}>
         {/* Header */}
         <div style={styles.header}>
-          <h1 style={styles.logo}>🎫 Tikit</h1>
+          <h1 style={styles.logo}>🎵 Grooovy</h1>
           <h2 style={styles.title}>Welcome Back</h2>
           <p style={styles.subtitle}>Sign in to continue to your account</p>
         </div>

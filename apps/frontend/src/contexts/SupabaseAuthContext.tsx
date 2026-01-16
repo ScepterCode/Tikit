@@ -71,7 +71,7 @@ function SupabaseSetupScreen() {
       }}>
         <h1 style={{ color: '#10b981', marginBottom: '20px' }}>🔥 Supabase Setup Required</h1>
         <p style={{ fontSize: '18px', marginBottom: '30px', color: '#374151' }}>
-          Tikit is ready to launch! Just connect your Supabase database to get started.
+          Grooovy is ready to launch! Just connect your Supabase database to get started.
         </p>
         
         <div style={{ textAlign: 'left', marginBottom: '30px' }}>
@@ -275,7 +275,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       console.log('📝 Registering user with Supabase...');
 
       // Use email if provided, otherwise create email from phone number
-      const email = data.email || `${data.phoneNumber.replace(/[^0-9]/g, '')}@tikit.app`;
+      const email = data.email || `${data.phoneNumber.replace(/[^0-9]/g, '')}@grooovy.app`;
       
       console.log('📧 Using email for registration:', email);
       
@@ -376,7 +376,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       // Use email format for login - clean phone number first
       const cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
-      const email = phoneNumber.includes('@') ? phoneNumber : `${cleanPhone}@tikit.app`;
+      const email = phoneNumber.includes('@') ? phoneNumber : `${cleanPhone}@grooovy.app`;
       
       console.log('📧 Using email for login:', email);
       

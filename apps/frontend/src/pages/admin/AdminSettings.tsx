@@ -47,10 +47,10 @@ export function AdminSettings() {
   const navigate = useNavigate();
 
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
-    siteName: 'Tikit',
+    siteName: 'Grooovy',
     siteDescription: 'Nigeria\'s Premier Event Ticketing Platform',
-    contactEmail: 'support@tikit.com',
-    supportPhone: '+234-800-TIKIT-01',
+    contactEmail: 'support@grooovy.com',
+    supportPhone: '+234-800-GROOOVY-01',
     maintenanceMode: false,
     registrationEnabled: true,
     emailVerificationRequired: false,

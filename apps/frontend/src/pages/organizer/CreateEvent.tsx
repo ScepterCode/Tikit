@@ -34,7 +34,7 @@ export function CreateEvent() {
     <div style={styles.container}>
       {/* Top Bar */}
       <header style={styles.header}>
-        <h1 style={styles.logo}>Tikit</h1>
+        <h1 style={styles.logo}>Grooovy</h1>
         <div style={styles.userMenu}>
           <span style={styles.userName}>{user?.organizationName || user?.firstName}</span>
           <button onClick={() => signOut()} style={styles.logoutButton}>

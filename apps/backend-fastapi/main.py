@@ -1,5 +1,5 @@
 """
-Tikit FastAPI Backend - Main Application
+Grooovy FastAPI Backend - Main Application
 High-performance event management API with Supabase integration
 """
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
-    logger.info("🚀 Starting Tikit FastAPI Backend...")
+    logger.info("🚀 Starting Grooovy FastAPI Backend...")
     
     # Test Supabase connection
     try:
@@ -41,11 +41,11 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("🛑 Shutting down Tikit FastAPI Backend...")
+    logger.info("🛑 Shutting down Grooovy FastAPI Backend...")
 
 # Create FastAPI app
 app = FastAPI(
-    title="Tikit API",
+    title="Grooovy API",
     description="High-performance event management platform with real-time features",
     version="2.0.0",
     docs_url="/docs",
@@ -65,7 +65,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://tikit.vercel.app",
+        "https://grooovy.vercel.app",
         "https://grooovy.netlify.app",  # Add your Netlify domain
         os.getenv("FRONTEND_URL", "")
     ],
@@ -126,7 +126,7 @@ async def health_check() -> Dict[str, Any]:
     """System health check"""
     health_status = {
         "status": "ok",
-        "message": "Tikit FastAPI is running",
+        "message": "Grooovy FastAPI is running",
         "version": "2.0.0",
         "timestamp": time.time(),
         "services": {
@@ -163,7 +163,7 @@ async def health_check() -> Dict[str, Any]:
 async def root():
     """API root endpoint"""
     return {
-        "message": "Welcome to Tikit API v2.0",
+        "message": "Welcome to Grooovy API v2.0",
         "docs": "/docs",
         "health": "/health",
         "version": "2.0.0"

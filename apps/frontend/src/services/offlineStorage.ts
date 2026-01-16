@@ -34,7 +34,7 @@ export interface OfflineTicket {
   lastSyncedAt: string;
 }
 
-const DB_NAME = 'TikitOfflineDB';
+const DB_NAME = 'GrooovyOfflineDB';
 const DB_VERSION = 1;
 const TICKET_STORE = 'tickets';
 const QUOTA_WARNING_THRESHOLD = 0.9; // 90% of quota

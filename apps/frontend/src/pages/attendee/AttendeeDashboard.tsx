@@ -97,7 +97,7 @@ export function AttendeeDashboard() {
       {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerLeft}>
-          <h1 style={styles.logo}>🎫 Tikit</h1>
+          <h1 style={styles.logo}>🎵 Grooovy</h1>
           <span style={styles.roleTag}>Attendee</span>
         </div>
         <div style={styles.headerRight}>

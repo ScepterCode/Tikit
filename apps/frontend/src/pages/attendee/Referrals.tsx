@@ -34,8 +34,8 @@ export function Referrals() {
       activeReferrals: 8,
       totalEarnings: 24000,
       pendingEarnings: 6000,
-      referralCode: user?.referralCode || 'TIKIT123',
-      referralLink: `https://tikit.com/register?ref=${user?.referralCode || 'TIKIT123'}`
+      referralCode: user?.referralCode || 'GROOOVY123',
+      referralLink: `https://grooovy.com/register?ref=${user?.referralCode || 'GROOOVY123'}`
     };
 
     const mockHistory: ReferralHistory[] = [
@@ -83,7 +83,7 @@ export function Referrals() {
   };
 
   const shareReferral = (platform: string) => {
-    const message = `Join Tikit and get amazing event tickets! Use my referral code: ${referralData?.referralCode}`;
+    const message = `Join Grooovy and get amazing event tickets! Use my referral code: ${referralData?.referralCode}`;
     const url = referralData?.referralLink;
     
     switch (platform) {

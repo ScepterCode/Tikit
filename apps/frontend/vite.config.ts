@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Tikit - Event Ticketing Platform',
-        short_name: 'Tikit',
+        name: 'Grooovy - Event Ticketing Platform',
+        short_name: 'Grooovy',
         description: 'Nigerian event ticketing platform with offline support',
         theme_color: '#10b981',
         background_color: '#ffffff',
@@ -44,7 +44,7 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Cache API responses
-            urlPattern: /^https:\/\/api\.tikit\.ng\/api\/.*/i,
+            urlPattern: /^https:\/\/api\.grooovy\.ng\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -84,7 +84,7 @@ export default defineConfig({
           },
           {
             // Cache CDN assets
-            urlPattern: /^https:\/\/cdn\.tikit\.ng\/.*/i,
+            urlPattern: /^https:\/\/cdn\.grooovy\.ng\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'cdn-cache',

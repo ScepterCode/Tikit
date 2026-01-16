@@ -1,6 +1,6 @@
 {
-  "name": "Tikit - Event Ticketing Platform",
-  "short_name": "Tikit",
+  "name": "Grooovy - Event Ticketing Platform",
+  "short_name": "Grooovy",
   "description": "Nigerian event ticketing platform with offline support",
   "start_url": "/",
   "display": "standalone",

@@ -180,7 +180,7 @@ Users can click any template to insert it into the message field and customize i
 Messages are automatically formatted with:
 - Event title as a header with emoji (📢)
 - User's custom message
-- Footer with "Sent via Tikit" branding
+- Footer with "Sent via Grooovy" branding
 
 Example output:
 ```
@@ -188,7 +188,7 @@ Example output:
 
 Hi! This is a reminder about the event. We're looking forward to seeing you there! 🎉
 
-_Sent via Tikit_
+_Sent via Grooovy_
 ```
 
 ## Confirmation Dialog

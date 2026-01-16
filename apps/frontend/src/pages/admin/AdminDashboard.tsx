@@ -9,7 +9,7 @@ export function AdminDashboard() {
     <div style={styles.container}>
       {/* Top Bar */}
       <header style={styles.header}>
-        <h1 style={styles.logo}>Tikit Admin</h1>
+        <h1 style={styles.logo}>Grooovy Admin</h1>
         <div style={styles.userMenu}>
           <span style={styles.userName}>Admin: {user?.firstName}</span>
           <button onClick={() => signOut()} style={styles.logoutButton}>

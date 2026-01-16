@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import time
 
 app = FastAPI(
-    title="Tikit API - Simple",
+    title="Grooovy API - Simple",
     description="Simple version for testing integration",
     version="2.0.0"
 )
@@ -17,7 +17,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://tikit.vercel.app",
+        "https://grooovy.vercel.app",
         "https://grooovy.netlify.app"  # Add your Netlify domain
     ],
     allow_credentials=True,
@@ -28,7 +28,7 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {
-        "message": "Welcome to Tikit API v2.0 - Simple",
+        "message": "Welcome to Grooovy API v2.0 - Simple",
         "status": "ok",
         "timestamp": time.time()
     }
@@ -37,7 +37,7 @@ async def root():
 async def health_check():
     return {
         "status": "ok",
-        "message": "Tikit FastAPI is running",
+        "message": "Grooovy FastAPI is running",
         "version": "2.0.0",
         "timestamp": time.time()
     }

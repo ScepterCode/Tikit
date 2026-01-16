@@ -20,7 +20,7 @@ interface QueuedScan {
   error?: string;
 }
 
-const QUEUE_STORAGE_KEY = 'tikit_offline_scan_queue';
+const QUEUE_STORAGE_KEY = 'grooovy_offline_scan_queue';
 
 class OfflineScanQueueService {
   private queue: QueuedScan[] = [];

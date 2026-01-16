@@ -168,7 +168,7 @@ export const BroadcastComposer: React.FC<BroadcastComposerProps> = ({
           <div className="text-sm whitespace-pre-wrap">
             <div className="font-semibold mb-1">📢 {eventTitle}</div>
             <div className="mb-2">{message}</div>
-            <div className="text-xs text-gray-500 italic">Sent via Tikit</div>
+            <div className="text-xs text-gray-500 italic">Sent via Grooovy</div>
           </div>
         </div>
       )}

@@ -139,7 +139,7 @@ export function RegisterPage() {
       <div style={styles.card}>
         {/* Header */}
         <div style={styles.header}>
-          <h1 style={styles.logo}>🎫 Tikit</h1>
+          <h1 style={styles.logo}>🎵 Grooovy</h1>
           <h2 style={styles.title}>Create Your Account</h2>
           <p style={styles.subtitle}>Join thousands of event enthusiasts across Nigeria</p>
         </div>

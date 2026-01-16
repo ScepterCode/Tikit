@@ -170,7 +170,7 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
       // Then create Supabase auth user
       if (supabase) {
         const { error } = await supabase.auth.signUp({
-        email: userData.email || `${userData.phoneNumber}@tikit.temp`,
+        email: userData.email || `${userData.phoneNumber}@grooovy.temp`,
         password: userData.password,
         phone: userData.phoneNumber,
         options: {
@@ -225,7 +225,7 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
 
       // Then sign in to Supabase
       if (supabase) {
-        const email = apiResponse.data?.user?.email || `${phoneNumber}@tikit.temp`;
+        const email = apiResponse.data?.user?.email || `${phoneNumber}@grooovy.temp`;
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password

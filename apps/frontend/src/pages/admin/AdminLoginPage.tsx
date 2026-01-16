@@ -62,7 +62,7 @@ export function AdminLoginPage() {
         <div style={styles.header}>
           <div style={styles.logoSection}>
             <span style={styles.logoIcon}>🛡️</span>
-            <h1 style={styles.logoText}>Tikit Admin</h1>
+            <h1 style={styles.logoText}>Grooovy Admin</h1>
           </div>
           <p style={styles.subtitle}>Administrative Access Portal</p>
         </div>

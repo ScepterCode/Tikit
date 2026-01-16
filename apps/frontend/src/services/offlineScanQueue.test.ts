@@ -102,7 +102,7 @@ describe('Property 52: Offline scan queueing', () => {
           expect(queuedScan?.location).toBe(location);
 
           // Property: Queue should be persisted to localStorage
-          const stored = localStorage.getItem('tikit_offline_scan_queue');
+          const stored = localStorage.getItem('grooovy_offline_scan_queue');
           expect(stored).toBeDefined();
           const storedQueue = JSON.parse(stored!);
           expect(storedQueue.length).toBe(1);
@@ -287,7 +287,7 @@ describe('Property 52: Offline scan queueing', () => {
           });
 
           // Property: Queue should be in localStorage
-          const stored = localStorage.getItem('tikit_offline_scan_queue');
+          const stored = localStorage.getItem('grooovy_offline_scan_queue');
           expect(stored).toBeDefined();
 
           // Simulate page reload by creating new instance

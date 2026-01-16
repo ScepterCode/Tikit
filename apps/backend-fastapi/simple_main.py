@@ -58,12 +58,40 @@ async def register(request: Request):
         # Get the request body
         body = await request.json()
         
-        # Extract role from request, default to attendee if not provided
-        role = body.get('role', 'attendee')
+        # Validate required fields
+        required_fields = ['phone_number', 'password', 'first_name', 'last_name', 'state', 'role']
+        missing_fields = [field for field in required_fields if not body.get(field)]
         
-        # Validate role
+        if missing_fields:
+            return {
+                "success": False,
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": f"Missing required fields: {', '.join(missing_fields)}"
+                }
+            }
+        
+        # Extract and validate role
+        role = body.get('role')
         if role not in ['attendee', 'organizer', 'admin']:
-            role = 'attendee'
+            return {
+                "success": False,
+                "error": {
+                    "code": "INVALID_ROLE",
+                    "message": f"Invalid role '{role}'. Must be one of: attendee, organizer, admin"
+                }
+            }
+        
+        # Additional validation for organizer role
+        if role == 'organizer':
+            if not body.get('organization_name'):
+                return {
+                    "success": False,
+                    "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Organization name is required for organizer registration"
+                    }
+                }
         
         # Generate a more realistic user ID
         user_id = str(uuid.uuid4())
@@ -74,12 +102,12 @@ async def register(request: Request):
             "data": {
                 "user": {
                     "id": user_id,
-                    "phone_number": body.get("phone_number", "1234567890"),
-                    "first_name": body.get("first_name", "Test"),
-                    "last_name": body.get("last_name", "User"),
+                    "phone_number": body.get("phone_number"),
+                    "first_name": body.get("first_name"),
+                    "last_name": body.get("last_name"),
                     "email": body.get("email"),
-                    "state": body.get("state", "Lagos"),
-                    "role": role,  # Use the actual role from request
+                    "state": body.get("state"),
+                    "role": role,
                     "wallet_balance": 0.0,
                     "referral_code": f"REF{user_id[:8].upper()}",
                     "organization_name": body.get("organization_name"),

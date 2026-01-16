@@ -172,9 +172,15 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true);
 
+      console.log('🔍 Registration Debug:');
+      console.log('- Input userData:', userData);
+      console.log('- Selected role:', userData.role);
+
       // First, register with FastAPI backend
       const apiResponse = await apiService.register(userData);
       
+      console.log('- API Response:', apiResponse);
+
       if (!apiResponse.success) {
         return {
           success: false,
@@ -224,13 +230,14 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
           isVerified: backendUser.is_verified || false,
           createdAt: backendUser.created_at
         };
+        console.log('✅ Setting user after registration:', mappedUser);
         setUser(mappedUser);
       }
 
       return { success: true };
 
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('❌ Signup error:', error);
       return {
         success: false,
         error: error.message || 'Registration failed'

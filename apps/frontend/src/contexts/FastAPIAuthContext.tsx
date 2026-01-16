@@ -114,8 +114,23 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
     try {
       const response = await apiService.getCurrentUser();
       
-      if (response.success && response.data?.user) {
-        setUser(response.data.user);
+      if (response.success && response.data) {
+        const backendUser = response.data;
+        setUser({
+          id: backendUser.id,
+          phoneNumber: backendUser.phone_number,
+          firstName: backendUser.first_name,
+          lastName: backendUser.last_name,
+          email: backendUser.email,
+          state: backendUser.state,
+          role: backendUser.role,
+          walletBalance: backendUser.wallet_balance || 0,
+          referralCode: backendUser.referral_code || '',
+          organizationName: backendUser.organization_name,
+          organizationType: backendUser.organization_type,
+          isVerified: backendUser.is_verified || false,
+          createdAt: backendUser.created_at
+        });
       } else {
         console.error('Failed to fetch user from API:', response.error);
         // If API fails, try to get basic info from Supabase
@@ -193,7 +208,23 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
 
       // Set user data from API response
       if (apiResponse.data?.user) {
-        setUser(apiResponse.data.user);
+        const backendUser = apiResponse.data.user;
+        const mappedUser = {
+          id: backendUser.id,
+          phoneNumber: backendUser.phone_number,
+          firstName: backendUser.first_name,
+          lastName: backendUser.last_name,
+          email: backendUser.email,
+          state: backendUser.state,
+          role: backendUser.role,
+          walletBalance: backendUser.wallet_balance || 0,
+          referralCode: backendUser.referral_code || '',
+          organizationName: backendUser.organization_name,
+          organizationType: backendUser.organization_type,
+          isVerified: backendUser.is_verified || false,
+          createdAt: backendUser.created_at
+        };
+        setUser(mappedUser);
       }
 
       return { success: true };
@@ -245,7 +276,23 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
       } else {
         // No Supabase, just use API data
         if (apiResponse.data?.user) {
-          setUser(apiResponse.data.user);
+          const backendUser = apiResponse.data.user;
+          const mappedUser = {
+            id: backendUser.id,
+            phoneNumber: backendUser.phone_number,
+            firstName: backendUser.first_name,
+            lastName: backendUser.last_name,
+            email: backendUser.email,
+            state: backendUser.state,
+            role: backendUser.role,
+            walletBalance: backendUser.wallet_balance || 0,
+            referralCode: backendUser.referral_code || '',
+            organizationName: backendUser.organization_name,
+            organizationType: backendUser.organization_type,
+            isVerified: backendUser.is_verified || false,
+            createdAt: backendUser.created_at
+          };
+          setUser(mappedUser);
         }
       }
 

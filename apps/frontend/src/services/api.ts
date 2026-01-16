@@ -144,17 +144,35 @@ class ApiService {
     role?: string;
     organizationName?: string;
   }) {
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      phone_number: userData.phoneNumber,
+      password: userData.password,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      email: userData.email,
+      state: userData.state,
+      role: userData.role,
+      organization_name: userData.organizationName
+    };
+    
     return this.request('/auth/register', {
       method: 'POST',
-      body: userData,
+      body: backendData,
       requireAuth: false
     });
   }
 
   async login(credentials: { phoneNumber: string; password: string }) {
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      phone_number: credentials.phoneNumber,
+      password: credentials.password
+    };
+    
     return this.request('/auth/login', {
       method: 'POST',
-      body: credentials,
+      body: backendData,
       requireAuth: false
     });
   }

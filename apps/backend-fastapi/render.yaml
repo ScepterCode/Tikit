@@ -3,6 +3,7 @@ services:
   - type: web
     name: tikit-fastapi-backend
     env: python
+    runtime: python-3.11.9
     region: oregon
     plan: starter
     buildCommand: pip install -r requirements.txt
@@ -14,7 +15,7 @@ services:
       - key: DEBUG
         value: false
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11.9
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY

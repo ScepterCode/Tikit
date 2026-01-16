@@ -187,3 +187,4 @@ if __name__ == "__main__":
         port=int(os.getenv("PORT", 8000)),
         reload=os.getenv("ENVIRONMENT") == "development"
     )
+# Deployment trigger: 2026-01-16T21:55:51.025Z

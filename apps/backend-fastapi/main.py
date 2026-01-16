@@ -66,6 +66,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5173",
         "https://tikit.vercel.app",
+        "https://grooovy.netlify.app",  # Add your Netlify domain
         os.getenv("FRONTEND_URL", "")
     ],
     allow_credentials=True,

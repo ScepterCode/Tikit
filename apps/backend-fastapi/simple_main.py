@@ -1,7 +1,7 @@
 """
 Simple FastAPI app for testing integration
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import uuid
@@ -63,35 +63,44 @@ async def register(request: Request):
         missing_fields = [field for field in required_fields if not body.get(field)]
         
         if missing_fields:
-            return {
-                "success": False,
-                "error": {
-                    "code": "VALIDATION_ERROR",
-                    "message": f"Missing required fields: {', '.join(missing_fields)}"
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": f"Missing required fields: {', '.join(missing_fields)}"
+                    }
                 }
-            }
+            )
         
         # Extract and validate role
         role = body.get('role')
         if role not in ['attendee', 'organizer', 'admin']:
-            return {
-                "success": False,
-                "error": {
-                    "code": "INVALID_ROLE",
-                    "message": f"Invalid role '{role}'. Must be one of: attendee, organizer, admin"
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "INVALID_ROLE",
+                        "message": f"Invalid role '{role}'. Must be one of: attendee, organizer, admin"
+                    }
                 }
-            }
+            )
         
         # Additional validation for organizer role
         if role == 'organizer':
             if not body.get('organization_name'):
-                return {
-                    "success": False,
-                    "error": {
-                        "code": "VALIDATION_ERROR",
-                        "message": "Organization name is required for organizer registration"
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "success": False,
+                        "error": {
+                            "code": "VALIDATION_ERROR",
+                            "message": "Organization name is required for organizer registration"
+                        }
                     }
-                }
+                )
         
         # Generate a more realistic user ID
         user_id = str(uuid.uuid4())
@@ -120,6 +129,8 @@ async def register(request: Request):
             }
         }
     except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
         return {
             "success": False,
             "error": {

@@ -3,8 +3,10 @@ Simple FastAPI app for testing integration
 """
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import time
 import uuid
+import secrets
 
 app = FastAPI(
     title="Grooovy API - Simple",
@@ -50,6 +52,20 @@ async def test_endpoint():
         "message": "FastAPI backend is working!",
         "timestamp": time.time()
     }
+
+@app.get("/api/csrf-token")
+async def get_csrf_token():
+    """Generate and return a CSRF token"""
+    token = secrets.token_urlsafe(32)
+    response = JSONResponse({"csrf_token": token})
+    response.set_cookie(
+        key="csrf_token",
+        value=token,
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite="lax"
+    )
+    return response
 
 # Mock auth endpoints
 @app.post("/api/auth/register")

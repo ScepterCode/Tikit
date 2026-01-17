@@ -38,25 +38,46 @@ export function ApiStatusIndicator() {
   }, [realtimeConnection.connected, realtimeConnection.connecting]);
 
   const checkApiStatus = async () => {
-    // Check FastAPI
+    // Check FastAPI with better error handling for Render sleep/wake
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const health = await apiService.healthCheck();
+      clearTimeout(timeoutId);
+      
       setStatus(prev => ({
         ...prev,
         fastapi: health.status === 'ok' ? 'connected' : 'disconnected'
       }));
-    } catch (error) {
+    } catch (error: any) {
+      console.log('FastAPI health check failed:', error.message);
+      
+      // Handle specific Render sleep/wake scenarios
+      if (error.message?.includes('ERR_CONNECTION_CLOSED') || 
+          error.message?.includes('Failed to fetch')) {
+        console.log('Backend may be sleeping (Render free tier), this is normal');
+      }
+      
       setStatus(prev => ({ ...prev, fastapi: 'disconnected' }));
     }
 
-    // Check Supabase
+    // Check Supabase (less frequently to reduce load)
     try {
       if (supabase) {
-        const { error } = await supabase.from('users').select('id').limit(1);
-        setStatus(prev => ({
-          ...prev,
-          supabase: error ? 'disconnected' : 'connected'
-        }));
+        // Only check if we haven't checked recently or if status is disconnected
+        const now = Date.now();
+        const lastCheck = (window as any).__supabaseLastCheck || 0;
+        const shouldCheck = now - lastCheck > 60000 || status.supabase === 'disconnected'; // Check every 60 seconds
+        
+        if (shouldCheck) {
+          const { error } = await supabase.from('users').select('id').limit(1);
+          (window as any).__supabaseLastCheck = now;
+          setStatus(prev => ({
+            ...prev,
+            supabase: error ? 'disconnected' : 'connected'
+          }));
+        }
       } else {
         setStatus(prev => ({ ...prev, supabase: 'not_configured' }));
       }

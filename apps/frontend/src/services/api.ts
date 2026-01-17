@@ -43,11 +43,14 @@ class ApiService {
   private async initializeCSRF() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/csrf-token`);
+      if (!response.ok) {
+        console.warn('CSRF token endpoint not available, continuing without CSRF protection');
+        return;
+      }
       const data = await response.json();
-      this.csrfToken = data.token;
-      this.sessionId = data.session_id;
+      this.csrfToken = data.csrf_token;
     } catch (error) {
-      console.warn('CSRF token initialization failed:', error);
+      console.warn('CSRF initialization failed, continuing without CSRF protection:', error);
     }
   }
 

@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { DashboardNavbar } from '../../components/layout/DashboardNavbar';
+import { OrganizerSidebar, ORG_SIDEBAR_WIDTH, ORG_SIDEBAR_BREAK } from '../../components/layout/OrganizerSidebar';
 
 export function CreateEvent() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < ORG_SIDEBAR_BREAK);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -16,390 +19,118 @@ export function CreateEvent() {
     category: 'conference',
   });
 
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < ORG_SIDEBAR_BREAK);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleLogout = async () => { await signOut(); navigate('/'); };
+  const mainPadding = isMobile ? '96px 16px 60px' : `96px 40px 60px ${ORG_SIDEBAR_WIDTH + 40}px`;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement event creation
     console.log('Creating event:', formData);
     alert('Event creation will be implemented soon!');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
-    <div style={styles.container}>
-      {/* Top Bar */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Grooovy</h1>
-        <div style={styles.userMenu}>
-          <span style={styles.userName}>{user?.organizationName || user?.firstName}</span>
-          <button onClick={() => signOut()} style={styles.logoutButton}>
-            Logout
-          </button>
+    <div style={s.root}>
+      <DashboardNavbar user={user!} onLogout={handleLogout} />
+      <OrganizerSidebar />
+      <main style={{ ...s.main, padding: mainPadding }}>
+
+        <div style={s.titleRow}>
+          <div>
+            <h2 style={s.pageTitle}>Create Event</h2>
+            <p style={s.pageSubtitle}>Set up a new event and start selling tickets</p>
+          </div>
         </div>
-      </header>
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="📊" label="Dashboard" onClick={() => navigate('/organizer/dashboard')} />
-            <NavItem icon="🎉" label="My Events" onClick={() => navigate('/organizer/events')} />
-            <NavItem icon="➕" label="Create Event" active />
-            <NavItem icon="👥" label="Attendees" onClick={() => navigate('/organizer/attendees')} />
-            <NavItem icon="💰" label="Financials" onClick={() => navigate('/organizer/financials')} />
-            <NavItem icon="📢" label="Broadcast" onClick={() => navigate('/organizer/broadcast')} />
-            <NavItem icon="📱" label="Scanner" onClick={() => navigate('/organizer/scanner')} />
-            <NavItem icon="⚙️" label="Settings" onClick={() => navigate('/organizer/settings')} />
-          </nav>
-        </aside>
+        <div style={s.card}>
+          <form onSubmit={handleSubmit} style={s.form}>
 
-        {/* Main Content */}
-        <main style={styles.main}>
-          <div style={styles.titleRow}>
-            <div>
-              <h2 style={styles.pageTitle}>Create Event</h2>
-              <p style={styles.pageSubtitle}>
-                Set up a new event and start selling tickets
-              </p>
+            <div style={s.formGrid}>
+              <div style={s.field}>
+                <label style={s.label}>Event Title *</label>
+                <input type="text" name="title" value={formData.title} onChange={handleChange} style={s.input} placeholder="Enter event title" required />
+              </div>
+
+              <div style={s.field}>
+                <label style={s.label}>Category *</label>
+                <select name="category" value={formData.category} onChange={handleChange} style={s.input} required>
+                  <option value="conference">Conference</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="concert">Concert</option>
+                  <option value="party">Party</option>
+                  <option value="wedding">Wedding</option>
+                  <option value="sports">Sports</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div style={s.field}>
+                <label style={s.label}>Date *</label>
+                <input type="date" name="date" value={formData.date} onChange={handleChange} style={s.input} required />
+              </div>
+
+              <div style={s.field}>
+                <label style={s.label}>Time *</label>
+                <input type="time" name="time" value={formData.time} onChange={handleChange} style={s.input} required />
+              </div>
+
+              <div style={s.field}>
+                <label style={s.label}>Ticket Price (₦) *</label>
+                <input type="number" name="ticketPrice" value={formData.ticketPrice} onChange={handleChange} style={s.input} placeholder="0" min="0" required />
+              </div>
+
+              <div style={s.field}>
+                <label style={s.label}>Total Tickets *</label>
+                <input type="number" name="totalTickets" value={formData.totalTickets} onChange={handleChange} style={s.input} placeholder="100" min="1" required />
+              </div>
             </div>
-          </div>
 
-          {/* Event Form */}
-          <div style={styles.formContainer}>
-            <form onSubmit={handleSubmit} style={styles.form}>
-              <div style={styles.formGrid}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Event Title *</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    style={styles.input}
-                    placeholder="Enter event title"
-                    required
-                  />
-                </div>
+            <div style={s.field}>
+              <label style={s.label}>Venue *</label>
+              <input type="text" name="venue" value={formData.venue} onChange={handleChange} style={s.input} placeholder="Enter venue address" required />
+            </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Category *</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    style={styles.select}
-                    required
-                  >
-                    <option value="conference">Conference</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="concert">Concert</option>
-                    <option value="party">Party</option>
-                    <option value="wedding">Wedding</option>
-                    <option value="sports">Sports</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
+            <div style={{ ...s.field, marginTop: '4px' }}>
+              <label style={s.label}>Description *</label>
+              <textarea name="description" value={formData.description} onChange={handleChange} style={s.textarea} placeholder="Describe your event..." rows={4} required />
+            </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Date *</label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    style={styles.input}
-                    required
-                  />
-                </div>
+            <div style={s.btnRow}>
+              <button type="button" onClick={() => navigate('/organizer/events')} style={s.cancelBtn}>Cancel</button>
+              <button type="submit" style={s.submitBtn}>Create Event</button>
+            </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Time *</label>
-                  <input
-                    type="time"
-                    name="time"
-                    value={formData.time}
-                    onChange={handleChange}
-                    style={styles.input}
-                    required
-                  />
-                </div>
+          </form>
+        </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Ticket Price (₦) *</label>
-                  <input
-                    type="number"
-                    name="ticketPrice"
-                    value={formData.ticketPrice}
-                    onChange={handleChange}
-                    style={styles.input}
-                    placeholder="0"
-                    min="0"
-                    required
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Total Tickets *</label>
-                  <input
-                    type="number"
-                    name="totalTickets"
-                    value={formData.totalTickets}
-                    onChange={handleChange}
-                    style={styles.input}
-                    placeholder="100"
-                    min="1"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Venue *</label>
-                <input
-                  type="text"
-                  name="venue"
-                  value={formData.venue}
-                  onChange={handleChange}
-                  style={styles.input}
-                  placeholder="Enter venue address"
-                  required
-                />
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Description *</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  style={styles.textarea}
-                  placeholder="Describe your event..."
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div style={styles.buttonGroup}>
-                <button
-                  type="button"
-                  onClick={() => navigate('/organizer/events')}
-                  style={styles.cancelButton}
-                >
-                  Cancel
-                </button>
-                <button type="submit" style={styles.submitButton}>
-                  Create Event
-                </button>
-              </div>
-            </form>
-          </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
 
-function NavItem({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      style={{
-        ...styles.navItem,
-        ...(active ? styles.navItemActive : {}),
-      }}
-      onClick={onClick}
-    >
-      <span style={styles.navIcon}>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#667eea',
-    margin: 0,
-  },
-  userMenu: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  userName: {
-    fontSize: '14px',
-    color: '#374151',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#f3f4f6',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    color: '#374151',
-  },
-  layout: {
-    display: 'flex',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
-    minHeight: 'calc(100vh - 65px)',
-    padding: '24px 0',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-    padding: '0 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#6b7280',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s',
-  },
-  navItemActive: {
-    backgroundColor: '#f5f7ff',
-    color: '#667eea',
-    fontWeight: '500',
-  },
-  navIcon: {
-    fontSize: '18px',
-  },
-  main: {
-    flex: 1,
-    padding: '32px',
-    maxWidth: '1200px',
-  },
-  titleRow: {
-    marginBottom: '24px',
-  },
-  pageTitle: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '4px',
-  },
-  pageSubtitle: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  formContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '32px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  },
-  form: {
-    maxWidth: '800px',
-  },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    marginBottom: '20px',
-  },
-  formGroup: {
-    marginBottom: '20px',
-  },
-  label: {
-    display: 'block',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '6px',
-  },
-  input: {
-    width: '100%',
-    padding: '12px',
-    fontSize: '14px',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-    boxSizing: 'border-box' as const,
-  },
-  select: {
-    width: '100%',
-    padding: '12px',
-    fontSize: '14px',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-    boxSizing: 'border-box' as const,
-  },
-  textarea: {
-    width: '100%',
-    padding: '12px',
-    fontSize: '14px',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-    resize: 'vertical' as const,
-    boxSizing: 'border-box' as const,
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '12px',
-    justifyContent: 'flex-end',
-    marginTop: '32px',
-  },
-  cancelButton: {
-    padding: '12px 24px',
-    fontSize: '14px',
-    fontWeight: '600',
-    backgroundColor: '#f3f4f6',
-    color: '#374151',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  },
-  submitButton: {
-    padding: '12px 24px',
-    fontSize: '14px',
-    fontWeight: '600',
-    backgroundColor: '#667eea',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  },
+const s = {
+  root: { minHeight: '100vh', backgroundColor: '#f5f6fa', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+  main: { maxWidth: '1200px' },
+  titleRow: { marginBottom: '28px' },
+  pageTitle: { fontSize: '26px', fontWeight: '800', color: '#111827', margin: '0 0 4px' },
+  pageSubtitle: { fontSize: '14px', color: '#9ca3af', margin: 0 },
+  card: { backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #f1f3f5', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '32px' },
+  form: { maxWidth: '800px' },
+  formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '20px', marginBottom: '20px' },
+  field: { display: 'flex', flexDirection: 'column' as const, gap: '6px', marginBottom: '4px' },
+  label: { fontSize: '13px', fontWeight: '600', color: '#374151' },
+  input: { padding: '12px 14px', fontSize: '14px', border: '1.5px solid #e5e7eb', borderRadius: '12px', outline: 'none', color: '#111827', fontFamily: 'inherit', boxSizing: 'border-box' as const, width: '100%', backgroundColor: '#fff' },
+  textarea: { padding: '12px 14px', fontSize: '14px', border: '1.5px solid #e5e7eb', borderRadius: '12px', outline: 'none', color: '#111827', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const, resize: 'vertical' as const },
+  btnRow: { display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '28px' },
+  cancelBtn: { padding: '12px 24px', fontSize: '14px', fontWeight: '600', backgroundColor: '#f5f6fa', color: '#374151', border: '1px solid #e5e7eb', borderRadius: '12px', cursor: 'pointer' },
+  submitBtn: { padding: '12px 28px', fontSize: '14px', fontWeight: '700', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer' },
 };

@@ -24,309 +24,146 @@ interface GroupBuyStatusProps {
   currentUserId?: string;
 }
 
+const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  completed: { label: '✅ Completed', bg: '#ecfdf5', color: '#059669' },
+  expired:   { label: '⏰ Expired',   bg: '#fef2f2', color: '#dc2626' },
+  cancelled: { label: '❌ Cancelled', bg: '#f3f4f6', color: '#6b7280' },
+  active:    { label: '🔄 Active',    bg: '#eef2ff', color: '#4f46e5' },
+};
+
 export function GroupBuyStatus({ groupBuy, onJoin, currentUserId }: GroupBuyStatusProps) {
   const [timeRemaining, setTimeRemaining] = useState('');
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
-    const updateTimeRemaining = () => {
-      const now = new Date().getTime();
-      const expiry = new Date(groupBuy.expiresAt).getTime();
-      const diff = expiry - now;
-
-      if (diff <= 0) {
-        setTimeRemaining('Expired');
-        setIsExpired(true);
-        return;
-      }
-
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      
-      if (hours > 0) {
-        setTimeRemaining(`${hours}h ${minutes}m`);
-      } else {
-        setTimeRemaining(`${minutes}m`);
-      }
+    const update = () => {
+      const diff = new Date(groupBuy.expiresAt).getTime() - Date.now();
+      if (diff <= 0) { setTimeRemaining('Expired'); setIsExpired(true); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setTimeRemaining(h > 0 ? `${h}h ${m}m` : `${m}m`);
     };
-
-    updateTimeRemaining();
-    const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
-
-    return () => clearInterval(interval);
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
   }, [groupBuy.expiresAt]);
 
   const progress = (groupBuy.currentParticipants / groupBuy.totalParticipants) * 100;
   const spotsLeft = groupBuy.totalParticipants - groupBuy.currentParticipants;
   const totalCost = groupBuy.pricePerPerson * groupBuy.totalParticipants;
+  const canJoin = !isExpired && groupBuy.status === 'active' && spotsLeft > 0 &&
+    !groupBuy.participants.some((p) => p.name === currentUserId);
 
-  const canJoin = !isExpired && 
-                  groupBuy.status === 'active' && 
-                  spotsLeft > 0 &&
-                  !groupBuy.participants.some(p => p.name === currentUserId);
-
-  const getStatusColor = () => {
-    switch (groupBuy.status) {
-      case 'completed': return '#059669';
-      case 'expired': return '#dc2626';
-      case 'cancelled': return '#6b7280';
-      default: return '#667eea';
-    }
-  };
-
-  const getStatusText = () => {
-    switch (groupBuy.status) {
-      case 'completed': return '✅ Completed';
-      case 'expired': return '⏰ Expired';
-      case 'cancelled': return '❌ Cancelled';
-      default: return '🔄 Active';
-    }
-  };
+  const statusCfg = STATUS_CONFIG[groupBuy.status] || STATUS_CONFIG.active;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <div style={styles.titleRow}>
-          <h3 style={styles.title}>{groupBuy.tierName} Group Buy</h3>
-          <span style={{
-            ...styles.statusBadge,
-            backgroundColor: getStatusColor()
-          }}>
-            {getStatusText()}
+    <div style={s.root}>
+
+      {/* Header */}
+      <div style={s.header}>
+        <div style={s.headerTop}>
+          <p style={s.tierName}>{groupBuy.tierName} Group Buy</p>
+          <span style={{ ...s.statusBadge, backgroundColor: statusCfg.bg, color: statusCfg.color }}>
+            {statusCfg.label}
           </span>
         </div>
-        <p style={styles.organizer}>Organized by {groupBuy.initiatorName}</p>
+        <p style={s.organizer}>Organised by {groupBuy.initiatorName}</p>
       </div>
 
-      <div style={styles.progressSection}>
-        <div style={styles.progressHeader}>
-          <span style={styles.progressText}>
-            {groupBuy.currentParticipants} of {groupBuy.totalParticipants} joined
-          </span>
-          <span style={styles.progressPercent}>{Math.round(progress)}%</span>
+      {/* Progress */}
+      <div style={s.progressSection}>
+        <div style={s.progressLabels}>
+          <span style={s.progressText}>{groupBuy.currentParticipants} of {groupBuy.totalParticipants} joined</span>
+          <span style={s.progressPct}>{Math.round(progress)}%</span>
         </div>
-        <div style={styles.progressBar}>
-          <div 
-            style={{
-              ...styles.progressFill,
-              width: `${progress}%`
-            }}
-          />
+        <div style={s.progressTrack}>
+          <div style={{ ...s.progressFill, width: `${progress}%` }} />
         </div>
       </div>
 
-      <div style={styles.details}>
-        <div style={styles.detailRow}>
-          <span style={styles.detailLabel}>Price per person:</span>
-          <span style={styles.detailValue}>₦{groupBuy.pricePerPerson.toLocaleString()}</span>
-        </div>
-        <div style={styles.detailRow}>
-          <span style={styles.detailLabel}>Total group cost:</span>
-          <span style={styles.detailValue}>₦{totalCost.toLocaleString()}</span>
-        </div>
-        <div style={styles.detailRow}>
-          <span style={styles.detailLabel}>Time remaining:</span>
-          <span style={{
-            ...styles.detailValue,
-            color: isExpired ? '#dc2626' : '#374151'
-          }}>
-            {timeRemaining}
-          </span>
-        </div>
-        <div style={styles.detailRow}>
-          <span style={styles.detailLabel}>Spots left:</span>
-          <span style={styles.detailValue}>{spotsLeft}</span>
-        </div>
+      {/* Details */}
+      <div style={s.details}>
+        {[
+          { label: 'Price per person', value: `₦${groupBuy.pricePerPerson.toLocaleString()}` },
+          { label: 'Total group cost',  value: `₦${totalCost.toLocaleString()}` },
+          { label: 'Time remaining',    value: timeRemaining, valueColor: isExpired ? '#dc2626' : '#111827' },
+          { label: 'Spots left',        value: String(spotsLeft) },
+        ].map((d) => (
+          <div key={d.label} style={s.detailRow}>
+            <span style={s.detailKey}>{d.label}</span>
+            <span style={{ ...s.detailVal, ...(d.valueColor ? { color: d.valueColor } : {}) }}>{d.value}</span>
+          </div>
+        ))}
       </div>
 
-      {groupBuy.participants && groupBuy.participants.length > 0 && (
-        <div style={styles.participantsSection}>
-          <h4 style={styles.participantsTitle}>Participants:</h4>
-          <div style={styles.participantsList}>
-            {groupBuy.participants.map((participant, index) => (
-              <div key={index} style={styles.participant}>
-                <span style={styles.participantName}>
-                  {participant.joined ? '✅' : '⏳'} {participant.name}
-                </span>
-                {participant.paidAt && (
-                  <span style={styles.paidAt}>
-                    Paid {new Date(participant.paidAt).toLocaleDateString()}
-                  </span>
-                )}
+      {/* Participants */}
+      {groupBuy.participants?.length > 0 && (
+        <div style={s.participantsSection}>
+          <p style={s.participantsTitle}>Participants</p>
+          <div style={s.participantsList}>
+            {groupBuy.participants.map((p, i) => (
+              <div key={i} style={s.participantRow}>
+                <span style={s.participantName}>{p.joined ? '✅' : '⏳'} {p.name}</span>
+                {p.paidAt && <span style={s.paidAt}>Paid {new Date(p.paidAt).toLocaleDateString()}</span>}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div style={styles.actions}>
-        {canJoin ? (
-          <button
-            onClick={onJoin}
-            style={styles.joinButton}
-          >
-            Join Group Buy - ₦{groupBuy.pricePerPerson.toLocaleString()}
-          </button>
-        ) : (
-          <div style={styles.statusMessage}>
-            {isExpired && 'This group buy has expired'}
-            {groupBuy.status === 'completed' && 'This group buy is complete'}
-            {groupBuy.status === 'cancelled' && 'This group buy was cancelled'}
-            {spotsLeft === 0 && groupBuy.status === 'active' && 'This group buy is full'}
-          </div>
-        )}
-      </div>
+      {/* Action */}
+      {canJoin ? (
+        <button onClick={onJoin} style={s.joinBtn}>
+          Join Group Buy — ₦{groupBuy.pricePerPerson.toLocaleString()}
+        </button>
+      ) : (
+        <div style={s.statusMsg}>
+          {isExpired && 'This group buy has expired'}
+          {groupBuy.status === 'completed' && 'This group buy is complete'}
+          {groupBuy.status === 'cancelled' && 'This group buy was cancelled'}
+          {spotsLeft === 0 && groupBuy.status === 'active' && 'This group buy is full'}
+        </div>
+      )}
 
       {groupBuy.status === 'completed' && (
-        <div style={styles.completedMessage}>
+        <div style={s.completedBanner}>
           🎉 Group buy successful! Tickets have been issued to all participants.
         </div>
       )}
+
     </div>
   );
 }
 
-const styles = {
-  container: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '20px',
-    border: '1px solid #e5e7eb',
-    marginBottom: '16px',
-  },
-  header: {
-    marginBottom: '16px',
-  },
-  titleRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '4px',
-  },
-  title: {
-    margin: '0',
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  statusBadge: {
-    color: 'white',
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '600',
-  },
-  organizer: {
-    margin: '0',
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  progressSection: {
-    marginBottom: '16px',
-  },
-  progressHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
-  },
-  progressText: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
-  },
-  progressPercent: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  progressBar: {
-    width: '100%',
-    height: '8px',
-    backgroundColor: '#e5e7eb',
-    borderRadius: '4px',
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#059669',
-    borderRadius: '4px',
-    transition: 'width 0.3s ease',
-  },
-  details: {
-    marginBottom: '16px',
-  },
-  detailRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '8px',
-  },
-  detailLabel: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  detailValue: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  participantsSection: {
-    marginBottom: '16px',
-  },
-  participantsTitle: {
-    margin: '0 0 8px 0',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  participantsList: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-  },
-  participant: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '4px 0',
-  },
-  participantName: {
-    fontSize: '13px',
-    color: '#374151',
-  },
-  paidAt: {
-    fontSize: '12px',
-    color: '#6b7280',
-  },
-  actions: {
-    marginBottom: '12px',
-  },
-  joinButton: {
-    width: '100%',
-    backgroundColor: '#059669',
-    color: 'white',
-    border: 'none',
-    padding: '12px',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  statusMessage: {
-    textAlign: 'center' as const,
-    padding: '12px',
-    backgroundColor: '#f3f4f6',
-    borderRadius: '8px',
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  completedMessage: {
-    backgroundColor: '#d1fae5',
-    color: '#065f46',
-    padding: '12px',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '500',
-    textAlign: 'center' as const,
-  },
+const s = {
+  root: { display: 'flex', flexDirection: 'column' as const, gap: '16px', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+
+  header: {},
+  headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', gap: '12px', flexWrap: 'wrap' as const },
+  tierName: { fontSize: '16px', fontWeight: '700', color: '#111827', margin: 0 },
+  statusBadge: { fontSize: '12px', fontWeight: '600', padding: '4px 10px', borderRadius: '20px', whiteSpace: 'nowrap' as const },
+  organizer: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+
+  progressSection: {},
+  progressLabels: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' },
+  progressText: { fontSize: '13.5px', fontWeight: '500', color: '#374151' },
+  progressPct: { fontSize: '13.5px', fontWeight: '700', color: '#4f46e5' },
+  progressTrack: { width: '100%', height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' },
+  progressFill: { height: '100%', background: 'linear-gradient(90deg,#4f46e5,#7c3aed)', borderRadius: '4px', transition: 'width 0.4s ease' },
+
+  details: { backgroundColor: '#f9fafb', borderRadius: '14px', border: '1px solid #f1f3f5', padding: '14px', display: 'flex', flexDirection: 'column' as const, gap: '10px' },
+  detailRow: { display: 'flex', justifyContent: 'space-between' },
+  detailKey: { fontSize: '13px', color: '#6b7280' },
+  detailVal: { fontSize: '13px', fontWeight: '700', color: '#111827' },
+
+  participantsSection: {},
+  participantsTitle: { fontSize: '13px', fontWeight: '700', color: '#374151', margin: '0 0 10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' },
+  participantsList: { display: 'flex', flexDirection: 'column' as const, gap: '6px' },
+  participantRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: '#f9fafb', borderRadius: '10px' },
+  participantName: { fontSize: '13.5px', color: '#374151' },
+  paidAt: { fontSize: '11px', color: '#9ca3af' },
+
+  joinBtn: { width: '100%', padding: '14px', fontSize: '14px', fontWeight: '700', background: 'linear-gradient(135deg,#059669,#047857)', color: '#fff', border: 'none', borderRadius: '14px', cursor: 'pointer' },
+  statusMsg: { textAlign: 'center' as const, padding: '13px', backgroundColor: '#f3f4f6', borderRadius: '12px', fontSize: '13.5px', color: '#6b7280' },
+  completedBanner: { backgroundColor: '#d1fae5', color: '#065f46', padding: '13px', borderRadius: '12px', fontSize: '13.5px', fontWeight: '500', textAlign: 'center' as const, border: '1px solid #a7f3d0' },
 };

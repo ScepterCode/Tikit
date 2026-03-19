@@ -3,7 +3,7 @@ API Status Indicator
 Shows the connection status to FastAPI backend and Supabase
 */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { supabase } from '../../lib/supabase';
 import { useRealtimeConnection } from '../../hooks/useRealtimeConnection';
@@ -22,6 +22,64 @@ export function ApiStatusIndicator() {
   });
   const [isExpanded, setIsExpanded] = useState(false);
   const realtimeConnection = useRealtimeConnection({ autoConnect: false });
+
+  // Drag state
+  const [position, setPosition] = useState({ x: window.innerWidth - 100, y: 20 });
+  const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [hasDragged, setHasDragged] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setDragging(true);
+    setHasDragged(false);
+    const rect = containerRef.current!.getBoundingClientRect();
+    setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMouseMove = (e: MouseEvent) => {
+      setHasDragged(true);
+      setPosition({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
+    };
+    const onMouseUp = () => setDragging(false);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [dragging, dragOffset]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    const touch = e.touches[0];
+    setDragging(true);
+    setHasDragged(false);
+    const rect = containerRef.current!.getBoundingClientRect();
+    setDragOffset({ x: touch.clientX - rect.left, y: touch.clientY - rect.top });
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault(); // stops the page from scrolling while dragging
+      setHasDragged(true);
+      const touch = e.touches[0];
+      setPosition({ x: touch.clientX - dragOffset.x, y: touch.clientY - dragOffset.y });
+    };
+    const onTouchEnd = () => setDragging(false);
+    // { passive: false } is required to allow preventDefault on touchmove
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [dragging, dragOffset]);
 
   useEffect(() => {
     checkApiStatus();
@@ -109,14 +167,25 @@ export function ApiStatusIndicator() {
                        'disconnected';
 
   return (
-    <div style={styles.container}>
+    <div
+      ref={containerRef}
+      style={{
+        ...styles.container,
+        left: position.x,
+        top: position.y,
+        cursor: dragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+      }}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+    >
       <div 
         style={{
           ...styles.indicator,
           backgroundColor: getStatusColor(overallStatus)
         }}
-        onClick={() => setIsExpanded(!isExpanded)}
-        title="API Connection Status"
+        onClick={() => { if (!hasDragged) setIsExpanded(!isExpanded); }}
+        title="API Connection Status — drag to move"
       >
         <span style={styles.indicatorIcon}>
           {getStatusIcon(overallStatus)}
@@ -193,9 +262,8 @@ export function ApiStatusIndicator() {
 const styles = {
   container: {
     position: 'fixed' as const,
-    top: '20px',
-    right: '20px',
-    zIndex: 1000
+    zIndex: 1000,
+    touchAction: 'none',
   },
   indicator: {
     display: 'flex',

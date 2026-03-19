@@ -1,206 +1,60 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { DashboardNavbar } from '../../components/layout/DashboardNavbar';
+import { OrganizerSidebar, ORG_SIDEBAR_WIDTH, ORG_SIDEBAR_BREAK } from '../../components/layout/OrganizerSidebar';
 
 export function OrganizerBroadcast() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < ORG_SIDEBAR_BREAK);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < ORG_SIDEBAR_BREAK);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleLogout = async () => { await signOut(); navigate('/'); };
+  const mainPadding = isMobile ? '96px 16px 60px' : `96px 40px 60px ${ORG_SIDEBAR_WIDTH + 40}px`;
 
   return (
-    <div style={styles.container}>
-      {/* Top Bar */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Grooovy</h1>
-        <div style={styles.userMenu}>
-          <span style={styles.userName}>{user?.organizationName || user?.firstName}</span>
-          <button onClick={() => signOut()} style={styles.logoutButton}>
-            Logout
-          </button>
+    <div style={s.root}>
+      <DashboardNavbar user={user!} onLogout={handleLogout} />
+      <OrganizerSidebar />
+      <main style={{ ...s.main, padding: mainPadding }}>
+
+        <div style={s.titleRow}>
+          <div>
+            <h2 style={s.pageTitle}>Broadcast Messages</h2>
+            <p style={s.pageSubtitle}>Send updates and announcements to your event attendees</p>
+          </div>
         </div>
-      </header>
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="📊" label="Dashboard" onClick={() => navigate('/organizer/dashboard')} />
-            <NavItem icon="🎉" label="My Events" onClick={() => navigate('/organizer/events')} />
-            <NavItem icon="➕" label="Create Event" onClick={() => navigate('/organizer/create-event')} />
-            <NavItem icon="👥" label="Attendees" onClick={() => navigate('/organizer/attendees')} />
-            <NavItem icon="💰" label="Financials" onClick={() => navigate('/organizer/financials')} />
-            <NavItem icon="📢" label="Broadcast" active />
-            <NavItem icon="📱" label="Scanner" onClick={() => navigate('/organizer/scanner')} />
-            <NavItem icon="⚙️" label="Settings" onClick={() => navigate('/organizer/settings')} />
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main style={styles.main}>
-          <div style={styles.titleRow}>
-            <div>
-              <h2 style={styles.pageTitle}>Broadcast Messages</h2>
-              <p style={styles.pageSubtitle}>
-                Send updates and announcements to your event attendees
-              </p>
-            </div>
+        <div style={s.card}>
+          <div style={s.emptyState}>
+            <div style={s.emptyIcon}>📢</div>
+            <h3 style={s.emptyTitle}>No broadcasts sent yet</h3>
+            <p style={s.emptyText}>
+              Once you have events with attendees, you can send them updates and announcements here.
+            </p>
           </div>
+        </div>
 
-          <div style={styles.content}>
-            <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>📢</div>
-              <h3 style={styles.emptyTitle}>No broadcasts sent yet</h3>
-              <p style={styles.emptyText}>
-                Once you have events with attendees, you can send them updates and announcements here.
-              </p>
-            </div>
-          </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
 
-function NavItem({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      style={{
-        ...styles.navItem,
-        ...(active ? styles.navItemActive : {}),
-      }}
-      onClick={onClick}
-    >
-      <span style={styles.navIcon}>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#667eea',
-    margin: 0,
-  },
-  userMenu: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  userName: {
-    fontSize: '14px',
-    color: '#374151',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#f3f4f6',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    color: '#374151',
-  },
-  layout: {
-    display: 'flex',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
-    minHeight: 'calc(100vh - 65px)',
-    padding: '24px 0',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-    padding: '0 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#6b7280',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s',
-  },
-  navItemActive: {
-    backgroundColor: '#f5f7ff',
-    color: '#667eea',
-    fontWeight: '500',
-  },
-  navIcon: {
-    fontSize: '18px',
-  },
-  main: {
-    flex: 1,
-    padding: '32px',
-    maxWidth: '1200px',
-  },
-  titleRow: {
-    marginBottom: '24px',
-  },
-  pageTitle: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '4px',
-  },
-  pageSubtitle: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  content: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '48px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    textAlign: 'center' as const,
-  },
-  emptyState: {
-    maxWidth: '400px',
-    margin: '0 auto',
-  },
-  emptyIcon: {
-    fontSize: '64px',
-    marginBottom: '16px',
-  },
-  emptyTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  emptyText: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
+const s = {
+  root: { minHeight: '100vh', backgroundColor: '#f5f6fa', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+  main: { maxWidth: '1200px' },
+  titleRow: { marginBottom: '28px' },
+  pageTitle: { fontSize: '26px', fontWeight: '800', color: '#111827', margin: '0 0 4px' },
+  pageSubtitle: { fontSize: '14px', color: '#9ca3af', margin: 0 },
+  card: { backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #f1f3f5', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '64px 32px' },
+  emptyState: { textAlign: 'center' as const, maxWidth: '400px', margin: '0 auto' },
+  emptyIcon: { fontSize: '56px', marginBottom: '16px' },
+  emptyTitle: { fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 8px' },
+  emptyText: { fontSize: '14px', color: '#9ca3af', margin: 0, lineHeight: 1.6 },
 };

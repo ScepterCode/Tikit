@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
-
-interface ReferralData {
-  totalReferrals: number;
-  activeReferrals: number;
-  totalEarnings: number;
-  pendingEarnings: number;
-  referralCode: string;
-  referralLink: string;
-}
+import { DashboardNavbar } from '../../components/layout/DashboardNavbar';
+import { DashboardSidebar, SIDEBAR_WIDTH, SIDEBAR_BREAK } from '../../components/layout/DashboardSidebar';
 
 interface ReferralHistory {
   id: string;
@@ -19,561 +12,217 @@ interface ReferralHistory {
   earnings: number;
 }
 
+const MOCK_HISTORY: ReferralHistory[] = [
+  { id: '1', referredUser: 'John D.',  dateReferred: '2025-12-28', status: 'completed', earnings: 2000 },
+  { id: '2', referredUser: 'Sarah M.', dateReferred: '2025-12-25', status: 'active',    earnings: 2000 },
+  { id: '3', referredUser: 'Mike J.',  dateReferred: '2025-12-22', status: 'pending',   earnings: 0 },
+  { id: '4', referredUser: 'Emma W.',  dateReferred: '2025-12-20', status: 'completed', earnings: 2000 },
+];
+
+const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
+  completed: { bg: '#ecfdf5', color: '#059669' },
+  active:    { bg: '#eef2ff', color: '#4f46e5' },
+  pending:   { bg: '#fffbeb', color: '#d97706' },
+};
+
 export function Referrals() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [referralData, setReferralData] = useState<ReferralData | null>(null);
-  const [referralHistory, setReferralHistory] = useState<ReferralHistory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < SIDEBAR_BREAK);
+  const [copied, setCopied] = useState<'code' | 'link' | null>(null);
 
   useEffect(() => {
-    // Mock data - replace with API call
-    const mockReferralData: ReferralData = {
-      totalReferrals: 12,
-      activeReferrals: 8,
-      totalEarnings: 24000,
-      pendingEarnings: 6000,
-      referralCode: user?.referralCode || 'GROOOVY123',
-      referralLink: `https://grooovy.com/register?ref=${user?.referralCode || 'GROOOVY123'}`
-    };
+    const onResize = () => setIsMobile(window.innerWidth < SIDEBAR_BREAK);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
-    const mockHistory: ReferralHistory[] = [
-      {
-        id: '1',
-        referredUser: 'John D.',
-        dateReferred: '2025-12-28T10:30:00.000Z',
-        status: 'completed',
-        earnings: 2000
-      },
-      {
-        id: '2',
-        referredUser: 'Sarah M.',
-        dateReferred: '2025-12-25T14:15:00.000Z',
-        status: 'active',
-        earnings: 2000
-      },
-      {
-        id: '3',
-        referredUser: 'Mike J.',
-        dateReferred: '2025-12-22T09:45:00.000Z',
-        status: 'pending',
-        earnings: 0
-      },
-      {
-        id: '4',
-        referredUser: 'Emma W.',
-        dateReferred: '2025-12-20T16:20:00.000Z',
-        status: 'completed',
-        earnings: 2000
-      }
-    ];
+  const handleLogout = async () => { await signOut(); navigate('/'); };
 
-    setTimeout(() => {
-      setReferralData(mockReferralData);
-      setReferralHistory(mockHistory);
-      setLoading(false);
-    }, 1000);
-  }, [user]);
+  const code = user?.referralCode || 'GROOOVY123';
+  const link = `https://grooovy.com/register?ref=${code}`;
 
-  const copyToClipboard = (text: string) => {
+  const copy = (text: string, type: 'code' | 'link') => {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(type);
+    setTimeout(() => setCopied(null), 2000);
   };
 
-  const shareReferral = (platform: string) => {
-    const message = `Join Grooovy and get amazing event tickets! Use my referral code: ${referralData?.referralCode}`;
-    const url = referralData?.referralLink;
-    
-    switch (platform) {
-      case 'whatsapp':
-        window.open(`https://wa.me/?text=${encodeURIComponent(message + ' ' + url)}`);
-        break;
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(url || '')}`);
-        break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url || '')}`);
-        break;
-    }
+  const share = (platform: string) => {
+    const msg = `Join Grooovy for amazing event tickets! Use my code: ${code}`;
+    if (platform === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(msg + ' ' + link)}`);
+    if (platform === 'twitter')  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}&url=${encodeURIComponent(link)}`);
+    if (platform === 'facebook') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return '#16a34a';
-      case 'active': return '#3b82f6';
-      case 'pending': return '#f59e0b';
-      default: return '#6b7280';
-    }
-  };
+  const mainPadding = isMobile
+    ? '96px 16px 60px'
+    : `96px 40px 60px ${SIDEBAR_WIDTH + 40}px`;
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loading}>
-          <div style={styles.spinner}></div>
-          <p>Loading referral data...</p>
-        </div>
-      </div>
-    );
-  }
+  const stats = [
+    { icon: '👥', label: 'Total Referrals',  value: '12',         color: '#4f46e5', bg: '#eef2ff' },
+    { icon: '✅', label: 'Active',           value: '8',          color: '#059669', bg: '#ecfdf5' },
+    { icon: '💰', label: 'Total Earned',     value: '₦24,000',    color: '#d97706', bg: '#fffbeb' },
+    { icon: '⏳', label: 'Pending',          value: '₦6,000',     color: '#7c3aed', bg: '#f5f3ff' },
+  ];
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <button onClick={() => navigate('/attendee/dashboard')} style={styles.backButton}>
-          ← Back to Dashboard
-        </button>
-        <h1 style={styles.title}>🎁 Referral Program</h1>
-      </div>
+    <div style={s.root}>
+      <DashboardNavbar user={user!} onLogout={handleLogout} />
+      <DashboardSidebar />
 
-      {/* Stats Overview */}
-      {referralData && (
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>👥</div>
-            <div style={styles.statContent}>
-              <span style={styles.statNumber}>{referralData.totalReferrals}</span>
-              <span style={styles.statLabel}>Total Referrals</span>
-            </div>
-          </div>
-          
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>✅</div>
-            <div style={styles.statContent}>
-              <span style={styles.statNumber}>{referralData.activeReferrals}</span>
-              <span style={styles.statLabel}>Active Referrals</span>
-            </div>
-          </div>
-          
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>💰</div>
-            <div style={styles.statContent}>
-              <span style={styles.statNumber}>₦{referralData.totalEarnings.toLocaleString()}</span>
-              <span style={styles.statLabel}>Total Earnings</span>
-            </div>
-          </div>
-          
-          <div style={styles.statCard}>
-            <div style={styles.statIcon}>⏳</div>
-            <div style={styles.statContent}>
-              <span style={styles.statNumber}>₦{referralData.pendingEarnings.toLocaleString()}</span>
-              <span style={styles.statLabel}>Pending Earnings</span>
-            </div>
-          </div>
+      <main style={{ ...s.main, padding: mainPadding }}>
+
+        <div style={s.pageHeader}>
+          <h1 style={s.pageTitle}>Referral Program</h1>
+          <p style={s.pageSub}>Invite friends and earn ₦2,000 for every successful referral</p>
         </div>
-      )}
 
-      {/* Referral Code Section */}
-      {referralData && (
-        <div style={styles.referralSection}>
-          <h2 style={styles.sectionTitle}>Your Referral Code</h2>
-          <div style={styles.referralCard}>
-            <div style={styles.referralCodeSection}>
-              <div style={styles.codeContainer}>
-                <span style={styles.codeLabel}>Referral Code:</span>
-                <span style={styles.referralCode}>{referralData.referralCode}</span>
-                <button 
-                  onClick={() => copyToClipboard(referralData.referralCode)}
-                  style={styles.copyButton}
-                >
-                  {copied ? '✓ Copied!' : '📋 Copy'}
-                </button>
+        {/* Stats */}
+        <div style={s.statsGrid}>
+          {stats.map((stat) => (
+            <div key={stat.label} style={s.statCard}>
+              <div style={{ ...s.statIcon, backgroundColor: stat.bg, color: stat.color }}>{stat.icon}</div>
+              <div>
+                <p style={s.statValue}>{stat.value}</p>
+                <p style={s.statLabel}>{stat.label}</p>
               </div>
-              
-              <div style={styles.linkContainer}>
-                <span style={styles.linkLabel}>Referral Link:</span>
-                <div style={styles.linkBox}>
-                  <span style={styles.referralLink}>{referralData.referralLink}</span>
-                  <button 
-                    onClick={() => copyToClipboard(referralData.referralLink)}
-                    style={styles.copyButton}
-                  >
-                    {copied ? '✓ Copied!' : '📋 Copy'}
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div style={styles.shareSection}>
-              <h3 style={styles.shareTitle}>Share with Friends</h3>
-              <div style={styles.shareButtons}>
-                <button 
-                  onClick={() => shareReferral('whatsapp')}
-                  style={{...styles.shareButton, backgroundColor: '#25d366'}}
-                >
-                  📱 WhatsApp
-                </button>
-                <button 
-                  onClick={() => shareReferral('twitter')}
-                  style={{...styles.shareButton, backgroundColor: '#1da1f2'}}
-                >
-                  🐦 Twitter
-                </button>
-                <button 
-                  onClick={() => shareReferral('facebook')}
-                  style={{...styles.shareButton, backgroundColor: '#4267b2'}}
-                >
-                  📘 Facebook
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* How It Works */}
-      <div style={styles.howItWorksSection}>
-        <h2 style={styles.sectionTitle}>How It Works</h2>
-        <div style={styles.stepsGrid}>
-          <div style={styles.step}>
-            <div style={styles.stepNumber}>1</div>
-            <h3 style={styles.stepTitle}>Share Your Code</h3>
-            <p style={styles.stepDescription}>
-              Share your unique referral code or link with friends and family
-            </p>
-          </div>
-          
-          <div style={styles.step}>
-            <div style={styles.stepNumber}>2</div>
-            <h3 style={styles.stepTitle}>Friend Registers</h3>
-            <p style={styles.stepDescription}>
-              Your friend signs up using your referral code and makes their first purchase
-            </p>
-          </div>
-          
-          <div style={styles.step}>
-            <div style={styles.stepNumber}>3</div>
-            <h3 style={styles.stepTitle}>Earn Rewards</h3>
-            <p style={styles.stepDescription}>
-              You both get ₦2,000 credited to your wallets when they buy their first ticket
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Referral History */}
-      <div style={styles.historySection}>
-        <h2 style={styles.sectionTitle}>Referral History</h2>
-        <div style={styles.historyTable}>
-          <div style={styles.tableHeader}>
-            <span>Referred User</span>
-            <span>Date</span>
-            <span>Status</span>
-            <span>Earnings</span>
-          </div>
-          
-          {referralHistory.map((referral) => (
-            <div key={referral.id} style={styles.tableRow}>
-              <span style={styles.userName}>{referral.referredUser}</span>
-              <span style={styles.date}>
-                {new Date(referral.dateReferred).toLocaleDateString()}
-              </span>
-              <span 
-                style={{
-                  ...styles.status,
-                  backgroundColor: getStatusColor(referral.status)
-                }}
-              >
-                {referral.status}
-              </span>
-              <span style={styles.earnings}>
-                {referral.earnings > 0 ? `₦${referral.earnings.toLocaleString()}` : '-'}
-              </span>
             </div>
           ))}
         </div>
-        
-        {referralHistory.length === 0 && (
-          <div style={styles.emptyState}>
-            <p>No referrals yet. Start sharing your code to earn rewards!</p>
+
+        {/* Code card */}
+        <div style={s.codeCard}>
+          <div style={s.codeCardHead}>
+            <div style={s.codeCardIcon}>🎁</div>
+            <div>
+              <p style={s.codeCardTitle}>Your Referral Code</p>
+              <p style={s.codeCardSub}>Share this code and earn rewards</p>
+            </div>
           </div>
-        )}
-      </div>
+
+          <div style={s.codeDisplay}>
+            <span style={s.codeText}>{code}</span>
+            <button style={s.copyBtn} onClick={() => copy(code, 'code')}>
+              {copied === 'code' ? '✓ Copied' : '📋 Copy Code'}
+            </button>
+          </div>
+
+          <div style={s.linkRow}>
+            <span style={s.linkText}>{link}</span>
+            <button style={{ ...s.copyBtn, ...s.copyBtnSmall }} onClick={() => copy(link, 'link')}>
+              {copied === 'link' ? '✓' : '📋'}
+            </button>
+          </div>
+
+          <div style={s.shareRow}>
+            <p style={s.shareLabel}>Share via</p>
+            <div style={s.shareButtons}>
+              <button style={{ ...s.shareBtn, ...s.shareBtnWA }} onClick={() => share('whatsapp')}>📱 WhatsApp</button>
+              <button style={{ ...s.shareBtn, ...s.shareBtnTW }} onClick={() => share('twitter')}>🐦 Twitter</button>
+              <button style={{ ...s.shareBtn, ...s.shareBtnFB }} onClick={() => share('facebook')}>📘 Facebook</button>
+            </div>
+          </div>
+        </div>
+
+        {/* How it works */}
+        <section style={s.section}>
+          <h2 style={s.sectionTitle}>How It Works</h2>
+          <div style={s.stepsGrid}>
+            {[
+              { n: '1', title: 'Share Your Code', desc: 'Share your unique referral code or link with friends and family.' },
+              { n: '2', title: 'Friend Registers', desc: 'Your friend signs up using your code and makes their first purchase.' },
+              { n: '3', title: 'Earn Rewards',     desc: 'You both get ₦2,000 credited to your wallets instantly.' },
+            ].map((step) => (
+              <div key={step.n} style={s.stepCard}>
+                <div style={s.stepNum}>{step.n}</div>
+                <h3 style={s.stepTitle}>{step.title}</h3>
+                <p style={s.stepDesc}>{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* History */}
+        <section style={s.section}>
+          <h2 style={s.sectionTitle}>Referral History</h2>
+          <div style={s.table}>
+            <div style={s.tableHead}>
+              <span>User</span>
+              <span>Date</span>
+              <span>Status</span>
+              <span style={{ textAlign: 'right' as const }}>Earnings</span>
+            </div>
+            {MOCK_HISTORY.map((r) => {
+              const st = STATUS_STYLES[r.status];
+              return (
+                <div key={r.id} style={s.tableRow}>
+                  <span style={s.rowUser}>{r.referredUser}</span>
+                  <span style={s.rowDate}>{new Date(r.dateReferred).toLocaleDateString()}</span>
+                  <span style={{ ...s.rowStatus, backgroundColor: st.bg, color: st.color }}>
+                    {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                  </span>
+                  <span style={{ ...s.rowEarnings, textAlign: 'right' as const }}>
+                    {r.earnings > 0 ? `₦${r.earnings.toLocaleString()}` : '—'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+      </main>
     </div>
   );
 }
 
-const styles = {
-  container: {
-    padding: '20px',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    backgroundColor: '#f9fafb',
-    minHeight: '100vh',
-  },
-  loading: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '400px',
-    gap: '16px',
-  },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '4px solid #f3f4f6',
-    borderTop: '4px solid #3b82f6',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    marginBottom: '30px',
-  },
-  backButton: {
-    padding: '8px 16px',
-    backgroundColor: '#6b7280',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  title: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: 0,
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    marginBottom: '30px',
-  },
-  statCard: {
-    backgroundColor: '#ffffff',
-    padding: '24px',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e5e7eb',
-  },
-  statIcon: {
-    fontSize: '32px',
-    width: '60px',
-    height: '60px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f3f4f6',
-    borderRadius: '12px',
-  },
-  statContent: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-  },
-  statNumber: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  statLabel: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  referralSection: {
-    marginBottom: '30px',
-  },
-  sectionTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '16px',
-  },
-  referralCard: {
-    backgroundColor: '#ffffff',
-    padding: '30px',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  },
-  referralCodeSection: {
-    marginBottom: '30px',
-  },
-  codeContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    marginBottom: '20px',
-    flexWrap: 'wrap' as const,
-  },
-  codeLabel: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
-  },
-  referralCode: {
-    fontSize: '20px',
-    fontWeight: 'bold',
-    color: '#3b82f6',
-    padding: '8px 16px',
-    backgroundColor: '#f0f9ff',
-    borderRadius: '8px',
-    border: '2px solid #3b82f6',
-  },
-  copyButton: {
-    padding: '8px 16px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  linkContainer: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '8px',
-  },
-  linkLabel: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
-  },
-  linkBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px',
-    backgroundColor: '#f9fafb',
-    borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-  },
-  referralLink: {
-    flex: 1,
-    fontSize: '14px',
-    color: '#6b7280',
-    wordBreak: 'break-all' as const,
-  },
-  shareSection: {
-    borderTop: '1px solid #e5e7eb',
-    paddingTop: '20px',
-  },
-  shareTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '12px',
-  },
-  shareButtons: {
-    display: 'flex',
-    gap: '12px',
-    flexWrap: 'wrap' as const,
-  },
-  shareButton: {
-    padding: '10px 20px',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-  },
-  howItWorksSection: {
-    marginBottom: '30px',
-  },
-  stepsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-  },
-  step: {
-    backgroundColor: '#ffffff',
-    padding: '24px',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-    textAlign: 'center' as const,
-  },
-  stepNumber: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    fontWeight: 'bold',
-    margin: '0 auto 16px',
-  },
-  stepTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  stepDescription: {
-    fontSize: '14px',
-    color: '#6b7280',
-    lineHeight: '1.5',
-  },
-  historySection: {
-    backgroundColor: '#ffffff',
-    padding: '24px',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-  },
-  historyTable: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1px',
-    backgroundColor: '#f3f4f6',
-    borderRadius: '8px',
-    overflow: 'hidden',
-  },
-  tableHeader: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr 1fr',
-    gap: '16px',
-    padding: '16px',
-    backgroundColor: '#f9fafb',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  tableRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr 1fr',
-    gap: '16px',
-    padding: '16px',
-    backgroundColor: '#ffffff',
-    fontSize: '14px',
-    alignItems: 'center',
-  },
-  userName: {
-    fontWeight: '500',
-    color: '#1f2937',
-  },
-  date: {
-    color: '#6b7280',
-  },
-  status: {
-    padding: '4px 8px',
-    borderRadius: '4px',
-    color: 'white',
-    fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'capitalize' as const,
-    textAlign: 'center' as const,
-  },
-  earnings: {
-    fontWeight: '600',
-    color: '#16a34a',
-  },
-  emptyState: {
-    textAlign: 'center' as const,
-    padding: '40px',
-    color: '#6b7280',
-  },
+const s = {
+  root: { minHeight: '100vh', backgroundColor: '#f5f6fa', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+  main: { maxWidth: '1100px' },
+
+  pageHeader: { marginBottom: '24px' },
+  pageTitle: { fontSize: '24px', fontWeight: '800', color: '#111827', margin: '0 0 4px' },
+  pageSub: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '12px', marginBottom: '24px' },
+  statCard: { backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '14px' },
+  statIcon: { width: '44px', height: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 },
+  statValue: { fontSize: '20px', fontWeight: '800', color: '#111827', margin: '0 0 2px' },
+  statLabel: { fontSize: '12px', color: '#9ca3af', margin: 0, fontWeight: '500' },
+
+  codeCard: { backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', padding: '28px', marginBottom: '24px' },
+  codeCardHead: { display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' },
+  codeCardIcon: { width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' },
+  codeCardTitle: { fontSize: '16px', fontWeight: '700', color: '#111827', margin: '0 0 2px' },
+  codeCardSub: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+  codeDisplay: { display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '14px', border: '1.5px dashed #e5e7eb', marginBottom: '12px', flexWrap: 'wrap' as const },
+  codeText: { flex: 1, fontSize: '22px', fontWeight: '800', color: '#4f46e5', letterSpacing: '3px', minWidth: '120px' },
+  copyBtn: { padding: '9px 18px', fontSize: '13px', fontWeight: '600', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', whiteSpace: 'nowrap' as const },
+  copyBtnSmall: { padding: '8px 12px', fontSize: '14px', flexShrink: 0 },
+  linkRow: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', backgroundColor: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '20px' },
+  linkText: { flex: 1, fontSize: '12px', color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  shareRow: { borderTop: '1px solid #f1f3f5', paddingTop: '20px' },
+  shareLabel: { fontSize: '12px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0 0 12px' },
+  shareButtons: { display: 'flex', gap: '10px', flexWrap: 'wrap' as const },
+  shareBtn: { padding: '10px 18px', fontSize: '13.5px', fontWeight: '600', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer' },
+  shareBtnWA: { backgroundColor: '#25d366' },
+  shareBtnTW: { backgroundColor: '#1da1f2' },
+  shareBtnFB: { backgroundColor: '#4267b2' },
+
+  section: { marginBottom: '24px' },
+  sectionTitle: { fontSize: '16px', fontWeight: '700', color: '#111827', margin: '0 0 14px' },
+
+  stepsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '12px' },
+  stepCard: { backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: '22px', textAlign: 'center' as const },
+  stepNum: { width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', margin: '0 auto 14px' },
+  stepTitle: { fontSize: '15px', fontWeight: '700', color: '#111827', margin: '0 0 8px' },
+  stepDesc: { fontSize: '13px', color: '#6b7280', lineHeight: '1.6', margin: 0 },
+
+  table: { backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' },
+  tableHead: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '12px 20px', backgroundColor: '#fafafa', borderBottom: '1px solid #f1f3f5', fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.5px' },
+  tableRow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', padding: '14px 20px', borderBottom: '1px solid #f9fafb', alignItems: 'center', fontSize: '13.5px' },
+  rowUser: { fontWeight: '600', color: '#111827' },
+  rowDate: { color: '#6b7280' },
+  rowStatus: { padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', display: 'inline-block', width: 'fit-content' },
+  rowEarnings: { fontWeight: '700', color: '#059669' },
 };

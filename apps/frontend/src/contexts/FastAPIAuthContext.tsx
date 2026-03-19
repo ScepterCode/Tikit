@@ -45,6 +45,54 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Maps FastAPI snake_case response → AuthUser camelCase
+function mapUser(b: any): AuthUser {
+  return {
+    id: b.id,
+    phoneNumber: b.phone_number,
+    firstName: b.first_name,
+    lastName: b.last_name,
+    email: b.email,
+    state: b.state,
+    role: b.role,
+    walletBalance: b.wallet_balance || 0,
+    referralCode: b.referral_code || '',
+    organizationName: b.organization_name,
+    organizationType: b.organization_type,
+    isVerified: b.is_verified || false,
+    createdAt: b.created_at,
+  };
+}
+
+// Builds AuthUser from Supabase user object (metadata stored at signup).
+// Supabase is used as the reliable source for display data since the
+// backend may be a mock that returns placeholder user data.
+function buildUserFromSupabase(sbUser: any, phoneOverride?: string): AuthUser {
+  const meta = sbUser.user_metadata || {};
+  // Phone is stored in sbUser.phone or encoded in email as phone@grooovy.temp
+  const phone =
+    phoneOverride ||
+    sbUser.phone ||
+    (sbUser.email?.endsWith('@grooovy.temp')
+      ? sbUser.email.replace('@grooovy.temp', '')
+      : '');
+  return {
+    id: sbUser.id,
+    phoneNumber: phone,
+    firstName: meta.firstName || '',
+    lastName: meta.lastName || '',
+    email: sbUser.email?.endsWith('@grooovy.temp') ? undefined : sbUser.email,
+    state: meta.state || '',
+    role: meta.role || 'attendee',
+    walletBalance: 0,
+    referralCode: '',
+    organizationName: meta.organizationName,
+    organizationType: meta.organizationType,
+    isVerified: !!sbUser.email_confirmed_at,
+    createdAt: sbUser.created_at,
+  };
+}
+
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -64,17 +112,15 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
     }
     
     // Listen for Supabase auth changes
+    // NOTE: We do NOT fetch user data here. FastAPI is the source of truth for user data.
+    // This listener only tracks the Supabase session token for API calls that need it.
+    // Fetching user here causes stale/wrong user data when Supabase and FastAPI are out of sync.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
-        
-        if (session?.user) {
-          await fetchUserFromAPI();
-        } else {
-          setUser(null);
-        }
-        
+        // NEVER call fetchUserFromAPI() here - it races with the login flow
+        // and returns the wrong user when no FastAPI token is set yet
         setLoading(false);
       }
     );
@@ -84,23 +130,26 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
 
   const initializeAuth = async () => {
     try {
-      if (!supabase) {
-        setLoading(false);
-        return;
+      // Restore FastAPI token so API calls are authenticated
+      const storedToken = localStorage.getItem('fastapi_token');
+      if (storedToken) {
+        apiService.setFastAPIToken(storedToken);
       }
 
-      // Get current Supabase session
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error getting session:', error);
-        setLoading(false);
-        return;
+      // Primary: restore user from Supabase session (real user metadata)
+      // The backend may be a mock that returns placeholder data, so Supabase
+      // is the reliable source of truth for who the user actually is.
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setSession(session);
+          setUser(buildUserFromSupabase(session.user));
+          return;
+        }
       }
 
-      setSession(session);
-
-      if (session?.user) {
+      // Fallback: if no Supabase session but we have a FastAPI token, try the API
+      if (storedToken) {
         await fetchUserFromAPI();
       }
     } catch (error) {
@@ -113,46 +162,13 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
   const fetchUserFromAPI = async () => {
     try {
       const response = await apiService.getCurrentUser();
-      
       if (response.success && response.data) {
-        const backendUser = response.data;
-        setUser({
-          id: backendUser.id,
-          phoneNumber: backendUser.phone_number,
-          firstName: backendUser.first_name,
-          lastName: backendUser.last_name,
-          email: backendUser.email,
-          state: backendUser.state,
-          role: backendUser.role,
-          walletBalance: backendUser.wallet_balance || 0,
-          referralCode: backendUser.referral_code || '',
-          organizationName: backendUser.organization_name,
-          organizationType: backendUser.organization_type,
-          isVerified: backendUser.is_verified || false,
-          createdAt: backendUser.created_at
-        });
+        setUser(mapUser(response.data));
       } else {
         console.error('Failed to fetch user from API:', response.error);
-        // If API fails, try to get basic info from Supabase
-        if (supabase) {
-          const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-          if (supabaseUser) {
-            // Create minimal user object from Supabase data
-            setUser({
-              id: supabaseUser.id,
-              phoneNumber: supabaseUser.phone || '',
-              firstName: supabaseUser.user_metadata?.firstName || '',
-              lastName: supabaseUser.user_metadata?.lastName || '',
-              email: supabaseUser.email || '',
-              state: supabaseUser.user_metadata?.state || '',
-              role: supabaseUser.user_metadata?.role || 'attendee',
-              walletBalance: 0,
-              referralCode: '',
-              isVerified: supabaseUser.email_confirmed_at !== null,
-              createdAt: supabaseUser.created_at
-            });
-          }
-        }
+        // Clear stored token if /auth/me rejects it - token is invalid
+        localStorage.removeItem('fastapi_token');
+        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user from API:', error);
@@ -191,51 +207,49 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
       // Then create Supabase auth user
       if (supabase) {
         console.log('🔍 Creating Supabase user with metadata...');
-        const { error } = await supabase.auth.signUp({
-        email: userData.email || `${userData.phoneNumber}@grooovy.temp`,
-        password: userData.password,
-        phone: userData.phoneNumber,
-        options: {
-          data: {
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            state: userData.state,
-            role: userData.role || 'attendee', // Ensure role is always set
-            organizationName: userData.organizationName
-          }
-        }
-      });
+        const sbEmail = userData.email || `${userData.phoneNumber}@grooovy.temp`;
+        // Store the email so we can look it up on future logins
+        localStorage.setItem(`sb_email_${userData.phoneNumber}`, sbEmail);
 
-        if (error) {
-          console.error('Supabase signup error:', error);
-          // API registration succeeded but Supabase failed
-          // This is okay for hybrid mode
-        } else {
+        const { data: sbData, error: sbError } = await supabase.auth.signUp({
+          email: sbEmail,
+          password: userData.password,
+          phone: userData.phoneNumber,
+          options: {
+            data: {
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              state: userData.state,
+              role: userData.role || 'attendee',
+              organizationName: userData.organizationName
+            }
+          }
+        });
+
+        if (sbError) {
+          console.error('Supabase signup error:', sbError);
+        } else if (sbData.user) {
           console.log('✅ Supabase user created successfully');
+          // Use Supabase metadata as the user — it has the real submitted data
+          const regToken = apiResponse.data?.access_token || apiResponse.data?.token;
+          if (regToken) {
+            localStorage.setItem('fastapi_token', regToken);
+            apiService.setFastAPIToken(regToken);
+          }
+          setUser(buildUserFromSupabase(sbData.user, userData.phoneNumber));
+          setSession(sbData.session);
+          return { success: true };
         }
       }
 
-      // Set user data from API response
+      // Fallback: Supabase not available — use backend response data
       if (apiResponse.data?.user) {
-        const backendUser = apiResponse.data.user;
-        const mappedUser = {
-          id: backendUser.id,
-          phoneNumber: backendUser.phone_number,
-          firstName: backendUser.first_name,
-          lastName: backendUser.last_name,
-          email: backendUser.email,
-          state: backendUser.state,
-          role: backendUser.role,
-          walletBalance: backendUser.wallet_balance || 0,
-          referralCode: backendUser.referral_code || '',
-          organizationName: backendUser.organization_name,
-          organizationType: backendUser.organization_type,
-          isVerified: backendUser.is_verified || false,
-          createdAt: backendUser.created_at
-        };
-        console.log('✅ Setting user after registration:', mappedUser);
-        console.log('- Final user role:', mappedUser.role);
-        setUser(mappedUser);
+        const regToken = apiResponse.data?.access_token || apiResponse.data?.token;
+        if (regToken) {
+          localStorage.setItem('fastapi_token', regToken);
+          apiService.setFastAPIToken(regToken);
+        }
+        setUser(mapUser(apiResponse.data.user));
       }
 
       return { success: true };
@@ -265,46 +279,30 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
         };
       }
 
-      // Then sign in to Supabase
-      if (supabase) {
-        const email = apiResponse.data?.user?.email || `${phoneNumber}@grooovy.temp`;
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+      // Store the FastAPI token for API calls
+      const fastapiToken = apiResponse.data?.access_token || apiResponse.data?.token;
+      if (fastapiToken) {
+        localStorage.setItem('fastapi_token', fastapiToken);
+        apiService.setFastAPIToken(fastapiToken);
+      }
 
-        if (error) {
-          console.error('Supabase signin error:', error);
-          // API login succeeded but Supabase failed
-          // This is okay for hybrid mode, set user from API
-          if (apiResponse.data?.user) {
-            setUser(apiResponse.data.user);
-          }
-        } else {
-          // Both succeeded, user will be set via auth state change
-          setSession(data.session);
+      // Sign into Supabase and use its metadata as the real user data.
+      // The backend may return placeholder data (e.g. a mock), so Supabase
+      // user_metadata (stored at signup) is the reliable source of truth.
+      if (supabase) {
+        // Look up the email used at registration (stored in localStorage at signup)
+        const email = localStorage.getItem(`sb_email_${phoneNumber}`) || `${phoneNumber}@grooovy.temp`;
+        const { data: sbData, error: sbError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!sbError && sbData.user) {
+          setSession(sbData.session);
+          setUser(buildUserFromSupabase(sbData.user, phoneNumber));
+          return { success: true };
         }
-      } else {
-        // No Supabase, just use API data
-        if (apiResponse.data?.user) {
-          const backendUser = apiResponse.data.user;
-          const mappedUser = {
-            id: backendUser.id,
-            phoneNumber: backendUser.phone_number,
-            firstName: backendUser.first_name,
-            lastName: backendUser.last_name,
-            email: backendUser.email,
-            state: backendUser.state,
-            role: backendUser.role,
-            walletBalance: backendUser.wallet_balance || 0,
-            referralCode: backendUser.referral_code || '',
-            organizationName: backendUser.organization_name,
-            organizationType: backendUser.organization_type,
-            isVerified: backendUser.is_verified || false,
-            createdAt: backendUser.created_at
-          };
-          setUser(mappedUser);
-        }
+      }
+
+      // Fallback: use whatever the backend returned (may be mock/placeholder)
+      if (apiResponse.data?.user) {
+        setUser(mapUser(apiResponse.data.user));
       }
 
       return { success: true };
@@ -326,11 +324,11 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
 
       // Sign out from both FastAPI and Supabase
       const promises: Promise<any>[] = [apiService.logout()];
-      if (supabase) {
-        promises.push(supabase.auth.signOut());
-      }
+      if (supabase) promises.push(supabase.auth.signOut());
       await Promise.all(promises);
 
+      localStorage.removeItem('fastapi_token');
+      if (apiService.clearAuth) apiService.clearAuth();
       setUser(null);
       setSession(null);
 
@@ -342,8 +340,10 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
   };
 
   const refreshUser = async () => {
-    if (session?.user) {
-      await fetchUserFromAPI();
+    if (!supabase) return;
+    const { data: { user: sbUser } } = await supabase.auth.getUser();
+    if (sbUser) {
+      setUser(buildUserFromSupabase(sbUser, user?.phoneNumber));
     }
   };
 

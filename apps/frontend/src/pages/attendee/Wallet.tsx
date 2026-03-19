@@ -1,444 +1,220 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { DashboardNavbar } from '../../components/layout/DashboardNavbar';
+import { DashboardSidebar, SIDEBAR_WIDTH, SIDEBAR_BREAK } from '../../components/layout/DashboardSidebar';
+
+const QUICK_AMOUNTS = [1000, 2000, 5000, 10000];
 
 export function Wallet() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
-  const [showAddFunds, setShowAddFunds] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < SIDEBAR_BREAK);
+  const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState('');
 
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < SIDEBAR_BREAK);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleLogout = async () => { await signOut(); navigate('/'); };
+
   const handleAddFunds = () => {
-    // Mock add funds functionality
-    alert(`Adding ₦${amount} to wallet (Mock functionality)`);
-    setShowAddFunds(false);
+    alert(`Adding ₦${parseInt(amount).toLocaleString()} to wallet (Mock)`);
+    setShowModal(false);
     setAmount('');
   };
 
+  if (loading || !user) {
+    return (
+      <div style={s.fullCenter}>
+        <div style={s.spinner} />
+      </div>
+    );
+  }
+
+  const mainPadding = isMobile
+    ? '96px 16px 60px'
+    : `96px 40px 60px ${SIDEBAR_WIDTH + 40}px`;
+
   return (
-    <div style={styles.container}>
-      {/* Top Bar */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Grooovy</h1>
-        <div style={styles.userMenu}>
-          <span style={styles.userName}>
-            {user?.firstName} {user?.lastName}
-          </span>
-          <button onClick={() => signOut()} style={styles.logoutButton}>
-            Logout
-          </button>
+    <div style={s.root}>
+      <DashboardNavbar user={user} onLogout={handleLogout} />
+      <DashboardSidebar />
+
+      <main style={{ ...s.main, padding: mainPadding }}>
+
+        {/* Page header */}
+        <div style={s.pageHeader}>
+          <div>
+            <h1 style={s.pageTitle}>My Wallet</h1>
+            <p style={s.pageSub}>Manage your funds and transactions</p>
+          </div>
         </div>
-      </header>
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="🏠" label="Dashboard" onClick={() => navigate('/attendee/dashboard')} />
-            <NavItem icon="🎫" label="My Tickets" onClick={() => navigate('/attendee/tickets')} />
-            <NavItem icon="💰" label="Wallet" active />
-            <NavItem icon="🎉" label="Browse Events" onClick={() => navigate('/events')} />
-            <NavItem icon="🎁" label="Referrals" onClick={() => navigate('/attendee/referrals')} />
-            <NavItem icon="👤" label="Profile" onClick={() => navigate('/attendee/profile')} />
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main style={styles.main}>
-          <div style={styles.pageHeader}>
-            <h2 style={styles.pageTitle}>My Wallet</h2>
-            <button 
-              style={styles.primaryButton} 
-              onClick={() => setShowAddFunds(true)}
-            >
-              Add Funds
-            </button>
-          </div>
-
-          {/* Wallet Balance Card */}
-          <div style={styles.balanceCard}>
-            <div style={styles.balanceHeader}>
-              <h3 style={styles.balanceTitle}>Available Balance</h3>
-              <span style={styles.balanceAmount}>₦{user?.walletBalance?.toLocaleString() || '0'}</span>
+        {/* Balance card */}
+        <div style={s.balanceCard}>
+          <div style={s.balanceOrb1} />
+          <div style={s.balanceOrb2} />
+          <div style={s.balanceInner}>
+            <div style={s.balanceLeft}>
+              <p style={s.balanceLabel}>Available Balance</p>
+              <p style={s.balanceAmount}>₦{(user.walletBalance || 0).toLocaleString()}</p>
+              <p style={s.balanceSub}>Grooovy Wallet</p>
             </div>
-            <div style={styles.balanceActions}>
-              <button 
-                style={styles.actionButton}
-                onClick={() => setShowAddFunds(true)}
+            <div style={s.balanceActions}>
+              <ActionBtn icon="💳" label="Add Funds" onClick={() => setShowModal(true)} />
+              <ActionBtn icon="📤" label="Send" onClick={() => {}} />
+              <ActionBtn icon="📥" label="Request" onClick={() => {}} />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick amounts */}
+        <section style={s.section}>
+          <h2 style={s.sectionTitle}>Quick Add</h2>
+          <div style={s.amountGrid}>
+            {QUICK_AMOUNTS.map((amt) => (
+              <button
+                key={amt}
+                style={s.amountChip}
+                onClick={() => { setAmount(String(amt)); setShowModal(true); }}
               >
-                💳 Add Funds
+                <span style={s.amountValue}>₦{amt.toLocaleString()}</span>
+                <span style={s.amountPlus}>+</span>
               </button>
-              <button style={styles.actionButton}>
-                📤 Send Money
-              </button>
-              <button style={styles.actionButton}>
-                📥 Request Money
-              </button>
-            </div>
+            ))}
           </div>
+        </section>
 
-          {/* Quick Actions */}
-          <div style={styles.quickActions}>
-            <h3 style={styles.sectionTitle}>Quick Add</h3>
-            <div style={styles.amountGrid}>
-              {['1000', '2000', '5000', '10000'].map((amt) => (
-                <button
-                  key={amt}
-                  style={styles.amountButton}
-                  onClick={() => {
-                    setAmount(amt);
-                    setShowAddFunds(true);
-                  }}
-                >
-                  ₦{parseInt(amt).toLocaleString()}
-                </button>
-              ))}
-            </div>
+        {/* Transactions */}
+        <section style={s.section}>
+          <h2 style={s.sectionTitle}>Recent Transactions</h2>
+          <div style={s.emptyCard}>
+            <div style={s.emptyIconWrap}><span style={s.emptyIcon}>💳</span></div>
+            <p style={s.emptyTitle}>No transactions yet</p>
+            <p style={s.emptyText}>Your transaction history will appear here.</p>
           </div>
+        </section>
 
-          {/* Transaction History */}
-          <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>Recent Transactions</h3>
-            <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>💳</div>
-              <h4 style={styles.emptyTitle}>No transactions yet</h4>
-              <p style={styles.emptyText}>
-                Your transaction history will appear here once you start using your wallet.
-              </p>
+      </main>
+
+      {/* Add funds modal */}
+      {showModal && (
+        <div style={s.overlay} onClick={() => setShowModal(false)}>
+          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={s.modalHead}>
+              <div>
+                <p style={s.modalTitle}>Add Funds</p>
+                <p style={s.modalSub}>Enter the amount to top up your wallet</p>
+              </div>
+              <button style={s.modalClose} onClick={() => setShowModal(false)}>✕</button>
             </div>
-          </div>
-
-          {/* Add Funds Modal */}
-          {showAddFunds && (
-            <div style={styles.modal}>
-              <div style={styles.modalContent}>
-                <div style={styles.modalHeader}>
-                  <h3 style={styles.modalTitle}>Add Funds</h3>
-                  <button 
-                    style={styles.closeButton}
-                    onClick={() => setShowAddFunds(false)}
+            <div style={s.modalBody}>
+              <label style={s.inputLabel}>Amount (₦)</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                style={s.input}
+                placeholder="e.g. 5000"
+                min="100"
+                autoFocus
+              />
+              <div style={s.quickRow}>
+                {QUICK_AMOUNTS.map((a) => (
+                  <button
+                    key={a}
+                    style={{ ...s.quickChip, ...(amount === String(a) ? s.quickChipActive : {}) }}
+                    onClick={() => setAmount(String(a))}
                   >
-                    ✕
+                    ₦{a.toLocaleString()}
                   </button>
-                </div>
-                <div style={styles.modalBody}>
-                  <label style={styles.label}>Amount (₦)</label>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    style={styles.input}
-                    placeholder="Enter amount"
-                    min="100"
-                  />
-                  <div style={styles.modalActions}>
-                    <button 
-                      style={styles.secondaryButton}
-                      onClick={() => setShowAddFunds(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      style={styles.primaryButton}
-                      onClick={handleAddFunds}
-                      disabled={!amount || parseInt(amount) < 100}
-                    >
-                      Add ₦{amount ? parseInt(amount).toLocaleString() : '0'}
-                    </button>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
-          )}
-        </main>
-      </div>
+            <div style={s.modalFoot}>
+              <button style={s.cancelBtn} onClick={() => setShowModal(false)}>Cancel</button>
+              <button
+                style={{ ...s.confirmBtn, ...(!amount || parseInt(amount) < 100 ? s.confirmBtnDisabled : {}) }}
+                onClick={handleAddFunds}
+                disabled={!amount || parseInt(amount) < 100}
+              >
+                Add ₦{amount ? parseInt(amount).toLocaleString() : '0'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function NavItem({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
+function ActionBtn({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
   return (
-    <button
-      style={{
-        ...styles.navItem,
-        ...(active ? styles.navItemActive : {}),
-      }}
-      onClick={onClick}
-    >
-      <span style={styles.navIcon}>{icon}</span>
-      <span>{label}</span>
+    <button style={s.balanceActionBtn} onClick={onClick}>
+      <span style={s.balanceActionIcon}>{icon}</span>
+      <span style={s.balanceActionLabel}>{label}</span>
     </button>
   );
 }
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#667eea',
-    margin: 0,
-  },
-  userMenu: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  userName: {
-    fontSize: '14px',
-    color: '#374151',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#f3f4f6',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    color: '#374151',
-  },
-  layout: {
-    display: 'flex',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
-    minHeight: 'calc(100vh - 65px)',
-    padding: '24px 0',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-    padding: '0 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#6b7280',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s',
-  },
-  navItemActive: {
-    backgroundColor: '#f5f7ff',
-    color: '#667eea',
-    fontWeight: '500',
-  },
-  navIcon: {
-    fontSize: '18px',
-  },
-  main: {
-    flex: 1,
-    padding: '32px',
-    maxWidth: '1200px',
-  },
-  pageHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '32px',
-  },
-  pageTitle: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: 0,
-  },
-  balanceCard: {
-    backgroundColor: '#667eea',
-    padding: '32px',
-    borderRadius: '16px',
-    marginBottom: '32px',
-    color: '#ffffff',
-  },
-  balanceHeader: {
-    marginBottom: '24px',
-  },
-  balanceTitle: {
-    fontSize: '16px',
-    fontWeight: '500',
-    marginBottom: '8px',
-    opacity: 0.9,
-  },
-  balanceAmount: {
-    fontSize: '36px',
-    fontWeight: 'bold',
-  },
-  balanceActions: {
-    display: 'flex',
-    gap: '12px',
-  },
-  actionButton: {
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  quickActions: {
-    marginBottom: '32px',
-  },
-  sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '16px',
-  },
-  amountGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-    gap: '12px',
-  },
-  amountButton: {
-    padding: '16px',
-    fontSize: '16px',
-    fontWeight: '600',
-    backgroundColor: '#ffffff',
-    color: '#667eea',
-    border: '2px solid #e5e7eb',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  section: {
-    marginBottom: '32px',
-  },
-  emptyState: {
-    backgroundColor: '#ffffff',
-    padding: '48px 32px',
-    borderRadius: '12px',
-    textAlign: 'center' as const,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  },
-  emptyIcon: {
-    fontSize: '48px',
-    marginBottom: '16px',
-  },
-  emptyTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  emptyText: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  modal: {
-    position: 'fixed' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  },
-  modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '400px',
-    margin: '20px',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px 24px',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  modalTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
-    margin: 0,
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    fontSize: '18px',
-    cursor: 'pointer',
-    color: '#6b7280',
-  },
-  modalBody: {
-    padding: '24px',
-  },
-  label: {
-    display: 'block',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '8px',
-  },
-  input: {
-    width: '100%',
-    padding: '12px 16px',
-    fontSize: '16px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '8px',
-    marginBottom: '24px',
-    outline: 'none',
-  },
-  modalActions: {
-    display: 'flex',
-    gap: '12px',
-  },
-  primaryButton: {
-    flex: 1,
-    padding: '12px 24px',
-    fontSize: '14px',
-    fontWeight: '600',
-    backgroundColor: '#667eea',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  },
-  secondaryButton: {
-    flex: 1,
-    padding: '12px 24px',
-    fontSize: '14px',
-    fontWeight: '600',
-    backgroundColor: '#f3f4f6',
-    color: '#374151',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  },
+const s = {
+  root: { minHeight: '100vh', backgroundColor: '#f5f6fa', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+  main: { maxWidth: '1100px' },
+  fullCenter: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f6fa' },
+  spinner: { width: '36px', height: '36px', border: '3px solid #e5e7eb', borderTop: '3px solid #667eea', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+
+  pageHeader: { marginBottom: '24px' },
+  pageTitle: { fontSize: '24px', fontWeight: '800', color: '#111827', margin: '0 0 4px' },
+  pageSub: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+
+  // Balance card
+  balanceCard: { position: 'relative' as const, background: 'linear-gradient(135deg,#1e1b4b 0%,#312e81 60%,#4c1d95 100%)', borderRadius: '20px', marginBottom: '24px', overflow: 'hidden' },
+  balanceOrb1: { position: 'absolute' as const, width: '220px', height: '220px', borderRadius: '50%', background: 'rgba(167,139,250,0.15)', top: '-60px', right: '-40px', pointerEvents: 'none' as const },
+  balanceOrb2: { position: 'absolute' as const, width: '160px', height: '160px', borderRadius: '50%', background: 'rgba(99,102,241,0.15)', bottom: '-50px', left: '30%', pointerEvents: 'none' as const },
+  balanceInner: { position: 'relative' as const, zIndex: 1, padding: '32px 36px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' as const },
+  balanceLeft: { flex: 1, minWidth: 0 },
+  balanceLabel: { fontSize: '13px', color: 'rgba(255,255,255,0.55)', margin: '0 0 8px', fontWeight: '500' },
+  balanceAmount: { fontSize: '40px', fontWeight: '800', color: '#fff', margin: '0 0 6px', lineHeight: 1 },
+  balanceSub: { fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 },
+  balanceActions: { display: 'flex', gap: '10px', flexWrap: 'wrap' as const },
+  balanceActionBtn: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '6px', padding: '12px 18px', backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '14px', cursor: 'pointer', backdropFilter: 'blur(4px)', transition: 'all 0.18s ease', minWidth: '72px' },
+  balanceActionIcon: { fontSize: '20px', lineHeight: 1 },
+  balanceActionLabel: { fontSize: '11.5px', fontWeight: '600', color: 'rgba(255,255,255,0.85)', whiteSpace: 'nowrap' as const },
+
+  // Sections
+  section: { marginBottom: '24px' },
+  sectionTitle: { fontSize: '16px', fontWeight: '700', color: '#111827', margin: '0 0 12px' },
+
+  amountGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: '10px' },
+  amountChip: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', backgroundColor: '#fff', border: '1px solid #f1f3f5', borderRadius: '14px', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', transition: 'all 0.18s ease' },
+  amountValue: { fontSize: '15px', fontWeight: '700', color: '#111827' },
+  amountPlus: { fontSize: '18px', fontWeight: '700', color: '#667eea' },
+
+  emptyCard: { backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: '52px 32px', textAlign: 'center' as const, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '10px' },
+  emptyIconWrap: { width: '72px', height: '72px', borderRadius: '20px', backgroundColor: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' },
+  emptyIcon: { fontSize: '32px', lineHeight: 1 },
+  emptyTitle: { fontSize: '17px', fontWeight: '700', color: '#111827', margin: 0 },
+  emptyText: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+
+  // Modal
+  overlay: { position: 'fixed' as const, inset: 0, backgroundColor: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
+  modal: { backgroundColor: '#fff', borderRadius: '20px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden' },
+  modalHead: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '24px 24px 16px', borderBottom: '1px solid #f1f3f5' },
+  modalTitle: { fontSize: '17px', fontWeight: '700', color: '#111827', margin: '0 0 4px' },
+  modalSub: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+  modalClose: { width: '30px', height: '30px', border: 'none', backgroundColor: '#f3f4f6', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', color: '#6b7280', flexShrink: 0 },
+  modalBody: { padding: '24px' },
+  inputLabel: { display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' },
+  input: { width: '100%', padding: '12px 14px', fontSize: '16px', fontWeight: '600', border: '2px solid #e5e7eb', borderRadius: '12px', outline: 'none', boxSizing: 'border-box' as const, color: '#111827', marginBottom: '16px', transition: 'border-color 0.15s ease' },
+  quickRow: { display: 'flex', gap: '8px', flexWrap: 'wrap' as const },
+  quickChip: { padding: '6px 14px', fontSize: '13px', fontWeight: '600', backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '20px', cursor: 'pointer', color: '#374151', transition: 'all 0.15s ease' },
+  quickChipActive: { backgroundColor: '#eef2ff', borderColor: '#667eea', color: '#4f46e5' },
+  modalFoot: { display: 'flex', gap: '10px', padding: '16px 24px', borderTop: '1px solid #f1f3f5' },
+  cancelBtn: { flex: 1, padding: '12px', fontSize: '14px', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '12px', cursor: 'pointer' },
+  confirmBtn: { flex: 1, padding: '12px', fontSize: '14px', fontWeight: '600', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer' },
+  confirmBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
 };

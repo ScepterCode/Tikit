@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
-// import { useEventCapacity } from '../hooks/useSupabaseRealtime';
+import { DashboardNavbar } from '../components/layout/DashboardNavbar';
+import { DashboardSidebar, SIDEBAR_WIDTH, SIDEBAR_BREAK } from '../components/layout/DashboardSidebar';
 
 interface Event {
   id: string;
@@ -27,7 +28,7 @@ const mockEvents: Event[] = [
     price: 15000,
     image: '🏢',
     category: 'Technology',
-    organizer: 'TechLagos'
+    organizer: 'TechLagos',
   },
   {
     id: '2',
@@ -39,7 +40,7 @@ const mockEvents: Event[] = [
     price: 8000,
     image: '🎵',
     category: 'Music',
-    organizer: 'Music Events NG'
+    organizer: 'Music Events NG',
   },
   {
     id: '3',
@@ -51,7 +52,7 @@ const mockEvents: Event[] = [
     price: 3000,
     image: '🍲',
     category: 'Food & Drink',
-    organizer: 'Naija Food Co'
+    organizer: 'Naija Food Co',
   },
   {
     id: '4',
@@ -63,147 +64,144 @@ const mockEvents: Event[] = [
     price: 5000,
     image: '💡',
     category: 'Business',
-    organizer: 'StartupNG'
-  }
+    organizer: 'StartupNG',
+  },
 ];
+
+const CATEGORIES = ['All', 'Technology', 'Music', 'Food & Drink', 'Business', 'Sports', 'Arts'];
 
 export function Events() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < SIDEBAR_BREAK);
 
-  const categories = ['All', 'Technology', 'Music', 'Food & Drink', 'Business', 'Sports', 'Arts'];
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < SIDEBAR_BREAK);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
-  const filteredEvents = mockEvents.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleLogout = async () => { await signOut(); navigate('/'); };
+
+  const filteredEvents = mockEvents.filter((event) => {
+    const matchesSearch =
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || event.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
+  const mainPadding = isMobile
+    ? '96px 16px 60px'
+    : `96px 40px 60px ${SIDEBAR_WIDTH + 40}px`;
+
   return (
-    <div style={styles.container}>
-      {/* Top Bar */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Grooovy</h1>
-        <div style={styles.userMenu}>
-          <span style={styles.userName}>
-            {user?.firstName} {user?.lastName}
-          </span>
-          <button onClick={() => signOut()} style={styles.logoutButton}>
-            Logout
-          </button>
+    <div style={s.root}>
+      <DashboardNavbar user={user!} onLogout={handleLogout} />
+      <DashboardSidebar />
+
+      <main style={{ ...s.main, padding: mainPadding }}>
+
+        {/* Page header */}
+        <div style={s.pageHeader}>
+          <div>
+            <h1 style={s.pageTitle}>Browse Events</h1>
+            <p style={s.pageSub}>{filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} available</p>
+          </div>
+          <div style={s.searchWrapper}>
+            <span style={s.searchIcon}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={s.searchInput}
+            />
+          </div>
         </div>
-      </header>
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="🏠" label="Dashboard" onClick={() => navigate('/attendee/dashboard')} />
-            <NavItem icon="🎫" label="My Tickets" onClick={() => navigate('/attendee/tickets')} />
-            <NavItem icon="💰" label="Wallet" onClick={() => navigate('/attendee/wallet')} />
-            <NavItem icon="🎉" label="Browse Events" active />
-            <NavItem icon="🎁" label="Referrals" onClick={() => navigate('/attendee/referrals')} />
-            <NavItem icon="👤" label="Profile" onClick={() => navigate('/attendee/profile')} />
-          </nav>
-        </aside>
+        {/* Category filters */}
+        <div style={s.filterBar}>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              style={{ ...s.filterChip, ...(selectedCategory === cat ? s.filterChipActive : {}) }}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
 
-        {/* Main Content */}
-        <main style={styles.main}>
-          <div style={styles.pageHeader}>
-            <h2 style={styles.pageTitle}>Browse Events</h2>
-            <div style={styles.headerActions}>
-              <input
-                type="text"
-                placeholder="Search events..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.searchInput}
-              />
-            </div>
+        {/* Events grid */}
+        {filteredEvents.length > 0 ? (
+          <div style={{ ...s.grid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+            {filteredEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
           </div>
-
-          {/* Filters */}
-          <div style={styles.filters}>
-            <div style={styles.categoryFilters}>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  style={{
-                    ...styles.categoryButton,
-                    ...(selectedCategory === category ? styles.categoryButtonActive : {}),
-                  }}
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
+        ) : (
+          <div style={s.emptyCard}>
+            <div style={s.emptyIconWrap}><span style={s.emptyIcon}>🔍</span></div>
+            <h3 style={s.emptyTitle}>No events found</h3>
+            <p style={s.emptyText}>Try adjusting your search or filter criteria.</p>
           </div>
+        )}
 
-          {/* Events Grid */}
-          <div style={styles.eventsGrid}>
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))
-            ) : (
-              <div style={styles.emptyState}>
-                <div style={styles.emptyIcon}>🔍</div>
-                <h3 style={styles.emptyTitle}>No events found</h3>
-                <p style={styles.emptyText}>
-                  Try adjusting your search or filter criteria.
-                </p>
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
 
 function EventCard({ event }: { event: Event }) {
   const navigate = useNavigate();
-
-  const handleViewEvent = () => {
-    navigate(`/events/${event.id}`);
-  };
-
-  const handleBookTicket = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation when clicking book button
-    navigate(`/events/${event.id}`);
-  };
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <div style={styles.eventCard} onClick={handleViewEvent}>
-      <div style={styles.eventImage}>{event.image}</div>
-      <div style={styles.eventContent}>
-        <div style={styles.eventCategory}>{event.category}</div>
-        <h3 style={styles.eventTitle}>{event.title}</h3>
-        <p style={styles.eventDescription}>{event.description}</p>
-        
-        <div style={styles.eventDetails}>
-          <div style={styles.eventDetail}>
-            <span style={styles.detailIcon}>📅</span>
-            <span>{new Date(event.date).toLocaleDateString()} at {event.time}</span>
+    <div
+      style={{ ...s.card, ...(hovered ? s.cardHover : {}) }}
+      onClick={() => navigate(`/events/${event.id}`)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={s.cardBanner}>
+        <span style={s.cardEmoji}>{event.image}</span>
+        <span style={s.categoryPill}>{event.category}</span>
+      </div>
+
+      <div style={s.cardBody}>
+        <h3 style={s.cardTitle}>{event.title}</h3>
+        <p style={s.cardDesc}>{event.description}</p>
+
+        <div style={s.metaList}>
+          <div style={s.metaRow}>
+            <span style={s.metaIcon}>📅</span>
+            <span style={s.metaText}>
+              {new Date(event.date).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })} · {event.time}
+            </span>
           </div>
-          <div style={styles.eventDetail}>
-            <span style={styles.detailIcon}>📍</span>
-            <span>{event.location}</span>
+          <div style={s.metaRow}>
+            <span style={s.metaIcon}>📍</span>
+            <span style={s.metaText}>{event.location}</span>
           </div>
-          <div style={styles.eventDetail}>
-            <span style={styles.detailIcon}>👤</span>
-            <span>{event.organizer}</span>
+          <div style={s.metaRow}>
+            <span style={s.metaIcon}>🎙️</span>
+            <span style={s.metaText}>{event.organizer}</span>
           </div>
         </div>
 
-        <div style={styles.eventFooter}>
-          <div style={styles.eventPrice}>₦{event.price.toLocaleString()}</div>
-          <button style={styles.bookButton} onClick={handleBookTicket}>
-            View Details
+        <div style={s.cardFooter}>
+          <div>
+            <p style={s.priceLabel}>From</p>
+            <p style={s.priceAmount}>₦{event.price.toLocaleString()}</p>
+          </div>
+          <button
+            style={s.viewBtn}
+            onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }}
+          >
+            View Details →
           </button>
         </div>
       </div>
@@ -211,256 +209,47 @@ function EventCard({ event }: { event: Event }) {
   );
 }
 
-function NavItem({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      style={{
-        ...styles.navItem,
-        ...(active ? styles.navItemActive : {}),
-      }}
-      onClick={onClick}
-    >
-      <span style={styles.navIcon}>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
+const s = {
+  root: { minHeight: '100vh', backgroundColor: '#f5f6fa', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+  main: { maxWidth: '1100px' },
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#667eea',
-    margin: 0,
-  },
-  userMenu: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  userName: {
-    fontSize: '14px',
-    color: '#374151',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#f3f4f6',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    color: '#374151',
-  },
-  layout: {
-    display: 'flex',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
-    minHeight: 'calc(100vh - 65px)',
-    padding: '24px 0',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-    padding: '0 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#6b7280',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s',
-  },
-  navItemActive: {
-    backgroundColor: '#f5f7ff',
-    color: '#667eea',
-    fontWeight: '500',
-  },
-  navIcon: {
-    fontSize: '18px',
-  },
-  main: {
-    flex: 1,
-    padding: '32px',
-    maxWidth: '1200px',
-  },
-  pageHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px',
-  },
-  pageTitle: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: 0,
-  },
-  headerActions: {
-    display: 'flex',
-    gap: '12px',
-  },
-  searchInput: {
-    padding: '12px 16px',
-    fontSize: '14px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '8px',
-    width: '300px',
-    outline: 'none',
-  },
-  filters: {
-    marginBottom: '32px',
-  },
-  categoryFilters: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap' as const,
-  },
-  categoryButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#ffffff',
-    color: '#6b7280',
-    border: '1px solid #e5e7eb',
-    borderRadius: '20px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  categoryButtonActive: {
-    backgroundColor: '#667eea',
-    color: '#ffffff',
-    borderColor: '#667eea',
-  },
-  eventsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-    gap: '24px',
-  },
-  eventCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    transition: 'all 0.2s',
-    cursor: 'pointer',
-  },
-  eventImage: {
-    height: '120px',
-    backgroundColor: '#f3f4f6',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '48px',
-  },
-  eventContent: {
-    padding: '20px',
-  },
-  eventCategory: {
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#667eea',
-    textTransform: 'uppercase' as const,
-    marginBottom: '8px',
-  },
-  eventTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  eventDescription: {
-    fontSize: '14px',
-    color: '#6b7280',
-    marginBottom: '16px',
-    lineHeight: '1.5',
-  },
-  eventDetails: {
-    marginBottom: '16px',
-  },
-  eventDetail: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '13px',
-    color: '#6b7280',
-    marginBottom: '4px',
-  },
-  detailIcon: {
-    fontSize: '14px',
-  },
-  eventFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  eventPrice: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  bookButton: {
-    padding: '10px 20px',
-    fontSize: '14px',
-    fontWeight: '600',
-    backgroundColor: '#667eea',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  emptyState: {
-    gridColumn: '1 / -1',
-    backgroundColor: '#ffffff',
-    padding: '64px 32px',
-    borderRadius: '12px',
-    textAlign: 'center' as const,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  },
-  emptyIcon: {
-    fontSize: '64px',
-    marginBottom: '16px',
-  },
-  emptyTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  emptyText: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
+  pageHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' as const },
+  pageTitle: { fontSize: '24px', fontWeight: '800', color: '#111827', margin: '0 0 4px' },
+  pageSub: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+
+  searchWrapper: { position: 'relative' as const, display: 'flex', alignItems: 'center', flexShrink: 0 },
+  searchIcon: { position: 'absolute' as const, left: '12px', fontSize: '14px', pointerEvents: 'none' as const, zIndex: 1 },
+  searchInput: { padding: '10px 16px 10px 36px', fontSize: '13.5px', border: '1.5px solid #e5e7eb', borderRadius: '12px', width: '260px', outline: 'none', backgroundColor: '#fff', color: '#111827', boxSizing: 'border-box' as const },
+
+  filterBar: { display: 'flex', gap: '8px', flexWrap: 'wrap' as const, marginBottom: '28px' },
+  filterChip: { padding: '7px 16px', fontSize: '13px', fontWeight: '500', backgroundColor: '#fff', color: '#6b7280', border: '1.5px solid #e5e7eb', borderRadius: '20px', cursor: 'pointer', whiteSpace: 'nowrap' as const },
+  filterChipActive: { backgroundColor: '#4f46e5', color: '#fff', borderColor: '#4f46e5', fontWeight: '600' },
+
+  grid: { display: 'grid', gap: '20px' },
+
+  // Card
+  card: { backgroundColor: '#fff', borderRadius: '20px', overflow: 'hidden', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', cursor: 'pointer', transition: 'all 0.2s ease' },
+  cardHover: { transform: 'translateY(-3px)', boxShadow: '0 8px 28px rgba(102,126,234,0.14)', borderColor: '#c7d2fe' },
+  cardBanner: { height: '130px', background: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' as const, flexShrink: 0 },
+  cardEmoji: { fontSize: '48px' },
+  categoryPill: { position: 'absolute' as const, top: '10px', right: '10px', fontSize: '10px', fontWeight: '700', color: '#fff', backgroundColor: 'rgba(0,0,0,0.25)', padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.4px', textTransform: 'uppercase' as const },
+  cardBody: { padding: '18px', display: 'flex', flexDirection: 'column' as const },
+  cardTitle: { fontSize: '16px', fontWeight: '700', color: '#111827', margin: '0 0 5px', lineHeight: '1.35' },
+  cardDesc: { fontSize: '13px', color: '#6b7280', margin: '0 0 12px', lineHeight: '1.55', overflow: 'hidden', display: '-webkit-box' as unknown as 'block', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const },
+
+  metaList: { display: 'flex', flexDirection: 'column' as const, gap: '5px', marginBottom: '14px' },
+  metaRow: { display: 'flex', alignItems: 'center', gap: '7px' },
+  metaIcon: { fontSize: '13px', flexShrink: 0, width: '16px', textAlign: 'center' as const },
+  metaText: { fontSize: '12px', color: '#6b7280' },
+
+  cardFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid #f3f4f6', marginTop: 'auto' },
+  priceLabel: { fontSize: '11px', color: '#9ca3af', fontWeight: '500', margin: '0 0 1px' },
+  priceAmount: { fontSize: '18px', fontWeight: '800', color: '#111827', margin: 0 },
+  viewBtn: { padding: '8px 16px', fontSize: '13px', fontWeight: '600', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', whiteSpace: 'nowrap' as const },
+
+  emptyCard: { backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: '64px 32px', textAlign: 'center' as const, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '12px' },
+  emptyIconWrap: { width: '80px', height: '80px', borderRadius: '22px', backgroundColor: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' },
+  emptyIcon: { fontSize: '36px', lineHeight: 1 },
+  emptyTitle: { fontSize: '18px', fontWeight: '700', color: '#111827', margin: 0 },
+  emptyText: { fontSize: '13px', color: '#9ca3af', margin: 0 },
 };

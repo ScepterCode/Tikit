@@ -39,6 +39,7 @@ import { FeatureDemo } from './pages/FeatureDemo';
 import { EnvDebug } from './pages/EnvDebug';
 import { SupabaseTest } from './pages/SupabaseTest';
 import { ApiStatusIndicator } from './components/common/ApiStatusIndicator';
+import { NotificationsPage } from './pages/attendee/NotificationsPage';
 
 function App() {
   return (
@@ -110,6 +111,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+          path="/attendee/notifications"
+          element={
+            <ProtectedRoute allowedRoles={['attendee']}>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
 
           {/* Events Routes - accessible to all authenticated users */}
           <Route

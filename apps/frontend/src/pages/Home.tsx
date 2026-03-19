@@ -1,6 +1,37 @@
+import { useState, useEffect } from 'react';
+
 export function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (!mobile) setMenuOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div style={styles.container}>
+
+      {/* Overlay */}
+      {menuOpen && (
+        <div
+          style={styles.overlay}
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
       {/* Animated Background Orbs */}
       <div style={styles.backgroundOrbs}>
         <div style={{ ...styles.orb, ...styles.orb1 }}></div>
@@ -9,19 +40,62 @@ export function Home() {
       </div>
 
       {/* Navigation */}
-      <nav style={styles.nav}>
+      <nav style={{ ...styles.nav, ...(scrolled ? styles.navScrolled : {}) }}>
         <div style={styles.navContent}>
           <div style={styles.logo}>
             <span style={styles.logoIcon}>🎵</span>
             <span style={styles.logoText}>Grooovy</span>
           </div>
-          <div style={styles.navButtons}>
-            <a href="/demo" style={styles.navButton}>🎉 Demo</a>
-            <a href="/auth/login" style={styles.navButton}>Login</a>
-            <a href="/auth/register" style={styles.navButtonPrimary}>Get Started</a>
-            <a href="/admin/login" style={styles.adminLink} title="Admin Access">🛡️</a>
-          </div>
+
+          {/* Desktop buttons */}
+          {!isMobile && (
+            <div style={styles.navButtons}>
+              <a href="/demo" style={styles.navButton}>🎉 Demo</a>
+              <a href="/auth/login" style={styles.navButton}>Login</a>
+              <a href="/auth/register" style={styles.navButtonPrimary}>Get Started</a>
+              <a href="/admin/login" style={styles.adminLink} title="Admin Access">🛡️</a>
+            </div>
+          )}
+
+          {/* Hamburger (mobile) */}
+          {isMobile && (
+            <button
+              style={styles.hamburger}
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle menu"
+            >
+              <span style={{ ...styles.bar, ...(menuOpen ? styles.barTopOpen : {}) }} />
+              <span style={{ ...styles.bar, ...(menuOpen ? styles.barMidOpen : {}) }} />
+              <span style={{ ...styles.bar, ...(menuOpen ? styles.barBotOpen : {}) }} />
+            </button>
+          )}
         </div>
+
+        {/* Mobile drawer */}
+        {isMobile && (
+          <div style={{
+            ...styles.mobileDrawer,
+            ...(menuOpen ? styles.mobileDrawerOpen : {}),
+          }}>
+            <div style={styles.drawerDivider} />
+            <div style={styles.mobileLinks}>
+              <a href="/demo" style={styles.mobileDemoLink} onClick={() => setMenuOpen(false)}>
+                🎉 Demo
+              </a>
+              <a href="/auth/login" style={styles.mobileLoginLink} onClick={() => setMenuOpen(false)}>
+                Login
+              </a>
+              <a href="/auth/register" style={styles.mobileCtaLink} onClick={() => setMenuOpen(false)}>
+                Get Started
+              </a>
+            </div>
+            <div style={styles.mobileAdminRow}>
+              <a href="/admin/login" style={styles.mobileAdminLink} onClick={() => setMenuOpen(false)}>
+                🛡️ Admin Access
+              </a>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -338,9 +412,148 @@ const styles = {
     left: 0,
     right: 0,
     zIndex: 100,
-    background: 'rgba(15, 12, 41, 0.8)',
+    background: 'rgba(15, 12, 41, 0.6)',
     backdropFilter: 'blur(10px)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    transition: 'all 0.3s ease',
+  },
+  navScrolled: {
+    background: 'rgba(15, 12, 41, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
+  },
+  overlay: {
+    position: 'fixed' as const,
+    inset: 0,
+    zIndex: 98,
+    background: 'rgba(0, 0, 0, 0.5)',
+  },
+  hamburger: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '5px',
+    width: '42px',
+    height: '42px',
+    background: 'rgba(255, 255, 255, 0.07)',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    zIndex: 101,
+    padding: 0,
+  },
+  bar: {
+    width: '20px',
+    height: '2px',
+    background: '#ffffff',
+    borderRadius: '2px',
+    transition: 'all 0.3s ease',
+    transformOrigin: 'center' as const,
+    display: 'block',
+  },
+  barTopOpen: {
+    transform: 'translateY(7px) rotate(45deg)',
+  },
+  barMidOpen: {
+    opacity: 0,
+    transform: 'scaleX(0)',
+  },
+  barBotOpen: {
+    transform: 'translateY(-7px) rotate(-45deg)',
+  },
+  mobileDrawer: {
+    position: 'fixed' as const,
+    top: '68px',
+    left: 0,
+    right: 0,
+    zIndex: 99,
+    background: 'rgba(15, 12, 41, 0.97)',
+    backdropFilter: 'blur(24px)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    padding: '0 20px 28px',
+    transform: 'translateY(-10px)',
+    opacity: 0,
+    pointerEvents: 'none' as const,
+    transition: 'all 0.3s ease',
+  },
+  mobileDrawerOpen: {
+    transform: 'translateY(0)',
+    opacity: 1,
+    pointerEvents: 'all' as const,
+  },
+  drawerDivider: {
+    height: '1px',
+    background: 'rgba(255, 255, 255, 0.07)',
+    margin: '0 0 20px',
+  },
+  mobileLinks: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+  },
+  mobileDemoLink: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '14px 18px',
+    border: '1px solid rgba(167, 139, 250, 0.3)',
+    borderRadius: '12px',
+    color: '#a78bfa',
+    fontSize: '15px',
+    fontWeight: '600',
+    textDecoration: 'none',
+    background: 'rgba(167, 139, 250, 0.06)',
+  },
+  mobileLoginLink: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '14px 18px',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '12px',
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: '15px',
+    fontWeight: '600',
+    textDecoration: 'none',
+    background: 'rgba(255, 255, 255, 0.05)',
+    textAlign: 'center' as const,
+  },
+  mobileCtaLink: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px 18px',
+    borderRadius: '12px',
+    color: '#ffffff',
+    fontSize: '15px',
+    fontWeight: '700',
+    textDecoration: 'none',
+    background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%)',
+    boxShadow: '0 4px 20px rgba(124, 58, 237, 0.4)',
+    textAlign: 'center' as const,
+  },
+  mobileAdminRow: {
+    marginTop: '16px',
+    paddingTop: '16px',
+    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  mobileAdminLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '9px 16px',
+    background: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '8px',
+    color: 'rgba(255, 255, 255, 0.4)',
+    fontSize: '13px',
+    fontWeight: '500',
+    textDecoration: 'none',
   },
   navContent: {
     maxWidth: '1200px',

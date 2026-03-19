@@ -1,226 +1,89 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { DashboardNavbar } from '../../components/layout/DashboardNavbar';
+import { DashboardSidebar, SIDEBAR_WIDTH, SIDEBAR_BREAK } from '../../components/layout/DashboardSidebar';
 
 export function MyTickets() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < SIDEBAR_BREAK);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < SIDEBAR_BREAK);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleLogout = async () => { await signOut(); navigate('/'); };
+
+  const mainPadding = isMobile
+    ? '96px 16px 60px'
+    : `96px 40px 60px ${SIDEBAR_WIDTH + 40}px`;
 
   return (
-    <div style={styles.container}>
-      {/* Top Bar */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Grooovy</h1>
-        <div style={styles.userMenu}>
-          <span style={styles.userName}>
-            {user?.firstName} {user?.lastName}
-          </span>
-          <button onClick={() => signOut()} style={styles.logoutButton}>
-            Logout
+    <div style={s.root}>
+      <DashboardNavbar user={user!} onLogout={handleLogout} />
+      <DashboardSidebar />
+
+      <main style={{ ...s.main, padding: mainPadding }}>
+
+        {/* Page header */}
+        <div style={s.pageHeader}>
+          <div>
+            <h1 style={s.pageTitle}>My Tickets</h1>
+            <p style={s.pageSub}>All your purchased event tickets</p>
+          </div>
+          <button style={s.primaryBtn} onClick={() => navigate('/events')}>
+            + Browse Events
           </button>
         </div>
-      </header>
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="🏠" label="Dashboard" onClick={() => navigate('/attendee/dashboard')} />
-            <NavItem icon="🎫" label="My Tickets" active />
-            <NavItem icon="💰" label="Wallet" onClick={() => navigate('/attendee/wallet')} />
-            <NavItem icon="🎉" label="Browse Events" onClick={() => navigate('/events')} />
-            <NavItem icon="🎁" label="Referrals" onClick={() => navigate('/attendee/referrals')} />
-            <NavItem icon="👤" label="Profile" onClick={() => navigate('/attendee/profile')} />
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main style={styles.main}>
-          <div style={styles.pageHeader}>
-            <h2 style={styles.pageTitle}>My Tickets</h2>
-            <button style={styles.primaryButton} onClick={() => navigate('/events')}>
-              Browse Events
+        {/* Filter row */}
+        <div style={s.filterRow}>
+          {['All', 'Upcoming', 'Past', 'Cancelled'].map((f) => (
+            <button key={f} style={{ ...s.filterChip, ...(f === 'All' ? s.filterChipActive : {}) }}>
+              {f}
             </button>
-          </div>
+          ))}
+        </div>
 
-          {/* Tickets Grid */}
-          <div style={styles.ticketsGrid}>
-            {/* Empty State */}
-            <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>🎫</div>
-              <h3 style={styles.emptyTitle}>No tickets yet</h3>
-              <p style={styles.emptyText}>
-                You haven't purchased any tickets yet. Browse events to find something exciting!
-              </p>
-              <button
-                style={styles.primaryButton}
-                onClick={() => navigate('/events')}
-              >
-                Browse Events
-              </button>
-            </div>
+        {/* Empty state */}
+        <div style={s.emptyCard}>
+          <div style={s.emptyIconWrap}>
+            <span style={s.emptyIconInner}>🎫</span>
           </div>
-        </main>
-      </div>
+          <h3 style={s.emptyTitle}>No tickets yet</h3>
+          <p style={s.emptyText}>
+            You haven't purchased any tickets yet.<br />Find something exciting to attend!
+          </p>
+          <button style={s.primaryBtn} onClick={() => navigate('/events')}>
+            Browse Events
+          </button>
+        </div>
+
+      </main>
     </div>
   );
 }
 
-function NavItem({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      style={{
-        ...styles.navItem,
-        ...(active ? styles.navItemActive : {}),
-      }}
-      onClick={onClick}
-    >
-      <span style={styles.navIcon}>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
+const s = {
+  root: { minHeight: '100vh', backgroundColor: '#f5f6fa', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+  main: { maxWidth: '1100px' },
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#667eea',
-    margin: 0,
-  },
-  userMenu: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  userName: {
-    fontSize: '14px',
-    color: '#374151',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#f3f4f6',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    color: '#374151',
-  },
-  layout: {
-    display: 'flex',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
-    minHeight: 'calc(100vh - 65px)',
-    padding: '24px 0',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-    padding: '0 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#6b7280',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s',
-  },
-  navItemActive: {
-    backgroundColor: '#f5f7ff',
-    color: '#667eea',
-    fontWeight: '500',
-  },
-  navIcon: {
-    fontSize: '18px',
-  },
-  main: {
-    flex: 1,
-    padding: '32px',
-    maxWidth: '1200px',
-  },
-  pageHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '32px',
-  },
-  pageTitle: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: 0,
-  },
-  primaryButton: {
-    padding: '12px 24px',
-    fontSize: '14px',
-    fontWeight: '600',
-    backgroundColor: '#667eea',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  },
-  ticketsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '20px',
-  },
-  emptyState: {
-    gridColumn: '1 / -1',
-    backgroundColor: '#ffffff',
-    padding: '64px 32px',
-    borderRadius: '12px',
-    textAlign: 'center' as const,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  },
-  emptyIcon: {
-    fontSize: '64px',
-    marginBottom: '16px',
-  },
-  emptyTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  emptyText: {
-    fontSize: '14px',
-    color: '#6b7280',
-    marginBottom: '24px',
-    maxWidth: '400px',
-    margin: '0 auto 24px',
-  },
+  pageHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' as const },
+  pageTitle: { fontSize: '24px', fontWeight: '800', color: '#111827', margin: '0 0 4px' },
+  pageSub: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+
+  filterRow: { display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' as const },
+  filterChip: { padding: '7px 16px', fontSize: '13px', fontWeight: '500', backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '20px', cursor: 'pointer', color: '#6b7280', transition: 'all 0.15s ease' },
+  filterChipActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5', color: '#fff', fontWeight: '600' },
+
+  primaryBtn: { padding: '10px 20px', fontSize: '13.5px', fontWeight: '600', background: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0 },
+
+  emptyCard: { backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #f1f3f5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: '64px 32px', textAlign: 'center' as const, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '12px' },
+  emptyIconWrap: { width: '88px', height: '88px', borderRadius: '24px', backgroundColor: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' },
+  emptyIconInner: { fontSize: '40px', lineHeight: 1 },
+  emptyTitle: { fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 },
+  emptyText: { fontSize: '14px', color: '#9ca3af', lineHeight: 1.6, margin: 0 },
 };

@@ -1,307 +1,88 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/FastAPIAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { DashboardNavbar } from '../../components/layout/DashboardNavbar';
+import { OrganizerSidebar, ORG_SIDEBAR_WIDTH, ORG_SIDEBAR_BREAK } from '../../components/layout/OrganizerSidebar';
+
+const STAT_CARDS = [
+  { icon: '💰', label: 'Total Revenue',      value: '₦0', sub: 'All time',           color: '#10b981', bg: '#ecfdf5' },
+  { icon: '📈', label: 'This Month',          value: '₦0', sub: 'Current month',      color: '#667eea', bg: '#eef2ff' },
+  { icon: '💳', label: 'Pending Payouts',     value: '₦0', sub: 'Processing',         color: '#f59e0b', bg: '#fffbeb' },
+  { icon: '🏦', label: 'Available Balance',   value: '₦0', sub: 'Ready to withdraw',  color: '#8b5cf6', bg: '#f5f3ff' },
+];
 
 export function OrganizerFinancials() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < ORG_SIDEBAR_BREAK);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < ORG_SIDEBAR_BREAK);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleLogout = async () => { await signOut(); navigate('/'); };
+  const mainPadding = isMobile ? '96px 16px 60px' : `96px 40px 60px ${ORG_SIDEBAR_WIDTH + 40}px`;
 
   return (
-    <div style={styles.container}>
-      {/* Top Bar */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Grooovy</h1>
-        <div style={styles.userMenu}>
-          <span style={styles.userName}>{user?.organizationName || user?.firstName}</span>
-          <button onClick={() => signOut()} style={styles.logoutButton}>
-            Logout
-          </button>
+    <div style={s.root}>
+      <DashboardNavbar user={user!} onLogout={handleLogout} />
+      <OrganizerSidebar />
+      <main style={{ ...s.main, padding: mainPadding }}>
+
+        <div style={s.titleRow}>
+          <div>
+            <h2 style={s.pageTitle}>Financials</h2>
+            <p style={s.pageSubtitle}>Track your revenue, payouts, and financial performance</p>
+          </div>
         </div>
-      </header>
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="📊" label="Dashboard" onClick={() => navigate('/organizer/dashboard')} />
-            <NavItem icon="🎉" label="My Events" onClick={() => navigate('/organizer/events')} />
-            <NavItem icon="➕" label="Create Event" onClick={() => navigate('/organizer/create-event')} />
-            <NavItem icon="👥" label="Attendees" onClick={() => navigate('/organizer/attendees')} />
-            <NavItem icon="💰" label="Financials" active />
-            <NavItem icon="📢" label="Broadcast" onClick={() => navigate('/organizer/broadcast')} />
-            <NavItem icon="📱" label="Scanner" onClick={() => navigate('/organizer/scanner')} />
-            <NavItem icon="⚙️" label="Settings" onClick={() => navigate('/organizer/settings')} />
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main style={styles.main}>
-          <div style={styles.titleRow}>
-            <div>
-              <h2 style={styles.pageTitle}>Financials</h2>
-              <p style={styles.pageSubtitle}>
-                Track your revenue, payouts, and financial performance
-              </p>
+        {/* Stat cards */}
+        <div style={s.statsGrid}>
+          {STAT_CARDS.map((c) => (
+            <div key={c.label} style={s.statCard}>
+              <div style={{ ...s.statIconBox, backgroundColor: c.bg, color: c.color }}>{c.icon}</div>
+              <div>
+                <p style={s.statLabel}>{c.label}</p>
+                <p style={{ ...s.statValue, color: c.color }}>{c.value}</p>
+                <p style={s.statSub}>{c.sub}</p>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          {/* Stats Cards */}
-          <div style={styles.statsGrid}>
-            <StatsCard
-              icon="💰"
-              title="Total Revenue"
-              value="₦0"
-              subtitle="All time"
-              color="#10b981"
-            />
-            <StatsCard
-              icon="📈"
-              title="This Month"
-              value="₦0"
-              subtitle="Current month"
-              color="#667eea"
-            />
-            <StatsCard
-              icon="💳"
-              title="Pending Payouts"
-              value="₦0"
-              subtitle="Processing"
-              color="#f59e0b"
-            />
-            <StatsCard
-              icon="🏦"
-              title="Available Balance"
-              value="₦0"
-              subtitle="Ready to withdraw"
-              color="#8b5cf6"
-            />
+        {/* Empty state */}
+        <div style={s.card}>
+          <div style={s.emptyState}>
+            <div style={s.emptyIcon}>💰</div>
+            <h3 style={s.emptyTitle}>No financial data yet</h3>
+            <p style={s.emptyText}>
+              Start selling tickets to see your revenue and financial analytics here.
+            </p>
           </div>
+        </div>
 
-          <div style={styles.content}>
-            <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>💰</div>
-              <h3 style={styles.emptyTitle}>No financial data yet</h3>
-              <p style={styles.emptyText}>
-                Start selling tickets to see your revenue and financial analytics here.
-              </p>
-            </div>
-          </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
 
-function NavItem({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      style={{
-        ...styles.navItem,
-        ...(active ? styles.navItemActive : {}),
-      }}
-      onClick={onClick}
-    >
-      <span style={styles.navIcon}>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function StatsCard({
-  icon,
-  title,
-  value,
-  subtitle,
-  color,
-}: {
-  icon: string;
-  title: string;
-  value: string;
-  subtitle: string;
-  color: string;
-}) {
-  return (
-    <div style={styles.statsCard}>
-      <div style={{ ...styles.statsIcon, backgroundColor: color + '20', color }}>
-        {icon}
-      </div>
-      <div style={styles.statsContent}>
-        <p style={styles.statsTitle}>{title}</p>
-        <p style={styles.statsValue}>{value}</p>
-        <p style={styles.statsSubtitle}>{subtitle}</p>
-      </div>
-    </div>
-  );
-}
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #e5e7eb',
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#667eea',
-    margin: 0,
-  },
-  userMenu: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  userName: {
-    fontSize: '14px',
-    color: '#374151',
-    fontWeight: '500',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#f3f4f6',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    color: '#374151',
-  },
-  layout: {
-    display: 'flex',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
-    minHeight: 'calc(100vh - 65px)',
-    padding: '24px 0',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-    padding: '0 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#6b7280',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s',
-  },
-  navItemActive: {
-    backgroundColor: '#f5f7ff',
-    color: '#667eea',
-    fontWeight: '500',
-  },
-  navIcon: {
-    fontSize: '18px',
-  },
-  main: {
-    flex: 1,
-    padding: '32px',
-    maxWidth: '1200px',
-  },
-  titleRow: {
-    marginBottom: '24px',
-  },
-  pageTitle: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '4px',
-  },
-  pageSubtitle: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '20px',
-    marginBottom: '32px',
-  },
-  statsCard: {
-    backgroundColor: '#ffffff',
-    padding: '20px',
-    borderRadius: '12px',
-    display: 'flex',
-    gap: '16px',
-    alignItems: 'flex-start',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  },
-  statsIcon: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '24px',
-  },
-  statsContent: {
-    flex: 1,
-  },
-  statsTitle: {
-    fontSize: '12px',
-    color: '#6b7280',
-    marginBottom: '4px',
-  },
-  statsValue: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: '4px',
-  },
-  statsSubtitle: {
-    fontSize: '12px',
-    color: '#9ca3af',
-  },
-  content: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '48px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    textAlign: 'center' as const,
-  },
-  emptyState: {
-    maxWidth: '400px',
-    margin: '0 auto',
-  },
-  emptyIcon: {
-    fontSize: '64px',
-    marginBottom: '16px',
-  },
-  emptyTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  emptyText: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
+const s = {
+  root: { minHeight: '100vh', backgroundColor: '#f5f6fa', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' },
+  main: { maxWidth: '1200px' },
+  titleRow: { marginBottom: '28px' },
+  pageTitle: { fontSize: '26px', fontWeight: '800', color: '#111827', margin: '0 0 4px' },
+  pageSubtitle: { fontSize: '14px', color: '#9ca3af', margin: 0 },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '16px', marginBottom: '24px' },
+  statCard: { backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #f1f3f5', padding: '20px', display: 'flex', gap: '16px', alignItems: 'flex-start' },
+  statIconBox: { width: '44px', height: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 },
+  statLabel: { fontSize: '12px', color: '#9ca3af', fontWeight: '600', textTransform: 'uppercase' as const, letterSpacing: '0.4px', margin: '0 0 4px' },
+  statValue: { fontSize: '24px', fontWeight: '800', margin: '0 0 2px' },
+  statSub: { fontSize: '11px', color: '#9ca3af', margin: 0 },
+  card: { backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #f1f3f5', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '64px 32px' },
+  emptyState: { textAlign: 'center' as const, maxWidth: '400px', margin: '0 auto' },
+  emptyIcon: { fontSize: '56px', marginBottom: '16px' },
+  emptyTitle: { fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 8px' },
+  emptyText: { fontSize: '14px', color: '#9ca3af', margin: 0, lineHeight: 1.6 },
 };

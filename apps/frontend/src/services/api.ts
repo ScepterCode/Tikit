@@ -31,10 +31,29 @@ class ApiService {
   private baseUrl: string;
   private csrfToken: string | null = null;
   private sessionId: string | null = null;
+  private fastapiToken: string | null = null;  // FastAPI JWT token
 
   constructor() {
     this.baseUrl = `${API_BASE_URL}${API_VERSION}`;
+    // Restore FastAPI token from localStorage on init
+    this.fastapiToken = localStorage.getItem('fastapi_token');
     this.initializeCSRF();
+  }
+
+  /** Store FastAPI token (called after login) */
+  setFastAPIToken(token: string | null) {
+    this.fastapiToken = token;
+    if (token) {
+      localStorage.setItem('fastapi_token', token);
+    } else {
+      localStorage.removeItem('fastapi_token');
+    }
+  }
+
+  /** Clear all auth state (called on logout) */
+  clearAuth() {
+    this.fastapiToken = null;
+    localStorage.removeItem('fastapi_token');
   }
 
   /**
@@ -55,9 +74,13 @@ class ApiService {
   }
 
   /**
-   * Get authentication token from Supabase
+   * Get authentication token — FastAPI token takes priority over Supabase
    */
   private async getAuthToken(): Promise<string | null> {
+    // Always prefer the FastAPI token if we have one
+    if (this.fastapiToken) return this.fastapiToken;
+
+    // Fall back to Supabase token only if no FastAPI token
     try {
       if (!supabase) return null;
       const { data: { session } } = await supabase.auth.getSession();

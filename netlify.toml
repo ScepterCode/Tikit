@@ -1,6 +1,6 @@
 [build]
-  # Build command - use npm since Netlify doesn't support pnpm workspaces well
-  command = "npm install && npm run build"
+  # Build command - explicitly install devDependencies
+  command = "npm install --include=dev && npm run build"
   
   # Publish directory (relative to base directory)
   publish = "dist"

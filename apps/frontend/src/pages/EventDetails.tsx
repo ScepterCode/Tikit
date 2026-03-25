@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/FastAPIAuthContext';
+import { useAuth } from '../contexts/SupabaseAuthContext';
+import { apiService } from '../services/api';
 import { TicketSelector } from '../components/tickets/TicketSelector';
 import { GroupBuyCreator } from '../components/tickets/GroupBuyCreator';
 import { GroupBuyStatus } from '../components/tickets/GroupBuyStatus';
 import { SprayMoneyLeaderboard } from '../components/events/SprayMoneyLeaderboard';
+import { SprayMoneyFeed } from '../components/spray-money/SprayMoneyFeed';
 import { WeddingTicketPurchase } from '../components/tickets/WeddingTicketPurchase';
 
 interface AsoEbiTier {
@@ -204,11 +206,26 @@ export function EventDetails() {
 
   const handleSprayMoney = async (amount: number, message: string) => {
     try {
-      // Mock API call for spray money
-      console.log('Spraying money:', { amount, message, eventId });
-      alert(`Successfully sprayed ₦${amount.toLocaleString()}! 🎉`);
-    } catch (error) {
+      const response = await apiService.request(`/events/${eventId}/spray-money`, {
+        method: 'POST',
+        body: {
+          amount,
+          message,
+          is_anonymous: false
+        }
+      });
+      
+      if (response.data.success) {
+        alert(`Successfully sprayed ₦${amount.toLocaleString()}! 🎉\nNew balance: ₦${response.data.data.new_balance.toLocaleString()}`);
+        // Refresh the page to update leaderboard
+        window.location.reload();
+      } else {
+        throw new Error('Failed to spray money');
+      }
+    } catch (error: any) {
       console.error('Error spraying money:', error);
+      const errorMessage = error.response?.data?.error?.message || 'Failed to spray money';
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -419,11 +436,18 @@ export function EventDetails() {
 
         {activeTab === 'spray' && isWedding && (
           <div style={styles.sprayTab}>
-            <SprayMoneyLeaderboard
-              eventId={event.id}
-              onSprayMoney={handleSprayMoney}
-              isOnline={event.isOnline}
-            />
+            <div style={styles.sprayGrid}>
+              <div style={styles.sprayLeaderboard}>
+                <SprayMoneyLeaderboard
+                  eventId={event.id}
+                  onSprayMoney={handleSprayMoney}
+                  isOnline={event.isOnline}
+                />
+              </div>
+              <div style={styles.sprayFeed}>
+                <SprayMoneyFeed eventId={event.id} maxItems={15} />
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -600,6 +624,17 @@ const styles = {
     color: '#6b7280',
   },
   sprayTab: {
+    // Grid layout for leaderboard and feed
+  },
+  sprayGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+    gap: '24px',
+  },
+  sprayLeaderboard: {
     // Styles handled by SprayMoneyLeaderboard component
+  },
+  sprayFeed: {
+    // Styles handled by SprayMoneyFeed component
   },
 };

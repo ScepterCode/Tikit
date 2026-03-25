@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/api';
 
 interface Event {
   id: string;
@@ -23,71 +24,44 @@ export function AdminEvents() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const navigate = useNavigate();
 
-  // Mock data for now - replace with API call
+  // Load events from API
   useEffect(() => {
-    const mockEvents: Event[] = [
-      {
-        id: '1',
-        title: 'Lagos Tech Conference 2025',
-        description: 'Annual technology conference bringing together innovators',
-        organizer: 'Jane Smith',
-        category: 'Technology',
-        date: '2025-02-15T10:00:00.000Z',
-        location: 'Lagos, Nigeria',
-        ticketsSold: 450,
-        totalTickets: 500,
-        revenue: 2250000,
-        status: 'published',
-        createdAt: '2025-12-20T09:00:00.000Z'
-      },
-      {
-        id: '2',
-        title: 'Afrobeats Music Festival',
-        description: 'Celebrating the best of African music',
-        organizer: 'Mike Johnson',
-        category: 'Music',
-        date: '2025-03-20T18:00:00.000Z',
-        location: 'Abuja, Nigeria',
-        ticketsSold: 1200,
-        totalTickets: 2000,
-        revenue: 6000000,
-        status: 'ongoing',
-        createdAt: '2025-12-15T14:30:00.000Z'
-      },
-      {
-        id: '3',
-        title: 'Business Summit Nigeria',
-        description: 'Networking event for entrepreneurs and business leaders',
-        organizer: 'Sarah Williams',
-        category: 'Business',
-        date: '2025-01-25T09:00:00.000Z',
-        location: 'Port Harcourt, Nigeria',
-        ticketsSold: 300,
-        totalTickets: 400,
-        revenue: 1500000,
-        status: 'completed',
-        createdAt: '2025-12-10T11:15:00.000Z'
-      },
-      {
-        id: '4',
-        title: 'Art & Culture Exhibition',
-        description: 'Showcasing contemporary Nigerian art',
-        organizer: 'David Brown',
-        category: 'Art',
-        date: '2025-04-10T12:00:00.000Z',
-        location: 'Kano, Nigeria',
-        ticketsSold: 0,
-        totalTickets: 300,
-        revenue: 0,
-        status: 'draft',
-        createdAt: '2025-12-28T16:45:00.000Z'
+    const loadEvents = async () => {
+      try {
+        setLoading(true);
+        // Fetch top events from dashboard API
+        const response = await apiService.request('/admin/dashboard/top-events?limit=10');
+        
+        if (response.success && response.data) {
+          // Convert API response to Event format
+          const events: Event[] = response.data.map((event: any, index: number) => ({
+            id: event.id || (index + 1).toString(),
+            title: event.title || 'Event',
+            description: 'Event details',
+            organizer: event.organizer || 'Unknown',
+            category: 'Event',
+            date: new Date().toISOString(),
+            location: 'Nigeria',
+            ticketsSold: event.tickets_sold || 0,
+            totalTickets: event.tickets_sold + 100,
+            revenue: event.revenue || 0,
+            status: 'published' as const,
+            createdAt: new Date().toISOString()
+          }));
+          
+          setEvents(events);
+        } else {
+          setEvents([]);
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+        setEvents([]);
+      } finally {
+        setLoading(false);
       }
-    ];
-
-    setTimeout(() => {
-      setEvents(mockEvents);
-      setLoading(false);
-    }, 1000);
+    };
+    
+    loadEvents();
   }, []);
 
   const filteredEvents = events.filter(event => {

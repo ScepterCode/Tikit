@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { LanguageSelector, Language } from './LanguageSelector';
 import { StateSelector } from './StateSelector';
+import { EventPreferencesSelector, EventType } from './EventPreferencesSelector';
 import { NigerianState } from '../../data/nigerianStates';
 
-type OnboardingStep = 'language' | 'state' | 'complete';
+type OnboardingStep = 'language' | 'state' | 'preferences' | 'complete';
 
 interface OnboardingData {
   language: Language | null;
   state: NigerianState | null;
+  eventPreferences: EventType[];
 }
 
 interface OnboardingFlowProps {
@@ -19,6 +21,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [data, setData] = useState<OnboardingData>({
     language: null,
     state: null,
+    eventPreferences: [],
   });
 
   const handleLanguageSelect = (language: Language) => {
@@ -27,7 +30,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   };
 
   const handleStateSelect = (state: NigerianState) => {
-    const finalData = { ...data, state };
+    setData((prev) => ({ ...prev, state }));
+    setStep('preferences');
+  };
+
+  const handlePreferencesSelect = (eventPreferences: EventType[]) => {
+    const finalData = { ...data, eventPreferences };
     setData(finalData);
     setStep('complete');
     onComplete(finalData);
@@ -39,6 +47,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   if (step === 'state') {
     return <StateSelector onStateSelect={handleStateSelect} />;
+  }
+
+  if (step === 'preferences') {
+    return <EventPreferencesSelector onPreferencesSelect={handlePreferencesSelect} />;
   }
 
   return null;

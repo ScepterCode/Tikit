@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/FastAPIAuthContext';
+import { useAuth } from '../contexts/SupabaseAuthContext';
 import { useEffect } from 'react';
 
 export function LandingPage() {

@@ -1,13 +1,16 @@
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { WeddingAnalytics } from '../../components/events/WeddingAnalytics';
 import { SprayMoneyLeaderboard } from '../../components/events/SprayMoneyLeaderboard';
+import { CreateSecretEventModal } from '../../components/modals/CreateSecretEventModal';
+import { DashboardLayout } from '../../components/layout/DashboardLayout';
 
 export function OrganizerDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  const [showCreateSecretEvent, setShowCreateSecretEvent] = useState(false);
 
   // Mock data for demonstration
   const mockEventId = 'demo-wedding-event';
@@ -30,261 +33,262 @@ export function OrganizerDashboard() {
     alert('USSD Integration Setup:\n\n1. Contact Africa\'s Talking for shortcode\n2. Configure webhook endpoint\n3. Test with *7477#\n\nYour events will be accessible via USSD!');
   };
 
+  // Transform user data for display
+  const userData = {
+    organizationName: user?.user_metadata?.organization_name || user?.user_metadata?.organizationName || '',
+    firstName: user?.user_metadata?.first_name || user?.user_metadata?.firstName || 'Organizer',
+    isVerified: user?.email_confirmed_at ? true : false,
+  };
+
   return (
-    <div style={styles.container}>
-      {/* Top Bar */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Grooovy</h1>
-        <div style={styles.userMenu}>
-          <span style={styles.userName}>{user?.organizationName || user?.firstName}</span>
-          <button onClick={() => signOut()} style={styles.logoutButton}>
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="📊" label="Dashboard" active />
-            <NavItem icon="🎉" label="My Events" onClick={() => navigate('/organizer/events')} />
-            <NavItem icon="➕" label="Create Event" onClick={() => navigate('/organizer/create-event')} />
-            <NavItem icon="👥" label="Attendees" onClick={() => navigate('/organizer/attendees')} />
-            <NavItem icon="💰" label="Financials" onClick={() => navigate('/organizer/financials')} />
-            <NavItem icon="📢" label="Broadcast" onClick={() => navigate('/organizer/broadcast')} />
-            <NavItem icon="📱" label="Scanner" onClick={() => navigate('/organizer/scanner')} />
-            <NavItem icon="📊" label="Analytics" onClick={() => setActiveFeature('analytics')} />
-            <NavItem icon="💸" label="Spray Money" onClick={() => setActiveFeature('spray-money')} />
-            <NavItem icon="⚙️" label="Settings" onClick={() => navigate('/organizer/settings')} />
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main style={styles.main}>
-          {/* Feature Modal/Overlay */}
-          {activeFeature && (
-            <div style={styles.featureOverlay}>
-              <div style={styles.featureModal}>
-                <div style={styles.featureHeader}>
-                  <h2 style={styles.featureModalTitle}>
-                    {activeFeature === 'analytics' && '📊 Wedding Analytics'}
-                    {activeFeature === 'spray-money' && '💸 Spray Money Leaderboard'}
-                  </h2>
-                  <button 
-                    onClick={() => setActiveFeature(null)}
-                    style={styles.closeButton}
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div style={styles.featureContent}>
-                  {activeFeature === 'analytics' && (
-                    <WeddingAnalytics eventId={mockEventId} />
-                  )}
-                  {activeFeature === 'spray-money' && (
-                    <SprayMoneyLeaderboard
-                      eventId={mockEventId}
-                      onSprayMoney={handleSprayMoney}
-                      isOnline={true}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div style={styles.titleRow}>
-            <div>
-              <h2 style={styles.pageTitle}>Dashboard</h2>
-              <p style={styles.pageSubtitle}>
-                Welcome back, {user?.organizationName || user?.firstName}!
-              </p>
-            </div>
-            <button
-              style={styles.createButton}
-              onClick={() => navigate('/organizer/create-event')}
-            >
-              ➕ Create Event
-            </button>
-          </div>
-
-          {/* Verification Banner */}
-          {!user?.isVerified && (
-            <div style={styles.banner}>
-              <div>
-                <strong>⚠️ Account Not Verified</strong>
-                <p style={styles.bannerText}>
-                  Complete verification to start selling tickets and receiving payments.
-                </p>
-              </div>
-              <button style={styles.bannerButton}>Verify Now</button>
-            </div>
-          )}
-
-          {/* Stats Cards */}
-          <div style={styles.statsGrid}>
-            <StatsCard
-              icon="🎉"
-              title="Total Events"
-              value="0"
-              subtitle="All time"
-              trend="+0%"
-              color="#667eea"
-            />
-            <StatsCard
-              icon="🎫"
-              title="Tickets Sold"
-              value="0"
-              subtitle="This month"
-              trend="+0%"
-              color="#10b981"
-            />
-            <StatsCard
-              icon="💰"
-              title="Revenue"
-              value="₦0"
-              subtitle="This month"
-              trend="+0%"
-              color="#f59e0b"
-            />
-            <StatsCard
-              icon="👥"
-              title="Total Attendees"
-              value="0"
-              subtitle="All events"
-              trend="+0%"
-              color="#8b5cf6"
-            />
-          </div>
-
-          {/* Enhanced Quick Actions */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>Quick Actions</h3>
-            <div style={styles.actionsGrid}>
-              <ActionCard
-                icon="➕"
-                title="Create Event"
-                description="Set up a new event"
-                onClick={() => navigate('/organizer/create-event')}
-              />
-              <ActionCard
-                icon="📱"
-                title="Scan Tickets"
-                description="Verify attendee tickets"
-                onClick={() => navigate('/organizer/scanner')}
-              />
-              <ActionCard
-                icon="📢"
-                title="Send Broadcast"
-                description="Message your attendees"
-                onClick={() => navigate('/organizer/broadcast')}
-              />
-              <ActionCard
-                icon="📊"
-                title="View Analytics"
-                description="Check event performance"
-                onClick={() => navigate('/organizer/analytics')}
-              />
-            </div>
-          </section>
-
-          {/* Feature Creation Section */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>🎉 Create Special Events</h3>
-            <div style={styles.featuresGrid}>
-              <FeatureCard
-                icon="💒"
-                title="Wedding Event"
-                description="Create wedding with aso-ebi, food RSVP, and spray money"
-                badge="Cultural Features"
-                onClick={handleCreateWeddingEvent}
-              />
-              <FeatureCard
-                icon="🔒"
-                title="Hidden Event"
-                description="Create private event with 4-digit access code"
-                badge="Private"
-                onClick={handleCreateHiddenEvent}
-              />
-              <FeatureCard
-                icon="👥"
-                title="Group Buy Event"
-                description="Enable group purchases for bulk discounts"
-                badge="Save Money"
-                onClick={() => navigate('/organizer/create-event?feature=group-buy')}
-              />
-              <FeatureCard
-                icon="📞"
-                title="USSD Integration"
-                description="Enable ticket sales via *7477# for feature phones"
-                badge="No Internet Needed"
-                onClick={handleSetupUSSD}
-              />
-            </div>
-          </section>
-
-          {/* Management Features */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>📊 Event Management</h3>
-            <div style={styles.managementGrid}>
-              <ManagementCard
-                icon="💸"
-                title="Spray Money Leaderboard"
-                description="View live wedding contributions"
-                onClick={() => setActiveFeature('spray-money')}
-              />
-              <ManagementCard
-                icon="📊"
-                title="Wedding Analytics"
-                description="Food RSVP, aso-ebi sales, totals"
-                onClick={() => setActiveFeature('analytics')}
-              />
-              <ManagementCard
-                icon="📱"
-                title="QR Code Scanner"
-                description="Verify tickets with duplicate detection"
-                onClick={() => navigate('/organizer/scanner')}
-              />
-              <ManagementCard
-                icon="📢"
-                title="WhatsApp Broadcast"
-                description="Send messages to all attendees"
-                onClick={() => navigate('/organizer/broadcast')}
-              />
-              <ManagementCard
-                icon="💰"
-                title="Payment Methods"
-                description="Card, bank, Opay, Palmpay, airtime, sponsorship"
-                onClick={() => navigate('/organizer/financials')}
-              />
-              <ManagementCard
-                icon="📈"
-                title="Real-time Updates"
-                description="Live capacity and sales tracking"
-                onClick={() => navigate('/organizer/analytics')}
-              />
-            </div>
-          </section>
-
-          {/* Recent Events */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>Recent Events</h3>
-            <div style={styles.emptyState}>
-              <p style={styles.emptyText}>
-                You haven't created any events yet. Get started by creating your first event!
-              </p>
-              <button
-                style={styles.primaryButton}
-                onClick={() => navigate('/organizer/create-event')}
+    <DashboardLayout>
+      {/* Feature Modal/Overlay */}
+      {activeFeature && (
+        <div style={styles.featureOverlay}>
+          <div style={styles.featureModal}>
+            <div style={styles.featureHeader}>
+              <h2 style={styles.featureModalTitle}>
+                {activeFeature === 'spray-money' && '💸 Spray Money Leaderboard'}
+              </h2>
+              <button 
+                onClick={() => setActiveFeature(null)}
+                style={styles.closeButton}
               >
-                Create Your First Event
+                ✕
               </button>
             </div>
-          </section>
-        </main>
+            <div style={styles.featureContent}>
+              {activeFeature === 'spray-money' && (
+                <SprayMoneyLeaderboard
+                  eventId={mockEventId}
+                  onSprayMoney={handleSprayMoney}
+                  isOnline={true}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={styles.titleRow}>
+        <div>
+          <h2 style={styles.pageTitle}>Dashboard</h2>
+          <p style={styles.pageSubtitle}>
+            Welcome back, {userData.organizationName || userData.firstName}!
+          </p>
+        </div>
+        <button
+          style={styles.createButton}
+          onClick={() => navigate('/organizer/create-event')}
+        >
+          ➕ Create Event
+        </button>
       </div>
-    </div>
+
+      {/* Verification Banner */}
+      {!userData.isVerified && (
+        <div style={styles.banner}>
+          <div>
+            <strong>⚠️ Account Not Verified</strong>
+            <p style={styles.bannerText}>
+              Complete verification to start selling tickets and receiving payments.
+            </p>
+          </div>
+          <button style={styles.bannerButton}>Verify Now</button>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      <div style={styles.statsGrid}>
+        <StatsCard
+          icon="🎉"
+          title="Total Events"
+          value="0"
+          subtitle="All time"
+          trend="+0%"
+          color="#667eea"
+        />
+        <StatsCard
+          icon="🎫"
+          title="Tickets Sold"
+          value="0"
+          subtitle="This month"
+          trend="+0%"
+          color="#10b981"
+        />
+        <StatsCard
+          icon="💰"
+          title="Revenue"
+          value="₦0"
+          subtitle="This month"
+          trend="+0%"
+          color="#f59e0b"
+        />
+        <StatsCard
+          icon="👥"
+          title="Total Attendees"
+          value="0"
+          subtitle="All events"
+          trend="+0%"
+          color="#8b5cf6"
+        />
+      </div>
+
+      {/* Enhanced Quick Actions */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>Quick Actions</h3>
+        <div style={styles.actionsGrid}>
+          <ActionCard
+            icon="➕"
+            title="Create Event"
+            description="Set up a new event"
+            onClick={() => navigate('/organizer/create-event')}
+          />
+          <ActionCard
+            icon="💳"
+            title="Manage Wallet"
+            description="View balance & transactions"
+            onClick={() => navigate('/organizer/wallet')}
+          />
+          <ActionCard
+            icon="📱"
+            title="Scan Tickets"
+            description="Verify attendee tickets"
+            onClick={() => navigate('/organizer/scanner')}
+          />
+          <ActionCard
+            icon="📢"
+            title="Send Broadcast"
+            description="Message your attendees"
+            onClick={() => navigate('/organizer/broadcast')}
+          />
+          <ActionCard
+            icon="📊"
+            title="View Analytics"
+            description="Check event performance"
+            onClick={() => navigate('/organizer/analytics')}
+          />
+        </div>
+      </section>
+
+      {/* Feature Creation Section */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>🎉 Create Special Events</h3>
+        <div style={styles.featuresGrid}>
+          <FeatureCard
+            icon="🔐"
+            title="Secret Event"
+            description="Create exclusive invite-only events with hidden locations"
+            badge="Premium Only"
+            onClick={() => setShowCreateSecretEvent(true)}
+          />
+          <FeatureCard
+            icon="💒"
+            title="Wedding Event"
+            description="Create wedding with aso-ebi, food RSVP, and spray money"
+            badge="Cultural Features"
+            onClick={handleCreateWeddingEvent}
+          />
+          <FeatureCard
+            icon="🔒"
+            title="Hidden Event"
+            description="Create private event with 4-digit access code"
+            badge="Private"
+            onClick={handleCreateHiddenEvent}
+          />
+          <FeatureCard
+            icon="👥"
+            title="Group Buy Event"
+            description="Enable group purchases for bulk discounts"
+            badge="Save Money"
+            onClick={() => navigate('/organizer/create-event?feature=group-buy')}
+          />
+          <FeatureCard
+            icon="📞"
+            title="USSD Integration"
+            description="Enable ticket sales via *7477# for feature phones"
+            badge="No Internet Needed"
+            onClick={handleSetupUSSD}
+          />
+        </div>
+      </section>
+
+      {/* Management Features */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>📊 Event Management</h3>
+        <div style={styles.managementGrid}>
+          <ManagementCard
+            icon="💳"
+            title="Multi-Wallet Dashboard"
+            description="Manage main, savings, and business wallets"
+            onClick={() => navigate('/organizer/wallet')}
+          />
+          <ManagementCard
+            icon="💸"
+            title="Spray Money Leaderboard"
+            description="View live wedding contributions"
+            onClick={() => setActiveFeature('spray-money')}
+          />
+          <ManagementCard
+            icon="📊"
+            title="Wedding Analytics"
+            description="Food RSVP, aso-ebi sales, totals"
+            onClick={() => navigate('/organizer/analytics')}
+          />
+          <ManagementCard
+            icon="📱"
+            title="QR Code Scanner"
+            description="Verify tickets with duplicate detection"
+            onClick={() => navigate('/organizer/scanner')}
+          />
+          <ManagementCard
+            icon="📢"
+            title="WhatsApp Broadcast"
+            description="Send messages to all attendees"
+            onClick={() => navigate('/organizer/broadcast')}
+          />
+          <ManagementCard
+            icon="💰"
+            title="Payment Methods"
+            description="Card, bank, Opay, Palmpay, airtime, sponsorship"
+            onClick={() => navigate('/organizer/financials')}
+          />
+          <ManagementCard
+            icon="📈"
+            title="Real-time Updates"
+            description="Live capacity and sales tracking"
+            onClick={() => navigate('/organizer/analytics')}
+          />
+        </div>
+      </section>
+
+      {/* Recent Events */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>Recent Events</h3>
+        <div style={styles.emptyState}>
+          <p style={styles.emptyText}>
+            You haven't created any events yet. Get started by creating your first event!
+          </p>
+          <button
+            style={styles.primaryButton}
+            onClick={() => navigate('/organizer/create-event')}
+          >
+            Create Your First Event
+          </button>
+        </div>
+      </section>
+
+      {/* Secret Event Creation Modal */}
+      {showCreateSecretEvent && (
+        <CreateSecretEventModal
+          onClose={() => setShowCreateSecretEvent(false)}
+          onSuccess={(event) => {
+            console.log('Secret event created:', event);
+            // Optionally refresh events or show success message
+          }}
+        />
+      )}
+    </DashboardLayout>
   );
 }
 

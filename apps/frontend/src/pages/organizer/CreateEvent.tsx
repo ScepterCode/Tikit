@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { authenticatedFetch } from '../../utils/auth';
 
 export function CreateEvent() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -11,24 +12,159 @@ export function CreateEvent() {
     date: '',
     time: '',
     venue: '',
-    ticketPrice: '',
-    totalTickets: '',
     category: 'conference',
+    enableLivestream: false,
   });
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [ticketTiers, setTicketTiers] = useState([
+    { name: 'General Admission', price: '', quantity: '' }
+  ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement event creation
-    console.log('Creating event:', formData);
-    alert('Event creation will be implemented soon!');
+    
+    // Check if auth is still loading
+    if (loading) {
+      alert('Please wait, authentication is loading...');
+      return;
+    }
+    
+    // Check if user is authenticated
+    if (!user) {
+      alert('You must be logged in to create events');
+      navigate('/auth/login');
+      return;
+    }
+    
+    // Validate ticket tiers
+    const validTiers = ticketTiers.filter(tier => tier.name && tier.price && tier.quantity);
+    if (validTiers.length === 0) {
+      alert('Please add at least one ticket tier');
+      return;
+    }
+    
+    try {
+      // Prepare event data with ticket tiers
+      const eventData = {
+        ...formData,
+        ticketTiers: validTiers.map(tier => ({
+          name: tier.name,
+          price: parseFloat(tier.price),
+          quantity: parseInt(tier.quantity),
+          sold: 0
+        })),
+        images: imagePreviews, // Base64 encoded images
+      };
+      
+      console.log('🔍 Creating event with data:', eventData);
+      
+      // Call API to create event
+      const response = await authenticatedFetch('http://localhost:8000/api/events', {
+        method: 'POST',
+        body: JSON.stringify(eventData)
+      });
+      
+      console.log('🔍 Response status:', response.status);
+      console.log('🔍 Response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error:', errorText);
+        alert(`Failed to create event: ${response.status} ${response.statusText}`);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('🔍 Response data:', data);
+      
+      if (data.success) {
+        alert('Event created successfully!');
+        navigate('/organizer/events');
+      } else {
+        alert(`Failed to create event: ${data.error?.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('❌ Error creating event:', error);
+      if (error instanceof Error) {
+        alert(`Failed to create event: ${error.message}`);
+      } else {
+        alert('Failed to create event. Please try again.');
+      }
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
   };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + images.length > 3) {
+      alert('Maximum 3 images allowed');
+      return;
+    }
+
+    setImages(prev => [...prev, ...files].slice(0, 3));
+
+    // Create previews
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result as string].slice(0, 3));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addTicketTier = () => {
+    if (ticketTiers.length >= 5) {
+      alert('Maximum 5 ticket tiers allowed');
+      return;
+    }
+    setTicketTiers(prev => [...prev, { name: '', price: '', quantity: '' }]);
+  };
+
+  const removeTicketTier = (index: number) => {
+    if (ticketTiers.length === 1) {
+      alert('At least one ticket tier is required');
+      return;
+    }
+    setTicketTiers(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateTicketTier = (index: number, field: string, value: string) => {
+    setTicketTiers(prev => prev.map((tier, i) => 
+      i === index ? { ...tier, [field]: value } : tier
+    ));
+  };
+
+  // Show loading state while auth is initializing
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.loadingContainer}>
+          <h2>Loading...</h2>
+          <p>Initializing authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    navigate('/auth/login');
+    return null;
+  }
 
   return (
     <div style={styles.container}>
@@ -129,33 +265,90 @@ export function CreateEvent() {
                   />
                 </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Ticket Price (₦) *</label>
-                  <input
-                    type="number"
-                    name="ticketPrice"
-                    value={formData.ticketPrice}
-                    onChange={handleChange}
-                    style={styles.input}
-                    placeholder="0"
-                    min="0"
-                    required
-                  />
-                </div>
+              </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Total Tickets *</label>
-                  <input
-                    type="number"
-                    name="totalTickets"
-                    value={formData.totalTickets}
-                    onChange={handleChange}
-                    style={styles.input}
-                    placeholder="100"
-                    min="1"
-                    required
-                  />
+              {/* Event Images */}
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Event Images (Max 3)</label>
+                <div style={styles.imageUploadSection}>
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} style={styles.imagePreview}>
+                      <img src={preview} alt={`Preview ${index + 1}`} style={styles.previewImage} />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        style={styles.removeImageButton}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {images.length < 3 && (
+                    <label style={styles.imageUploadBox}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        style={styles.fileInput}
+                      />
+                      <div style={styles.uploadPlaceholder}>
+                        <span style={styles.uploadIcon}>📷</span>
+                        <span style={styles.uploadText}>Add Image</span>
+                      </div>
+                    </label>
+                  )}
                 </div>
+              </div>
+
+              {/* Ticket Tiers */}
+              <div style={styles.formGroup}>
+                <div style={styles.tierHeader}>
+                  <label style={styles.label}>Ticket Tiers *</label>
+                  <button
+                    type="button"
+                    onClick={addTicketTier}
+                    style={styles.addTierButton}
+                  >
+                    + Add Tier
+                  </button>
+                </div>
+                {ticketTiers.map((tier, index) => (
+                  <div key={index} style={styles.tierRow}>
+                    <input
+                      type="text"
+                      placeholder="Tier name (e.g., VIP, Regular)"
+                      value={tier.name}
+                      onChange={(e) => updateTicketTier(index, 'name', e.target.value)}
+                      style={{...styles.input, flex: 2}}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Price (₦)"
+                      value={tier.price}
+                      onChange={(e) => updateTicketTier(index, 'price', e.target.value)}
+                      style={{...styles.input, flex: 1}}
+                      min="0"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Quantity"
+                      value={tier.quantity}
+                      onChange={(e) => updateTicketTier(index, 'quantity', e.target.value)}
+                      style={{...styles.input, flex: 1}}
+                      min="1"
+                    />
+                    {ticketTiers.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTicketTier(index)}
+                        style={styles.removeTierButton}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <div style={styles.formGroup}>
@@ -182,6 +375,23 @@ export function CreateEvent() {
                   rows={4}
                   required
                 />
+              </div>
+
+              {/* Livestream Option */}
+              <div style={styles.formGroup}>
+                <label style={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    name="enableLivestream"
+                    checked={formData.enableLivestream}
+                    onChange={handleChange}
+                    style={styles.checkbox}
+                  />
+                  <span>Enable Livestream & Spray Money</span>
+                </label>
+                <p style={styles.helperText}>
+                  Allow attendees to watch your event live and spray money virtually
+                </p>
               </div>
 
               <div style={styles.buttonGroup}>
@@ -231,6 +441,14 @@ function NavItem({
 
 const styles = {
   container: {
+    minHeight: '100vh',
+    backgroundColor: '#f9fafb',
+  },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: '100vh',
     backgroundColor: '#f9fafb',
   },
@@ -375,6 +593,115 @@ const styles = {
     backgroundColor: '#ffffff',
     resize: 'vertical' as const,
     boxSizing: 'border-box' as const,
+  },
+  imageUploadSection: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap' as const,
+  },
+  imagePreview: {
+    position: 'relative' as const,
+    width: '120px',
+    height: '120px',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    border: '2px solid #e5e7eb',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+  },
+  removeImageButton: {
+    position: 'absolute' as const,
+    top: '4px',
+    right: '4px',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50%',
+    width: '24px',
+    height: '24px',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  imageUploadBox: {
+    width: '120px',
+    height: '120px',
+    border: '2px dashed #d1d5db',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    backgroundColor: '#f9fafb',
+  },
+  fileInput: {
+    display: 'none',
+  },
+  uploadPlaceholder: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '4px',
+  },
+  uploadIcon: {
+    fontSize: '32px',
+  },
+  uploadText: {
+    fontSize: '12px',
+    color: '#6b7280',
+  },
+  tierHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '12px',
+  },
+  addTierButton: {
+    padding: '6px 12px',
+    fontSize: '13px',
+    fontWeight: '500',
+    backgroundColor: '#667eea',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+  },
+  tierRow: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '12px',
+    alignItems: 'center',
+  },
+  removeTierButton: {
+    padding: '8px 12px',
+    fontSize: '14px',
+    backgroundColor: '#fee2e2',
+    color: '#dc2626',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+  },
+  checkboxLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#374151',
+    cursor: 'pointer',
+  },
+  checkbox: {
+    width: '18px',
+    height: '18px',
+    cursor: 'pointer',
+  },
+  helperText: {
+    fontSize: '13px',
+    color: '#6b7280',
+    marginTop: '4px',
+    marginLeft: '26px',
   },
   buttonGroup: {
     display: 'flex',

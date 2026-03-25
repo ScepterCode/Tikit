@@ -1,12 +1,13 @@
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { SprayMoneyLeaderboard } from '../../components/events/SprayMoneyLeaderboard';
 import { GroupBuyCreator } from '../../components/tickets/GroupBuyCreator';
 import { GroupBuyStatus } from '../../components/tickets/GroupBuyStatus';
+import { DashboardLayout } from '../../components/layout/DashboardLayout';
 
 export function AttendeeDashboard() {
-  const { user, signOut, loading } = useAuth();
+  const { user, logout, loading } = useSupabaseAuth();
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
 
@@ -42,7 +43,7 @@ export function AttendeeDashboard() {
   };
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
     navigate('/');
   };
 
@@ -65,9 +66,6 @@ export function AttendeeDashboard() {
       alert('Invalid code. Please enter a 4-digit code.');
     }
   };
-
-  // Debug logging
-  // console.log('AttendeeDashboard - Auth State:', { user, loading });
 
   if (loading) {
     return (
@@ -92,267 +90,217 @@ export function AttendeeDashboard() {
     );
   }
 
+  // Transform user data for display
+  const userData = {
+    firstName: user.user_metadata?.first_name || user.user_metadata?.firstName || 'User',
+    lastName: user.user_metadata?.last_name || user.user_metadata?.lastName || '',
+    phoneNumber: user.user_metadata?.phone_number || user.user_metadata?.phoneNumber || user.phone || '',
+    email: user.email || '',
+    state: user.user_metadata?.state || '',
+    role: user.user_metadata?.role || 'attendee',
+    walletBalance: user.user_metadata?.wallet_balance || 0,
+    referralCode: user.user_metadata?.referral_code || '',
+    isVerified: user.email_confirmed_at ? true : false,
+  };
+
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <header style={styles.header}>
-        <div style={styles.headerLeft}>
-          <h1 style={styles.logo}>🎵 Grooovy</h1>
-          <span style={styles.roleTag}>Attendee</span>
-        </div>
-        <div style={styles.headerRight}>
-          <div style={styles.userInfo}>
-            <span style={styles.userName}>
-              {user.firstName} {user.lastName}
-            </span>
-            <span style={styles.userPhone}>{user.phoneNumber}</span>
+    <DashboardLayout>
+      {/* Feature Modal/Overlay */}
+      {activeFeature && (
+        <div style={styles.featureOverlay}>
+          <div style={styles.featureModal}>
+            <div style={styles.featureHeader}>
+              <h2 style={styles.featureTitle}>
+                {activeFeature === 'spray-money' && '💸 Spray Money'}
+                {activeFeature === 'group-buy' && '👥 Create Group Buy'}
+                {activeFeature === 'group-buy-status' && '📈 Group Buy Status'}
+              </h2>
+              <button 
+                onClick={() => setActiveFeature(null)}
+                style={styles.closeButton}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={styles.featureContent}>
+              {activeFeature === 'spray-money' && (
+                <SprayMoneyLeaderboard
+                  eventId={mockEvent.id}
+                  onSprayMoney={handleSprayMoney}
+                  isOnline={true}
+                />
+              )}
+              {activeFeature === 'group-buy' && (
+                <GroupBuyCreator
+                  event={mockEvent}
+                  onGroupBuyCreated={handleGroupBuyCreated}
+                />
+              )}
+              {activeFeature === 'group-buy-status' && (
+                <GroupBuyStatus 
+                  groupBuy={mockGroupBuy} 
+                  onJoin={() => console.log('Joining group buy')}
+                />
+              )}
+            </div>
           </div>
-          <button onClick={handleLogout} style={styles.logoutButton}>
-            Logout
-          </button>
         </div>
-      </header>
+      )}
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            <NavItem icon="🏠" label="Dashboard" active />
-            <NavItem icon="🎫" label="My Tickets" onClick={() => navigate('/attendee/tickets')} />
-            <NavItem icon="💰" label="Wallet" onClick={() => navigate('/attendee/wallet')} />
-            <NavItem icon="🎉" label="Browse Events" onClick={() => navigate('/events')} />
-            <NavItem icon="👥" label="Group Buys" onClick={() => setActiveFeature('group-buy')} />
-            <NavItem icon="💸" label="Spray Money" onClick={() => setActiveFeature('spray-money')} />
-            <NavItem icon="🔒" label="Hidden Events" onClick={handleAccessHiddenEvent} />
-            <NavItem icon="🎁" label="Referrals" onClick={() => navigate('/attendee/referrals')} />
-            <NavItem icon="👤" label="Profile" onClick={() => navigate('/attendee/profile')} />
-          </nav>
-        </aside>
+      {/* Welcome Section */}
+      <section style={styles.welcomeSection}>
+        <h2 style={styles.welcomeTitle}>
+          Welcome back, {userData.firstName}! 👋
+        </h2>
+        <p style={styles.welcomeSubtitle}>
+          Ready to discover amazing events in {userData.state || 'your area'}?
+        </p>
+      </section>
 
-        {/* Main Content */}
-        <main style={styles.main}>
-          {/* Feature Modal/Overlay */}
-          {activeFeature && (
-            <div style={styles.featureOverlay}>
-              <div style={styles.featureModal}>
-                <div style={styles.featureHeader}>
-                  <h2 style={styles.featureTitle}>
-                    {activeFeature === 'spray-money' && '💸 Spray Money'}
-                    {activeFeature === 'group-buy' && '👥 Create Group Buy'}
-                    {activeFeature === 'group-buy-status' && '📈 Group Buy Status'}
-                  </h2>
-                  <button 
-                    onClick={() => setActiveFeature(null)}
-                    style={styles.closeButton}
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div style={styles.featureContent}>
-                  {activeFeature === 'spray-money' && (
-                    <SprayMoneyLeaderboard
-                      eventId={mockEvent.id}
-                      onSprayMoney={handleSprayMoney}
-                      isOnline={true}
-                    />
-                  )}
-                  {activeFeature === 'group-buy' && (
-                    <GroupBuyCreator
-                      event={mockEvent}
-                      onGroupBuyCreated={handleGroupBuyCreated}
-                    />
-                  )}
-                  {activeFeature === 'group-buy-status' && (
-                    <GroupBuyStatus 
-                      groupBuy={mockGroupBuy} 
-                      onJoin={() => console.log('Joining group buy')}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Stats Grid */}
+      <section style={styles.statsSection}>
+        <div style={styles.statsGrid}>
+          <StatsCard
+            icon="🎫"
+            title="Active Tickets"
+            value="0"
+            subtitle="Ready to use"
+            color="#667eea"
+          />
+          <StatsCard
+            icon="💰"
+            title="Wallet Balance"
+            value={`₦${(userData.walletBalance || 0).toLocaleString()}`}
+            subtitle="Available funds"
+            color="#10b981"
+          />
+          <StatsCard
+            icon="🎁"
+            title="Referral Code"
+            value={userData.referralCode || 'N/A'}
+            subtitle="Share with friends"
+            color="#f59e0b"
+          />
+          <StatsCard
+            icon="📅"
+            title="Upcoming Events"
+            value="0"
+            subtitle="This month"
+            color="#8b5cf6"
+          />
+        </div>
+      </section>
 
-          {/* Welcome Section */}
-          <section style={styles.welcomeSection}>
-            <h2 style={styles.welcomeTitle}>
-              Welcome back, {user.firstName}! 👋
-            </h2>
-            <p style={styles.welcomeSubtitle}>
-              Ready to discover amazing events in {user.state}?
-            </p>
-          </section>
+      {/* Enhanced Quick Actions */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>Quick Actions</h3>
+        <div style={styles.actionsGrid}>
+          <ActionCard
+            icon="🔍"
+            title="Browse Events"
+            description="Discover events near you"
+            onClick={() => navigate('/events')}
+          />
+          <ActionCard
+            icon="🎫"
+            title="My Tickets"
+            description="View your tickets"
+            onClick={() => navigate('/attendee/tickets')}
+          />
+          <ActionCard
+            icon="💰"
+            title="Add Funds"
+            description="Top up your wallet"
+            onClick={() => navigate('/attendee/wallet')}
+          />
+          <ActionCard
+            icon="🎁"
+            title="Invite Friends"
+            description="Earn referral rewards"
+            onClick={() => navigate('/attendee/referrals')}
+          />
+        </div>
+      </section>
 
-          {/* Stats Grid */}
-          <section style={styles.statsSection}>
-            <div style={styles.statsGrid}>
-              <StatsCard
-                icon="🎫"
-                title="Active Tickets"
-                value="0"
-                subtitle="Ready to use"
-                color="#667eea"
-              />
-              <StatsCard
-                icon="💰"
-                title="Wallet Balance"
-                value={`₦${(user.walletBalance || 0).toLocaleString()}`}
-                subtitle="Available funds"
-                color="#10b981"
-              />
-              <StatsCard
-                icon="🎁"
-                title="Referral Code"
-                value={user.referralCode || 'N/A'}
-                subtitle="Share with friends"
-                color="#f59e0b"
-              />
-              <StatsCard
-                icon="📅"
-                title="Upcoming Events"
-                value="0"
-                subtitle="This month"
-                color="#8b5cf6"
-              />
-            </div>
-          </section>
+      {/* Feature Access Section */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>🎉 Special Features</h3>
+        <div style={styles.featuresGrid}>
+          <FeatureCard
+            icon="💸"
+            title="Spray Money"
+            description="Contribute to wedding celebrations with live leaderboard"
+            badge="Live Updates"
+            onClick={() => setActiveFeature('spray-money')}
+          />
+          <FeatureCard
+            icon="👥"
+            title="Group Buy"
+            description="Create group purchases and save money together"
+            badge="Save Money"
+            onClick={() => setActiveFeature('group-buy')}
+          />
+          <FeatureCard
+            icon="📈"
+            title="Group Buy Status"
+            description="Track your group buy progress in real-time"
+            badge="Real-time"
+            onClick={() => setActiveFeature('group-buy-status')}
+          />
+          <FeatureCard
+            icon="🔒"
+            title="Hidden Events"
+            description="Access private events with special codes"
+            badge="Exclusive"
+            onClick={handleAccessHiddenEvent}
+          />
+          <FeatureCard
+            icon="📱"
+            title="Offline Wallet"
+            description="Access your tickets without internet"
+            badge="Works Offline"
+            onClick={() => navigate('/attendee/wallet')}
+          />
+          <FeatureCard
+            icon="📞"
+            title="USSD Access"
+            description="Buy tickets via *7477# without internet"
+            badge="No Internet Needed"
+            onClick={() => alert('Dial *7477# from your phone to access USSD menu')}
+          />
+        </div>
+      </section>
 
-          {/* Enhanced Quick Actions */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>Quick Actions</h3>
-            <div style={styles.actionsGrid}>
-              <ActionCard
-                icon="🔍"
-                title="Browse Events"
-                description="Discover events near you"
-                onClick={() => navigate('/events')}
-              />
-              <ActionCard
-                icon="🎫"
-                title="My Tickets"
-                description="View your tickets"
-                onClick={() => navigate('/attendee/tickets')}
-              />
-              <ActionCard
-                icon="💰"
-                title="Add Funds"
-                description="Top up your wallet"
-                onClick={() => navigate('/attendee/wallet')}
-              />
-              <ActionCard
-                icon="🎁"
-                title="Invite Friends"
-                description="Earn referral rewards"
-                onClick={() => navigate('/attendee/referrals')}
-              />
-            </div>
-          </section>
+      {/* Payment Methods Section */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>💳 Available Payment Methods</h3>
+        <div style={styles.paymentGrid}>
+          <PaymentMethodCard icon="💳" name="Card Payment" description="Visa, Mastercard via Paystack" />
+          <PaymentMethodCard icon="🏦" name="Bank Transfer" description="Direct bank account transfer" />
+          <PaymentMethodCard icon="📱" name="Opay" description="Mobile money payment" />
+          <PaymentMethodCard icon="📱" name="Palmpay" description="Mobile money payment" />
+          <PaymentMethodCard icon="📞" name="Airtime" description="Pay with phone credit" />
+          <PaymentMethodCard icon="🎁" name="Sponsorship" description="Request someone to pay" />
+        </div>
+      </section>
 
-          {/* Feature Access Section */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>🎉 Special Features</h3>
-            <div style={styles.featuresGrid}>
-              <FeatureCard
-                icon="💸"
-                title="Spray Money"
-                description="Contribute to wedding celebrations with live leaderboard"
-                badge="Live Updates"
-                onClick={() => setActiveFeature('spray-money')}
-              />
-              <FeatureCard
-                icon="👥"
-                title="Group Buy"
-                description="Create group purchases and save money together"
-                badge="Save Money"
-                onClick={() => setActiveFeature('group-buy')}
-              />
-              <FeatureCard
-                icon="📈"
-                title="Group Buy Status"
-                description="Track your group buy progress in real-time"
-                badge="Real-time"
-                onClick={() => setActiveFeature('group-buy-status')}
-              />
-              <FeatureCard
-                icon="🔒"
-                title="Hidden Events"
-                description="Access private events with special codes"
-                badge="Exclusive"
-                onClick={handleAccessHiddenEvent}
-              />
-              <FeatureCard
-                icon="📱"
-                title="Offline Wallet"
-                description="Access your tickets without internet"
-                badge="Works Offline"
-                onClick={() => navigate('/attendee/wallet')}
-              />
-              <FeatureCard
-                icon="📞"
-                title="USSD Access"
-                description="Buy tickets via *7477# without internet"
-                badge="No Internet Needed"
-                onClick={() => alert('Dial *7477# from your phone to access USSD menu')}
-              />
-            </div>
-          </section>
-
-          {/* Payment Methods Section */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>💳 Available Payment Methods</h3>
-            <div style={styles.paymentGrid}>
-              <PaymentMethodCard icon="💳" name="Card Payment" description="Visa, Mastercard via Paystack" />
-              <PaymentMethodCard icon="🏦" name="Bank Transfer" description="Direct bank account transfer" />
-              <PaymentMethodCard icon="📱" name="Opay" description="Mobile money payment" />
-              <PaymentMethodCard icon="📱" name="Palmpay" description="Mobile money payment" />
-              <PaymentMethodCard icon="📞" name="Airtime" description="Pay with phone credit" />
-              <PaymentMethodCard icon="🎁" name="Sponsorship" description="Request someone to pay" />
-            </div>
-          </section>
-
-          {/* User Info */}
-          <section style={styles.section}>
-            <h3 style={styles.sectionTitle}>Account Information</h3>
-            <div style={styles.infoGrid}>
-              <InfoItem label="Full Name" value={`${user.firstName || ''} ${user.lastName || ''}`} />
-              <InfoItem label="Phone Number" value={user.phoneNumber || 'N/A'} />
-              <InfoItem label="Email" value={user.email || 'Not provided'} />
-              <InfoItem label="State" value={user.state || 'N/A'} />
-              <InfoItem label="Account Type" value={user.role || 'N/A'} />
-              <InfoItem label="Verified" value={user.isVerified ? 'Yes' : 'No'} />
-            </div>
-          </section>
-        </main>
-      </div>
-    </div>
+      {/* User Info */}
+      <section style={styles.section}>
+        <h3 style={styles.sectionTitle}>Account Information</h3>
+        <div style={styles.infoGrid}>
+          <InfoItem label="Full Name" value={`${userData.firstName || ''} ${userData.lastName || ''}`} />
+          <InfoItem label="Phone Number" value={userData.phoneNumber || 'N/A'} />
+          <InfoItem label="Email" value={userData.email || 'Not provided'} />
+          <InfoItem label="State" value={userData.state || 'N/A'} />
+          <InfoItem label="Account Type" value={userData.role || 'N/A'} />
+          <InfoItem label="Verified" value={userData.isVerified ? 'Yes' : 'No'} />
+        </div>
+      </section>
+    </DashboardLayout>
   );
 }
 
-// Navigation Item Component
-function NavItem({ 
-  icon, 
-  label, 
-  active = false, 
-  onClick 
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      style={{
-        ...styles.navItem,
-        ...(active ? styles.navItemActive : {})
-      }}
-      onClick={onClick}
-    >
-      <span style={styles.navIcon}>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
+// Navigation Item Component - REMOVED (now using DashboardLayout)
 
 // Stats Card Component
 function StatsCard({
@@ -460,10 +408,7 @@ function InfoItem({ label, value }: { label: string; value: string }) {
 
 // Styles
 const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
+  // Loading states
   loadingContainer: {
     minHeight: '100vh',
     display: 'flex',
@@ -500,108 +445,8 @@ const styles = {
     borderRadius: '8px',
     cursor: 'pointer',
   },
-  header: {
-    backgroundColor: '#ffffff',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid #e5e7eb',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  },
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#667eea',
-    margin: 0,
-  },
-  roleTag: {
-    padding: '4px 8px',
-    fontSize: '12px',
-    backgroundColor: '#f0f9ff',
-    color: '#0369a1',
-    borderRadius: '4px',
-    fontWeight: '500',
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  userInfo: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'flex-end',
-  },
-  userName: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  userPhone: {
-    fontSize: '12px',
-    color: '#6b7280',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    backgroundColor: '#f3f4f6',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    color: '#374151',
-    fontWeight: '500',
-    transition: 'all 0.2s ease',
-  },
-  layout: {
-    display: 'flex',
-  },
-  sidebar: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
-    minHeight: 'calc(100vh - 73px)',
-    padding: '24px 0',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '4px',
-    padding: '0 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    fontSize: '14px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#6b7280',
-    textAlign: 'left' as const,
-    transition: 'all 0.2s ease',
-    fontWeight: '500',
-  },
-  navItemActive: {
-    backgroundColor: '#f5f7ff',
-    color: '#667eea',
-    fontWeight: '600',
-  },
-  navIcon: {
-    fontSize: '18px',
-  },
-  main: {
-    flex: 1,
-    padding: '32px',
-    maxWidth: '1200px',
-  },
+
+  // Content sections
   welcomeSection: {
     marginBottom: '32px',
   },

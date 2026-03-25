@@ -1,379 +1,143 @@
 """
-Analytics Routes
-Business intelligence, reporting, and data insights
+Analytics API Router - Phase 4
+Advanced analytics for secret events and platform metrics
 """
+from fastapi import APIRouter, Request, HTTPException
+from auth_utils import get_user_from_request
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
-import logging
+router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
-from middleware.auth import get_current_user, require_role
-from services.analytics_service import AnalyticsService
-from models.analytics_schemas import (
-    EventAnalytics, UserAnalytics, RevenueAnalytics,
-    EngagementMetrics, GeographicData, TrendData
-)
-
-router = APIRouter()
-logger = logging.getLogger(__name__)
-
-@router.get("/dashboard")
-async def get_analytics_dashboard(
-    period: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
-    current_user: dict = Depends(get_current_user)
-):
-    """Get analytics dashboard overview"""
+@router.get("/secret-event/{event_id}")
+async def get_secret_event_analytics(request: Request, event_id: str):
+    """Get comprehensive analytics for secret event (organizer only)"""
     try:
-        analytics_service = AnalyticsService()
+        from services.analytics_service import analytics_service
         
-        # Calculate date range based on period
-        end_date = datetime.utcnow()
-        if period == "7d":
-            start_date = end_date - timedelta(days=7)
-        elif period == "30d":
-            start_date = end_date - timedelta(days=30)
-        elif period == "90d":
-            start_date = end_date - timedelta(days=90)
-        else:  # 1y
-            start_date = end_date - timedelta(days=365)
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
         
-        # Get dashboard data based on user role
-        if current_user["role"] == "admin":
-            dashboard = await analytics_service.get_admin_dashboard(
-                start_date=start_date,
-                end_date=end_date
-            )
-        elif current_user["role"] == "organizer":
-            dashboard = await analytics_service.get_organizer_dashboard(
-                organizer_id=current_user["user_id"],
-                start_date=start_date,
-                end_date=end_date
-            )
-        else:
-            dashboard = await analytics_service.get_user_dashboard(
-                user_id=current_user["user_id"],
-                start_date=start_date,
-                end_date=end_date
-            )
+        # Verify user is organizer
+        if user["role"] not in ["organizer", "admin"]:
+            raise HTTPException(status_code=403, detail="Only organizers can view event analytics")
         
-        return dashboard
-        
-    except Exception as e:
-        logger.error(f"Analytics dashboard error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to load analytics dashboard"
-        )
-
-@router.get("/events", response_model=EventAnalytics)
-async def get_event_analytics(
-    event_id: Optional[str] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    current_user: dict = Depends(get_current_user)
-):
-    """Get event analytics"""
-    try:
-        analytics_service = AnalyticsService()
-        
-        # Set default date range
-        if not end_date:
-            end_date = datetime.utcnow()
-        if not start_date:
-            start_date = end_date - timedelta(days=30)
-        
-        # Check permissions
-        if event_id and current_user["role"] not in ["admin"]:
-            # Verify user owns the event (for organizers)
-            event = await analytics_service.get_event_owner(event_id)
-            if not event or event["organizer_id"] != current_user["user_id"]:
-                raise HTTPException(
-                    status_code=403,
-                    detail="Access denied to this event's analytics"
-                )
-        
-        analytics = await analytics_service.get_event_analytics(
+        result = analytics_service.get_secret_event_analytics(
             event_id=event_id,
-            organizer_id=current_user["user_id"] if current_user["role"] == "organizer" else None,
-            start_date=start_date,
-            end_date=end_date
+            organizer_id=user_id
         )
         
-        return EventAnalytics(**analytics)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Event analytics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve event analytics"
-        )
-
-@router.get("/revenue", response_model=RevenueAnalytics)
-async def get_revenue_analytics(
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    granularity: str = Query("daily", regex="^(hourly|daily|weekly|monthly)$"),
-    current_user: dict = Depends(get_current_user)
-):
-    """Get revenue analytics"""
-    try:
-        # Only admins and organizers can access revenue analytics
-        if current_user["role"] not in ["admin", "organizer"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied to revenue analytics"
-            )
-        
-        analytics_service = AnalyticsService()
-        
-        # Set default date range
-        if not end_date:
-            end_date = datetime.utcnow()
-        if not start_date:
-            start_date = end_date - timedelta(days=30)
-        
-        analytics = await analytics_service.get_revenue_analytics(
-            organizer_id=current_user["user_id"] if current_user["role"] == "organizer" else None,
-            start_date=start_date,
-            end_date=end_date,
-            granularity=granularity
-        )
-        
-        return RevenueAnalytics(**analytics)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Revenue analytics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve revenue analytics"
-        )
-
-@router.get("/users", response_model=UserAnalytics)
-async def get_user_analytics(
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    segment: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
-    _: None = Depends(require_role(["admin"]))
-):
-    """Get user analytics (admin only)"""
-    try:
-        analytics_service = AnalyticsService()
-        
-        # Set default date range
-        if not end_date:
-            end_date = datetime.utcnow()
-        if not start_date:
-            start_date = end_date - timedelta(days=30)
-        
-        analytics = await analytics_service.get_user_analytics(
-            start_date=start_date,
-            end_date=end_date,
-            segment=segment
-        )
-        
-        return UserAnalytics(**analytics)
-        
-    except Exception as e:
-        logger.error(f"User analytics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve user analytics"
-        )
-
-@router.get("/engagement", response_model=EngagementMetrics)
-async def get_engagement_metrics(
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    current_user: dict = Depends(get_current_user)
-):
-    """Get engagement metrics"""
-    try:
-        analytics_service = AnalyticsService()
-        
-        # Set default date range
-        if not end_date:
-            end_date = datetime.utcnow()
-        if not start_date:
-            start_date = end_date - timedelta(days=30)
-        
-        metrics = await analytics_service.get_engagement_metrics(
-            user_id=current_user["user_id"] if current_user["role"] == "organizer" else None,
-            start_date=start_date,
-            end_date=end_date
-        )
-        
-        return EngagementMetrics(**metrics)
-        
-    except Exception as e:
-        logger.error(f"Engagement metrics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve engagement metrics"
-        )
-
-@router.get("/geographic", response_model=List[GeographicData])
-async def get_geographic_analytics(
-    metric: str = Query("users", regex="^(users|events|revenue|tickets)$"),
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    current_user: dict = Depends(get_current_user)
-):
-    """Get geographic analytics"""
-    try:
-        analytics_service = AnalyticsService()
-        
-        # Set default date range
-        if not end_date:
-            end_date = datetime.utcnow()
-        if not start_date:
-            start_date = end_date - timedelta(days=30)
-        
-        # Check permissions for sensitive metrics
-        if metric in ["revenue"] and current_user["role"] not in ["admin", "organizer"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied to revenue geographic data"
-            )
-        
-        data = await analytics_service.get_geographic_analytics(
-            metric=metric,
-            organizer_id=current_user["user_id"] if current_user["role"] == "organizer" else None,
-            start_date=start_date,
-            end_date=end_date
-        )
-        
-        return [GeographicData(**item) for item in data]
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Geographic analytics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve geographic analytics"
-        )
-
-@router.get("/trends", response_model=List[TrendData])
-async def get_trend_analytics(
-    metric: str = Query("events", regex="^(events|users|revenue|tickets)$"),
-    period: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
-    granularity: str = Query("daily", regex="^(hourly|daily|weekly|monthly)$"),
-    current_user: dict = Depends(get_current_user)
-):
-    """Get trend analytics"""
-    try:
-        analytics_service = AnalyticsService()
-        
-        # Calculate date range
-        end_date = datetime.utcnow()
-        if period == "7d":
-            start_date = end_date - timedelta(days=7)
-        elif period == "30d":
-            start_date = end_date - timedelta(days=30)
-        elif period == "90d":
-            start_date = end_date - timedelta(days=90)
-        else:  # 1y
-            start_date = end_date - timedelta(days=365)
-        
-        # Check permissions
-        if metric in ["revenue"] and current_user["role"] not in ["admin", "organizer"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied to revenue trend data"
-            )
-        
-        trends = await analytics_service.get_trend_analytics(
-            metric=metric,
-            organizer_id=current_user["user_id"] if current_user["role"] == "organizer" else None,
-            start_date=start_date,
-            end_date=end_date,
-            granularity=granularity
-        )
-        
-        return [TrendData(**item) for item in trends]
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Trend analytics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve trend analytics"
-        )
-
-@router.get("/export")
-async def export_analytics_data(
-    report_type: str = Query(..., regex="^(events|users|revenue|engagement)$"),
-    format: str = Query("csv", regex="^(csv|json|xlsx)$"),
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    current_user: dict = Depends(get_current_user)
-):
-    """Export analytics data"""
-    try:
-        # Check permissions
-        if current_user["role"] not in ["admin", "organizer"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied to analytics export"
-            )
-        
-        analytics_service = AnalyticsService()
-        
-        # Set default date range
-        if not end_date:
-            end_date = datetime.utcnow()
-        if not start_date:
-            start_date = end_date - timedelta(days=30)
-        
-        export_data = await analytics_service.export_analytics_data(
-            report_type=report_type,
-            format=format,
-            organizer_id=current_user["user_id"] if current_user["role"] == "organizer" else None,
-            start_date=start_date,
-            end_date=end_date
-        )
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
         
         return {
             "success": True,
-            "download_url": export_data["download_url"],
-            "expires_at": export_data["expires_at"],
-            "file_size": export_data["file_size"]
+            "data": result["data"]
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Export analytics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to export analytics data"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/realtime")
-async def get_realtime_analytics(
-    current_user: dict = Depends(get_current_user)
-):
-    """Get real-time analytics"""
+@router.get("/platform")
+async def get_platform_analytics(request: Request):
+    """Get platform-wide analytics (admin only)"""
     try:
-        analytics_service = AnalyticsService()
+        from services.analytics_service import analytics_service
         
-        realtime_data = await analytics_service.get_realtime_analytics(
-            user_id=current_user["user_id"],
-            role=current_user["role"]
-        )
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
         
-        return realtime_data
+        # Verify user is admin
+        if user["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
         
+        result = analytics_service.get_platform_analytics(admin_user_id=user_id)
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "data": result["data"]
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Realtime analytics error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve realtime analytics"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/membership-trends")
+async def get_membership_trends(request: Request):
+    """Get membership growth trends (admin only)"""
+    try:
+        from services.membership_service import membership_service
+        
+        user = await get_user_from_request(request)
+        
+        # Verify user is admin
+        if user["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Get membership statistics
+        stats = membership_service.get_membership_stats()
+        
+        return {
+            "success": True,
+            "data": {
+                "membership_stats": stats,
+                "trends": {
+                    "premium_growth": "Calculated based on historical data",
+                    "vip_conversion": "Premium to VIP conversion rate",
+                    "churn_rate": "Monthly membership churn"
+                }
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/engagement-metrics/{event_id}")
+async def get_engagement_metrics(request: Request, event_id: str):
+    """Get detailed engagement metrics for event"""
+    try:
+        from services.analytics_service import analytics_service
+        
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        # Verify access
+        if user["role"] not in ["organizer", "admin"]:
+            raise HTTPException(status_code=403, detail="Organizer or admin access required")
+        
+        result = analytics_service.get_secret_event_analytics(event_id, user_id)
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        # Extract just engagement metrics
+        engagement_data = result["data"].get("engagement_analytics", {})
+        chat_data = result["data"].get("chat_analytics", {})
+        
+        return {
+            "success": True,
+            "data": {
+                "engagement_score": engagement_data.get("engagement_score", 0),
+                "chat_activity": {
+                    "total_messages": chat_data.get("total_messages", 0),
+                    "active_participants": chat_data.get("active_participants", 0),
+                    "messages_per_participant": chat_data.get("messages_per_participant", 0)
+                },
+                "event_metrics": {
+                    "attendee_fill_rate": engagement_data.get("attendee_fill_rate", 0),
+                    "time_to_event_hours": engagement_data.get("time_to_event_hours", 0),
+                    "location_revealed": engagement_data.get("location_revealed", False)
+                }
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

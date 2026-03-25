@@ -12,7 +12,7 @@ from middleware.auth import get_current_user, require_role
 from datetime import datetime
 from typing import Dict, Any, List
 
-router = APIRouter(prefix="/tickets", tags=["tickets"])
+router = APIRouter(tags=["tickets"])
 
 @router.post("/issue", response_model=TicketResponse)
 async def issue_ticket(

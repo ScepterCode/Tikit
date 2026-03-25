@@ -1,9 +1,81 @@
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { apiService } from '../../services/api';
+import { NotificationCenter } from '../../components/notifications/NotificationCenter';
+
+interface DashboardStats {
+  total_users: number;
+  active_events: number;
+  tickets_sold: number;
+  platform_revenue: number;
+}
+
+interface PendingActions {
+  organizer_verifications: number;
+  flagged_events: number;
+  support_tickets: number;
+}
+
+interface Activity {
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  icon: string;
+}
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStats>({
+    total_users: 0,
+    active_events: 0,
+    tickets_sold: 0,
+    platform_revenue: 0
+  });
+  const [pending, setPending] = useState<PendingActions>({
+    organizer_verifications: 0,
+    flagged_events: 0,
+    support_tickets: 0
+  });
+  const [activity, setActivity] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+    // Refresh data every 30 seconds
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load stats
+      const statsResponse = await apiService.request('/admin/dashboard/stats');
+      if (statsResponse.success && statsResponse.data) {
+        setStats(statsResponse.data);
+      }
+      
+      // Load pending actions
+      const pendingResponse = await apiService.request('/admin/dashboard/pending-actions');
+      if (pendingResponse.success && pendingResponse.data) {
+        setPending(pendingResponse.data);
+      }
+      
+      // Load recent activity
+      const activityResponse = await apiService.request('/admin/dashboard/activity?limit=10');
+      if (activityResponse.success && activityResponse.data) {
+        setActivity(activityResponse.data);
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={styles.container}>
@@ -11,6 +83,7 @@ export function AdminDashboard() {
       <header style={styles.header}>
         <h1 style={styles.logo}>Grooovy Admin</h1>
         <div style={styles.userMenu}>
+          <NotificationCenter />
           <span style={styles.userName}>Admin: {user?.firstName}</span>
           <button onClick={() => signOut()} style={styles.logoutButton}>
             Logout
@@ -42,33 +115,33 @@ export function AdminDashboard() {
             <StatsCard
               icon="👥"
               title="Total Users"
-              value="0"
+              value={stats.total_users.toString()}
               subtitle="All time"
-              trend="+0%"
+              trend={`+${stats.total_users}%`}
               color="#667eea"
             />
             <StatsCard
               icon="🎉"
               title="Active Events"
-              value="0"
+              value={stats.active_events.toString()}
               subtitle="This month"
-              trend="+0%"
+              trend={`+${stats.active_events}%`}
               color="#10b981"
             />
             <StatsCard
               icon="🎫"
               title="Tickets Sold"
-              value="0"
+              value={stats.tickets_sold.toString()}
               subtitle="This month"
-              trend="+0%"
+              trend={`+${stats.tickets_sold}%`}
               color="#f59e0b"
             />
             <StatsCard
               icon="💰"
               title="Platform Revenue"
-              value="₦0"
+              value={`₦${stats.platform_revenue.toLocaleString()}`}
               subtitle="This month"
-              trend="+0%"
+              trend={`+${stats.platform_revenue > 0 ? '1' : '0'}%`}
               color="#8b5cf6"
             />
           </div>
@@ -107,9 +180,30 @@ export function AdminDashboard() {
           {/* Recent Activity */}
           <section style={styles.section}>
             <h3 style={styles.sectionTitle}>Recent Activity</h3>
-            <div style={styles.emptyState}>
-              <p style={styles.emptyText}>No recent activity to display</p>
-            </div>
+            {loading ? (
+              <div style={styles.emptyState}>
+                <p style={styles.emptyText}>Loading...</p>
+              </div>
+            ) : activity.length === 0 ? (
+              <div style={styles.emptyState}>
+                <p style={styles.emptyText}>No recent activity to display</p>
+              </div>
+            ) : (
+              <div style={styles.activityList}>
+                {activity.map((item, index) => (
+                  <div key={index} style={styles.activityItem}>
+                    <span style={styles.activityIcon}>{item.icon}</span>
+                    <div style={styles.activityContent}>
+                      <p style={styles.activityTitle}>{item.title}</p>
+                      <p style={styles.activityDescription}>{item.description}</p>
+                    </div>
+                    <span style={styles.activityTime}>
+                      {new Date(item.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Pending Actions */}
@@ -118,17 +212,17 @@ export function AdminDashboard() {
             <div style={styles.pendingGrid}>
               <PendingCard
                 title="Organizer Verifications"
-                count={0}
+                count={pending.organizer_verifications}
                 onClick={() => navigate('/admin/verifications')}
               />
               <PendingCard
                 title="Flagged Events"
-                count={0}
+                count={pending.flagged_events}
                 onClick={() => navigate('/admin/events?filter=flagged')}
               />
               <PendingCard
                 title="Support Tickets"
-                count={0}
+                count={pending.support_tickets}
                 onClick={() => navigate('/admin/support')}
               />
             </div>
@@ -419,6 +513,40 @@ const styles = {
   emptyText: {
     fontSize: '14px',
     color: '#6b7280',
+  },
+  activityList: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden',
+  },
+  activityItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    padding: '16px',
+    borderBottom: '1px solid #e5e7eb',
+    transition: 'background-color 0.2s',
+  },
+  activityIcon: {
+    fontSize: '24px',
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: '4px',
+  },
+  activityDescription: {
+    fontSize: '12px',
+    color: '#6b7280',
+  },
+  activityTime: {
+    fontSize: '12px',
+    color: '#9ca3af',
   },
   pendingGrid: {
     display: 'grid',

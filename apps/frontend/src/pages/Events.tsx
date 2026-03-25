@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/FastAPIAuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { AccessCodeModal } from '../components/modals/AccessCodeModal';
+import { SecretInviteModal } from '../components/modals/SecretInviteModal';
+import { authenticatedFetch } from '../utils/auth';
+import { useMembership } from '../hooks/useMembership';
 // import { useEventCapacity } from '../hooks/useSupabaseRealtime';
 
 interface Event {
@@ -69,18 +73,86 @@ const mockEvents: Event[] = [
 
 export function Events() {
   const { user, signOut } = useAuth();
+  const { isPremium } = useMembership();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showAccessCodeModal, setShowAccessCodeModal] = useState(false);
+  const [showSecretInviteModal, setShowSecretInviteModal] = useState(false);
+  const [recommendedEvents, setRecommendedEvents] = useState<Event[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [hasPreferences, setHasPreferences] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const categories = ['All', 'Technology', 'Music', 'Food & Drink', 'Business', 'Sports', 'Arts'];
 
-  const filteredEvents = mockEvents.filter(event => {
+  useEffect(() => {
+    fetchEvents();
+    fetchRecommendedEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await authenticatedFetch('http://localhost:8000/api/events');
+      const data = await response.json();
+      
+      if (data.success && data.data.events) {
+        // Convert backend event format to frontend format
+        const formattedEvents = data.data.events.map((event: any) => ({
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          date: event.event_date || event.date,
+          time: new Date(event.event_date || event.date).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          location: event.full_address || event.venue_name || event.location,
+          price: event.ticket_price || 0,
+          image: event.banner_image_url || '🎉', // Default emoji if no image
+          category: event.category || 'General',
+          organizer: event.organizer_name || 'Event Organizer'
+        }));
+        setAllEvents(formattedEvents);
+      } else {
+        // Fallback to mock events if API fails
+        setAllEvents(mockEvents);
+      }
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+      // Use mock events as fallback
+      setAllEvents(mockEvents);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRecommendedEvents = async () => {
+    try {
+      const response = await authenticatedFetch('http://localhost:8000/api/events/recommended');
+      const data = await response.json();
+      
+      if (data.success) {
+        setRecommendedEvents(data.data.events || []);
+        setHasPreferences(data.data.based_on_preferences || false);
+      }
+    } catch (error) {
+      console.error('Error fetching recommended events:', error);
+    }
+  };
+
+  const filteredEvents = allEvents.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || event.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleAccessCodeSuccess = (event: any) => {
+    // Navigate to the unlocked event
+    navigate(`/events/${event.id}`);
+  };
 
   return (
     <div style={styles.container}>
@@ -115,6 +187,20 @@ export function Events() {
           <div style={styles.pageHeader}>
             <h2 style={styles.pageTitle}>Browse Events</h2>
             <div style={styles.headerActions}>
+              <button
+                style={styles.accessCodeButton}
+                onClick={() => setShowAccessCodeModal(true)}
+              >
+                🔐 Have an access code?
+              </button>
+              {isPremium && (
+                <button
+                  style={styles.secretInviteButton}
+                  onClick={() => setShowSecretInviteModal(true)}
+                >
+                  ✨ Secret Invite
+                </button>
+              )}
               <input
                 type="text"
                 placeholder="Search events..."
@@ -143,24 +229,69 @@ export function Events() {
             </div>
           </div>
 
-          {/* Events Grid */}
-          <div style={styles.eventsGrid}>
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))
+          {/* Recommended Events Section */}
+          {hasPreferences && recommendedEvents.length > 0 && (
+            <div style={styles.recommendedSection}>
+              <h3 style={styles.sectionTitle}>✨ Recommended For You</h3>
+              <p style={styles.sectionSubtitle}>Based on your interests</p>
+              <div style={styles.eventsGrid}>
+                {recommendedEvents.slice(0, 4).map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* All Events Section */}
+          <div style={styles.allEventsSection}>
+            <h3 style={styles.sectionTitle}>
+              {hasPreferences ? '🎉 All Events' : '🎉 Browse Events'}
+            </h3>
+            
+            {loading ? (
+              <div style={styles.loadingState}>
+                <div style={styles.spinner}></div>
+                <p>Loading events...</p>
+              </div>
             ) : (
-              <div style={styles.emptyState}>
-                <div style={styles.emptyIcon}>🔍</div>
-                <h3 style={styles.emptyTitle}>No events found</h3>
-                <p style={styles.emptyText}>
-                  Try adjusting your search or filter criteria.
-                </p>
+              <div style={styles.eventsGrid}>
+                {filteredEvents.length > 0 ? (
+                  filteredEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))
+                ) : (
+                  <div style={styles.emptyState}>
+                    <div style={styles.emptyIcon}>🔍</div>
+                    <h3 style={styles.emptyTitle}>No events found</h3>
+                    <p style={styles.emptyText}>
+                      Try adjusting your search or filter criteria.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </main>
       </div>
+
+      {/* Access Code Modal */}
+      {showAccessCodeModal && (
+        <AccessCodeModal
+          onClose={() => setShowAccessCodeModal(false)}
+          onSuccess={handleAccessCodeSuccess}
+        />
+      )}
+
+      {/* Secret Invite Modal */}
+      {showSecretInviteModal && (
+        <SecretInviteModal
+          onClose={() => setShowSecretInviteModal(false)}
+          onSuccess={(event) => {
+            console.log('Secret event accessed:', event);
+            navigate(`/events/${event.id}`);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -333,6 +464,28 @@ const styles = {
     display: 'flex',
     gap: '12px',
   },
+  accessCodeButton: {
+    padding: '12px 20px',
+    fontSize: '14px',
+    fontWeight: '500',
+    backgroundColor: '#667eea',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+  },
+  secretInviteButton: {
+    padding: '12px 20px',
+    fontSize: '14px',
+    fontWeight: '500',
+    backgroundColor: '#8b5cf6',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+  },
   searchInput: {
     padding: '12px 16px',
     fontSize: '14px',
@@ -343,6 +496,23 @@ const styles = {
   },
   filters: {
     marginBottom: '32px',
+  },
+  recommendedSection: {
+    marginBottom: '48px',
+  },
+  allEventsSection: {
+    marginTop: '32px',
+  },
+  sectionTitle: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: '8px',
+  },
+  sectionSubtitle: {
+    fontSize: '14px',
+    color: '#6b7280',
+    marginBottom: '24px',
   },
   categoryFilters: {
     display: 'flex',
@@ -462,5 +632,25 @@ const styles = {
   emptyText: {
     fontSize: '14px',
     color: '#6b7280',
+  },
+  loadingState: {
+    gridColumn: '1 / -1',
+    backgroundColor: '#ffffff',
+    padding: '64px 32px',
+    borderRadius: '12px',
+    textAlign: 'center' as const,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '16px',
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: '3px solid #f3f4f6',
+    borderTop: '3px solid #667eea',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
   },
 };

@@ -21,7 +21,9 @@ export function WeddingAnalytics({ eventId }: WeddingAnalyticsProps) {
     const fetchAnalytics = async () => {
       try {
         if (!supabase) {
-          throw new Error('Database connection not available');
+          // Silently fail if Supabase is not available
+          setLoading(false);
+          return;
         }
 
         // Fetch wedding analytics data from Supabase
@@ -33,7 +35,10 @@ export function WeddingAnalytics({ eventId }: WeddingAnalyticsProps) {
           .select('*')
           .eq('event_id', eventId);
 
-        if (ticketsError) throw ticketsError;
+        if (ticketsError) {
+          // Silently handle error - just use empty data
+          console.debug('Tickets data not available:', ticketsError.message);
+        }
 
         // Get spray money data
         const { data: sprayMoney, error: sprayError } = await supabase
@@ -42,10 +47,11 @@ export function WeddingAnalytics({ eventId }: WeddingAnalyticsProps) {
           .eq('event_id', eventId);
 
         if (sprayError) {
-          console.warn('Spray money data not available:', sprayError);
+          // Silently handle error
+          console.debug('Spray money data not available:', sprayError.message);
         }
 
-        // Calculate analytics
+        // Calculate analytics with fallback to 0
         const totalSprayMoney = sprayMoney?.reduce((sum, entry) => sum + (entry.amount || 0), 0) || 0;
         const totalTickets = tickets?.length || 0;
 
@@ -71,8 +77,16 @@ export function WeddingAnalytics({ eventId }: WeddingAnalyticsProps) {
         });
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to load analytics');
-        console.error('Analytics fetch error:', err);
+        // Silently handle errors - don't show to user
+        console.debug('Analytics fetch error:', err.message);
+        // Set empty analytics instead of error
+        setAnalytics({
+          foodCounts: {},
+          asoEbiSales: {},
+          totalSprayMoney: 0,
+          totalTickets: 0,
+        });
+        setError(null);
       } finally {
         setLoading(false);
       }

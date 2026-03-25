@@ -8,11 +8,35 @@ from models.event_schemas import (
     ShareableLinkRequest, SprayMoneyTransaction, EventFilters
 )
 from services.event_service import event_service
-from middleware.auth import get_current_user, require_role
+from middleware.auth import get_current_user, require_role, get_current_user_optional
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 
 router = APIRouter(prefix="/events", tags=["events"])
+
+@router.get("/", response_model=EventFeedResponse)
+async def get_events(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    event_type: Optional[str] = Query(None),
+    date_from: Optional[datetime] = Query(None),
+    date_to: Optional[datetime] = Query(None),
+    price_min: Optional[float] = Query(None, ge=0),
+    price_max: Optional[float] = Query(None, ge=0),
+    lga: Optional[str] = Query(None),
+    distance: Optional[int] = Query(None, ge=1, le=500),
+    language: Optional[str] = Query(None),
+    capacity_status: Optional[str] = Query(None),
+    organizer_type: Optional[str] = Query(None),
+    current_user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)
+):
+    """
+    Get events list (alias for /feed endpoint)
+    """
+    return await get_events_feed(
+        page, limit, event_type, date_from, date_to, price_min, price_max,
+        lga, distance, language, capacity_status, organizer_type, current_user
+    )
 
 @router.get("/feed", response_model=EventFeedResponse)
 async def get_events_feed(
@@ -28,7 +52,7 @@ async def get_events_feed(
     language: Optional[str] = Query(None),
     capacity_status: Optional[str] = Query(None),
     organizer_type: Optional[str] = Query(None),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user)
+    current_user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)
 ):
     """
     Get paginated events feed with filtering options

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { PremiumStatus } from '../../components/premium/PremiumStatus';
 
 interface ProfileData {
   firstName: string;
@@ -29,7 +30,7 @@ export function Profile() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'premium'>('profile');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -69,11 +70,40 @@ export function Profile() {
     if (!profileData) return;
     
     setSaving(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      
+      if (!supabase || !user) {
+        alert('Unable to update profile. Please try again.');
+        return;
+      }
+
+      // Update user metadata in Supabase
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          first_name: profileData.firstName,
+          last_name: profileData.lastName,
+          state: profileData.state,
+          date_of_birth: profileData.dateOfBirth,
+          gender: profileData.gender,
+          preferred_language: profileData.preferredLanguage,
+          notifications: profileData.notifications,
+          privacy: profileData.privacy
+        }
+      });
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        alert(`Failed to update profile: ${error.message}`);
+      } else {
+        alert('Profile updated successfully!');
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      alert(`Failed to update profile: ${error.message}`);
+    } finally {
       setSaving(false);
-      alert('Profile updated successfully!');
-    }, 1500);
+    }
   };
 
   const handlePasswordChange = async () => {
@@ -88,12 +118,32 @@ export function Profile() {
     }
 
     setSaving(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      
+      if (!supabase) {
+        alert('Unable to change password. Please try again.');
+        return;
+      }
+
+      // Update password in Supabase
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) {
+        console.error('Error changing password:', error);
+        alert(`Failed to change password: ${error.message}`);
+      } else {
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        alert('Password changed successfully!');
+      }
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      alert(`Failed to change password: ${error.message}`);
+    } finally {
       setSaving(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      alert('Password changed successfully!');
-    }, 1500);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -185,6 +235,15 @@ export function Profile() {
             }}
           >
             ⚙️ Preferences
+          </button>
+          <button 
+            onClick={() => setActiveTab('premium')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'premium' ? styles.activeTab : {})
+            }}
+          >
+            ✨ Premium
           </button>
         </div>
       </div>
@@ -446,6 +505,13 @@ export function Profile() {
             >
               {saving ? 'Saving...' : 'Save Preferences'}
             </button>
+          </div>
+        )}
+
+        {activeTab === 'premium' && (
+          <div style={styles.section}>
+            <h3 style={styles.sectionTitle}>Premium Membership</h3>
+            <PremiumStatus showUpgradeButton={true} />
           </div>
         )}
       </div>

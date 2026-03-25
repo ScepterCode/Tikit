@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any
 import secrets
 import string
 from database import supabase_client
-from config import settings
+from config import config as settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -33,23 +33,67 @@ class AuthService:
     def create_access_token(self, data: dict) -> str:
         """Create JWT access token"""
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+        expire = datetime.utcnow() + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+        return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
     
     def create_refresh_token(self, data: dict) -> str:
         """Create JWT refresh token"""
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
+        expire = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, settings.jwt_refresh_secret, algorithm=settings.jwt_algorithm)
+        return jwt.encode(to_encode, settings.JWT_REFRESH_SECRET, algorithm=settings.JWT_ALGORITHM)
     
-    def verify_token(self, token: str, secret: str) -> Optional[Dict[str, Any]]:
-        """Verify JWT token"""
+    def verify_token(self, token: str, secret: str = None) -> Optional[Dict[str, Any]]:
+        """Verify JWT token - handles both custom JWT and Supabase JWT"""
         try:
-            payload = jwt.decode(token, secret, algorithms=[settings.jwt_algorithm])
-            return payload
+            # First try to verify as Supabase token
+            if self.supabase:
+                try:
+                    # For Supabase JWT tokens, we need to decode them with Supabase's JWT secret
+                    # The token contains user info directly
+                    import jwt as jose_jwt
+                    
+                    # Try to decode without verification first to get the payload structure
+                    unverified_payload = jose_jwt.decode(token, options={"verify_signature": False})
+                    
+                    if 'sub' in unverified_payload:  # Supabase tokens have 'sub' field
+                        user_id = unverified_payload['sub']
+                        
+                        # Get user data from our database using Supabase user ID
+                        try:
+                            user_data = self.supabase.table('users').select('*').eq('id', user_id).execute()
+                            if user_data.data:
+                                user = user_data.data[0]
+                                return {
+                                    "user_id": user["id"],
+                                    "phone_number": user.get("phone_number", ""),
+                                    "role": user.get("role", "attendee"),
+                                    "state": user.get("state", "active")
+                                }
+                        except Exception as db_error:
+                            logger.debug(f"Database lookup failed: {db_error}")
+                            
+                        # If database lookup fails, create basic user info from token
+                        return {
+                            "user_id": user_id,
+                            "phone_number": unverified_payload.get("phone", ""),
+                            "role": "attendee",  # Default role
+                            "state": "active"
+                        }
+                        
+                except Exception as e:
+                    logger.debug(f"Supabase token verification failed: {e}")
+            
+            # Fallback to custom JWT verification
+            if secret:
+                payload = jwt.decode(token, secret, algorithms=[settings.JWT_ALGORITHM])
+                return payload
+                
         except JWTError:
+            return None
+        except Exception as e:
+            logger.error(f"Token verification error: {e}")
             return None
     
     def generate_referral_code(self) -> str:

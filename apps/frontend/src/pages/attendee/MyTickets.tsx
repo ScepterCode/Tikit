@@ -1,4 +1,4 @@
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function MyTickets() {

@@ -15,9 +15,13 @@ export function useServiceWorker(): ServiceWorkerState {
   const [needRefresh, setNeedRefresh] = useState(false);
   const [offlineReady, setOfflineReady] = useState(false);
 
+  // Only register service worker in production or HTTPS
+  const shouldRegister = import.meta.env.PROD || location.protocol === 'https:';
+
   const {
     updateServiceWorker,
   } = useRegisterSW({
+    disabled: !shouldRegister, // Disable in development HTTP
     onRegistered(registration: ServiceWorkerRegistration | undefined) {
       console.log('Service Worker registered:', registration);
       

@@ -2,7 +2,7 @@
 Database connection and utilities using Supabase
 """
 from supabase import create_client, Client
-from config import settings
+from config import config
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,13 +16,13 @@ class SupabaseClient:
         """Get Supabase client with anon key (for user operations)"""
         if not self.client:
             # Only create client if we have valid credentials
-            if (settings.supabase_url and 
-                settings.supabase_anon_key and 
-                not settings.supabase_url.startswith("https://your-project") and
-                not settings.supabase_anon_key.startswith("your-")):
+            if (config.SUPABASE_URL and 
+                config.SUPABASE_ANON_KEY and 
+                not config.SUPABASE_URL.startswith("https://your-project") and
+                not config.SUPABASE_ANON_KEY.startswith("your-")):
                 self.client = create_client(
-                    settings.supabase_url,
-                    settings.supabase_anon_key
+                    config.SUPABASE_URL,
+                    config.SUPABASE_ANON_KEY
                 )
             else:
                 logger.warning("Supabase credentials not configured, using mock client")
@@ -33,13 +33,13 @@ class SupabaseClient:
         """Get Supabase client with service key (for admin operations)"""
         if not self.service_client:
             # Only create client if we have valid credentials
-            if (settings.supabase_url and 
-                settings.supabase_service_key and 
-                not settings.supabase_url.startswith("https://your-project") and
-                not settings.supabase_service_key.startswith("your-")):
+            if (config.SUPABASE_URL and 
+                config.SUPABASE_SERVICE_KEY and 
+                not config.SUPABASE_URL.startswith("https://your-project") and
+                not config.SUPABASE_SERVICE_KEY.startswith("your-")):
                 self.service_client = create_client(
-                    settings.supabase_url,
-                    settings.supabase_service_key
+                    config.SUPABASE_URL,
+                    config.SUPABASE_SERVICE_KEY
                 )
             else:
                 logger.warning("Supabase service credentials not configured, using mock client")

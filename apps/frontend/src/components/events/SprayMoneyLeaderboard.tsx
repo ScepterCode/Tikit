@@ -8,14 +8,14 @@ interface SprayMoneyLeaderboardProps {
 }
 
 export function SprayMoneyLeaderboard({ eventId, onSprayMoney, isOnline = false }: SprayMoneyLeaderboardProps) {
-  const { leaderboard, loading, error } = useSprayMoneyLeaderboard(eventId);
+  const { leaderboard, totalSprayed, loading, error } = useSprayMoneyLeaderboard(eventId);
   const [showSprayForm, setShowSprayForm] = useState(false);
   const [sprayAmount, setSprayAmount] = useState('');
   const [sprayMessage, setSprayMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Calculate total spray money
-  const totalSprayMoney = leaderboard.reduce((sum, entry) => sum + entry.amount, 0);
+  // Use total from API
+  const totalSprayMoney = totalSprayed;
 
   const handleSpraySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,29 +187,29 @@ export function SprayMoneyLeaderboard({ eventId, onSprayMoney, isOnline = false 
         ) : (
           <div style={styles.leaderboardList}>
             {leaderboard.slice(0, 10).map((entry, index) => {
-              const displayName = entry.user_name || 'Anonymous';
+              const displayName = entry.sprayer_name || 'Anonymous';
               const medals = ['🥇', '🥈', '🥉'];
               const medal = index < 3 ? medals[index] : null;
 
               return (
                 <div
-                  key={entry.user_id}
+                  key={`${entry.sprayer_name}-${index}`}
                   style={{
                     ...styles.leaderboardItem,
                     ...(index < 3 ? styles.topThree : {})
                   }}
                 >
                   <div style={styles.rank}>
-                    {medal || `#${index + 1}`}
+                    {medal || `#${entry.rank}`}
                   </div>
                   <div style={styles.contributorInfo}>
                     <div style={styles.contributorName}>{displayName}</div>
-                    {entry.message && (
-                      <div style={styles.contributorMessage}>"{entry.message}"</div>
-                    )}
+                    <div style={styles.contributorMessage}>
+                      {entry.spray_count} {entry.spray_count === 1 ? 'spray' : 'sprays'}
+                    </div>
                   </div>
                   <div style={styles.contributorAmount}>
-                    ₦{entry.amount.toLocaleString()}
+                    ₦{entry.total_amount.toLocaleString()}
                   </div>
                 </div>
               );

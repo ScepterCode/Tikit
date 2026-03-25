@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/FastAPIAuthContext';
+import { useAuth } from '../contexts/SupabaseAuthContext';
 import { nigerianStates } from '../data/nigerianStates';
 
 type UserRole = 'attendee' | 'organizer';
 
 interface FormData {
   role: UserRole;
-  phoneNumber: string;
+  email: string;
   password: string;
   confirmPassword: string;
   firstName: string;
   lastName: string;
-  email: string;
   state: string;
   organizationName: string;
   organizationType: string;
@@ -24,12 +23,11 @@ export function RegisterPage() {
   
   const [formData, setFormData] = useState<FormData>({
     role: 'attendee', // Explicitly set default role
-    phoneNumber: '',
+    email: '',
     password: '',
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    email: '',
     state: '',
     organizationName: '',
     organizationType: '',
@@ -44,7 +42,7 @@ export function RegisterPage() {
   const validateForm = (): string | null => {
     if (!formData.firstName.trim()) return 'First name is required';
     if (!formData.lastName.trim()) return 'Last name is required';
-    if (!formData.phoneNumber.trim()) return 'Phone number is required';
+    if (!formData.email.trim()) return 'Email is required';
     if (!formData.password) return 'Password is required';
     if (formData.password.length < 6) return 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
@@ -62,9 +60,7 @@ export function RegisterPage() {
   const handleFieldError = (errorMessage: string) => {
     const newFieldErrors: {[key: string]: string} = {};
     
-    if (errorMessage.toLowerCase().includes('phone number')) {
-      newFieldErrors.phoneNumber = errorMessage;
-    } else if (errorMessage.toLowerCase().includes('email')) {
+    if (errorMessage.toLowerCase().includes('email')) {
       newFieldErrors.email = errorMessage;
     } else if (errorMessage.toLowerCase().includes('first name')) {
       newFieldErrors.firstName = errorMessage;
@@ -96,11 +92,10 @@ export function RegisterPage() {
       console.log('- Organization name:', formData.organizationName);
       
       const result = await signUp({
-        phoneNumber: formData.phoneNumber.trim(),
+        email: formData.email.trim(),
         password: formData.password,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        email: formData.email.trim() || undefined,
         state: formData.state,
         role: formData.role, // Ensure role is always provided
         organizationName: formData.role === 'organizer' ? formData.organizationName.trim() : undefined,
@@ -109,9 +104,9 @@ export function RegisterPage() {
       console.log('- SignUp result:', result);
 
       if (result.success) {
-        console.log('✅ Registration successful, navigating to dashboard');
-        // Registration successful - navigate to dashboard
-        navigate('/dashboard');
+        console.log('✅ Registration successful, navigating to preferences');
+        // Registration successful - navigate to preferences page
+        navigate('/preferences');
       } else {
         throw new Error(result.error || 'Registration failed');
       }
@@ -227,26 +222,7 @@ export function RegisterPage() {
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>Phone Number *</label>
-              <input
-                type="tel"
-                value={formData.phoneNumber}
-                onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                style={{
-                  ...styles.input,
-                  ...(fieldErrors.phoneNumber ? styles.inputError : {})
-                }}
-                placeholder="+234 800 000 0000"
-                required
-              />
-              <p style={styles.hint}>This will be your username</p>
-              {fieldErrors.phoneNumber && (
-                <p style={styles.fieldError}>{fieldErrors.phoneNumber}</p>
-              )}
-            </div>
-
-            <div style={styles.field}>
-              <label style={styles.label}>Email (Optional)</label>
+              <label style={styles.label}>Email *</label>
               <input
                 type="email"
                 value={formData.email}
@@ -255,8 +231,10 @@ export function RegisterPage() {
                   ...styles.input,
                   ...(fieldErrors.email ? styles.inputError : {})
                 }}
-                placeholder="john@example.com"
+                placeholder="admin@grooovy.netlify.app"
+                required
               />
+              <p style={styles.hint}>This will be your login email</p>
               {fieldErrors.email && (
                 <p style={styles.fieldError}>{fieldErrors.email}</p>
               )}

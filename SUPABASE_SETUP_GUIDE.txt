@@ -1,0 +1,99 @@
+SUPABASE AUTHENTICATION SETUP GUIDE
+====================================
+
+STATUS: Supabase-only authentication has been implemented
+- Frontend now uses SupabaseAuthContext (Supabase-only, no FastAPI hybrid)
+- All imports updated across 30+ files
+- Test users created in Supabase Auth
+- Email confirmation required (Supabase default)
+
+TEST USERS CREATED:
+==================
+Email: admin@grooovy.netlify.app
+Password: password123
+Role: admin
+
+Email: organizer@grooovy.netlify.app
+Password: password123
+Role: organizer
+
+Email: attendee@grooovy.netlify.app
+Password: password123
+Role: attendee
+
+NEXT STEPS TO ENABLE LOGIN:
+===========================
+
+Option 1: Disable Email Confirmation (RECOMMENDED FOR TESTING)
+--------------------------------------------------------------
+1. Go to Supabase Dashboard: https://app.supabase.com
+2. Select your project: hwwzbsppzwcyvambeade
+3. Navigate to: Authentication > Providers > Email
+4. Toggle OFF: "Confirm email"
+5. Save changes
+6. Test users can now login immediately
+
+Option 2: Manually Confirm Emails
+----------------------------------
+1. Go to Supabase Dashboard: https://app.supabase.com
+2. Select your project: hwwzbsppzwcyvambeade
+3. Navigate to: Authentication > Users
+4. For each test user:
+   - Click the three-dot menu
+   - Select "Confirm email"
+5. Users can now login
+
+TESTING LOGIN:
+==============
+1. Start the frontend: npm run dev (in apps/frontend)
+2. Go to http://localhost:3000/auth/login
+3. Enter email: admin@grooovy.netlify.app
+4. Enter password: password123
+5. Click "Sign In"
+
+BACKEND INTEGRATION:
+====================
+The FastAPI backend still needs to be updated to:
+1. Validate Supabase JWT tokens instead of mock tokens
+2. Extract user info from JWT claims
+3. Maintain business logic (events, tickets, payments, etc.)
+
+Current status:
+- Backend still uses mock token validation
+- Business logic endpoints work with mock data
+- Need to integrate Supabase JWT validation
+
+FRONTEND CHANGES MADE:
+======================
+✅ App.tsx: Switched from FastAPIAuthProvider to SupabaseAuthProvider
+✅ LoginPage.tsx: Updated to use email instead of phone number
+✅ RegisterPage.tsx: Updated to use email instead of phone number
+✅ ProtectedRoute.tsx: Updated to use SupabaseAuthContext
+✅ All 30+ component files: Updated imports to SupabaseAuthContext
+✅ SupabaseAuthContext.tsx: Created with full Supabase auth flow
+✅ .env: Updated with real Supabase credentials
+
+ENVIRONMENT VARIABLES:
+======================
+File: Tikit/apps/frontend/.env
+VITE_SUPABASE_URL=https://hwwzbsppzwcyvambeade.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3BwendjeXZhbWJlYWRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NjgyOTYsImV4cCI6MjA4MjM0NDI5Nn0.Cwsvgq1qJ7fAfxT2opSfmnJkShy8F6lcRa4xXLdAbnc
+
+TROUBLESHOOTING:
+================
+Issue: "Email not confirmed" error
+Solution: Follow Option 1 or Option 2 above to confirm emails
+
+Issue: Login page shows "Supabase not configured"
+Solution: Check that .env file has correct VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+
+Issue: User data not loading after login
+Solution: Check browser console for errors, verify Supabase user metadata is set correctly
+
+NEXT PHASE:
+===========
+1. Disable email confirmation in Supabase (or confirm test emails)
+2. Test login flow end-to-end
+3. Update FastAPI backend to validate Supabase JWT tokens
+4. Test all features (events, tickets, payments, etc.) with Supabase auth
+5. Deploy to production

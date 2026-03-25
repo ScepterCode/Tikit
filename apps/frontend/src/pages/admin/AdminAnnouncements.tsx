@@ -1,500 +1,446 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { authenticatedFetch } from '../../utils/auth';
+import { NotificationCenter } from '../../components/notifications/NotificationCenter';
 
 interface Announcement {
   id: string;
   title: string;
-  content: string;
-  type: 'info' | 'warning' | 'success' | 'error';
-  targetAudience: 'all' | 'organizers' | 'attendees' | 'admins';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'draft' | 'published' | 'scheduled' | 'archived';
-  publishDate?: string;
-  expiryDate?: string;
-  createdBy: string;
-  createdAt: string;
-  views: number;
+  message: string;
+  target_roles: string[];
+  created_at: string;
+  sent_count: number;
+  status: 'draft' | 'sent' | 'scheduled';
 }
 
 export function AdminAnnouncements() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterAudience, setFilterAudience] = useState<string>('all');
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-
-  const [newAnnouncement, setNewAnnouncement] = useState({
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [showComposer, setShowComposer] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
     title: '',
-    content: '',
-    type: 'info' as const,
-    targetAudience: 'all' as const,
-    priority: 'medium' as const,
-    publishDate: '',
-    expiryDate: ''
+    message: '',
+    target_roles: [] as string[],
+    schedule_date: ''
   });
 
-  // Mock data for now - replace with API call
   useEffect(() => {
-    const mockAnnouncements: Announcement[] = [
-      {
-        id: '1',
-        title: 'Platform Maintenance Scheduled',
-        content: 'We will be performing scheduled maintenance on January 15th from 2:00 AM to 4:00 AM WAT. During this time, the platform may be temporarily unavailable.',
-        type: 'warning',
-        targetAudience: 'all',
-        priority: 'high',
-        status: 'published',
-        publishDate: '2025-01-10T09:00:00.000Z',
-        expiryDate: '2025-01-16T00:00:00.000Z',
-        createdBy: 'Admin',
-        createdAt: '2025-01-10T09:00:00.000Z',
-        views: 1247
-      },
-      {
-        id: '2',
-        title: 'New Features Released',
-        content: 'We\'ve added new analytics features for event organizers including real-time attendance tracking and revenue insights.',
-        type: 'success',
-        targetAudience: 'organizers',
-        priority: 'medium',
-        status: 'published',
-        publishDate: '2025-01-05T10:30:00.000Z',
-        createdBy: 'Admin',
-        createdAt: '2025-01-05T10:30:00.000Z',
-        views: 856
-      },
-      {
-        id: '3',
-        title: 'Security Update Required',
-        content: 'Please update your passwords and enable two-factor authentication for enhanced security.',
-        type: 'error',
-        targetAudience: 'all',
-        priority: 'urgent',
-        status: 'published',
-        publishDate: '2025-01-01T08:00:00.000Z',
-        createdBy: 'Security Team',
-        createdAt: '2025-01-01T08:00:00.000Z',
-        views: 2103
-      },
-      {
-        id: '4',
-        title: 'Holiday Event Guidelines',
-        content: 'Special guidelines for organizing events during the holiday season. Please review the updated policies.',
-        type: 'info',
-        targetAudience: 'organizers',
-        priority: 'low',
-        status: 'draft',
-        createdBy: 'Admin',
-        createdAt: '2024-12-20T14:15:00.000Z',
-        views: 0
-      }
-    ];
-
-    setTimeout(() => {
-      setAnnouncements(mockAnnouncements);
-      setLoading(false);
-    }, 1000);
+    fetchAnnouncements();
   }, []);
 
-  const filteredAnnouncements = announcements.filter(announcement => {
-    const matchesStatus = filterStatus === 'all' || announcement.status === filterStatus;
-    const matchesAudience = filterAudience === 'all' || announcement.targetAudience === filterAudience;
-    return matchesStatus && matchesAudience;
-  });
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'info': return '#3b82f6';
-      case 'warning': return '#f59e0b';
-      case 'success': return '#16a34a';
-      case 'error': return '#dc2626';
-      default: return '#6b7280';
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      const response = await authenticatedFetch('http://localhost:8000/api/admin/announcements');
+      if (response.success && response.data) {
+        setAnnouncements(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      // Set mock data for now
+      setAnnouncements([
+        {
+          id: '1',
+          title: 'Platform Maintenance Notice',
+          message: 'We will be performing scheduled maintenance on Sunday from 2-4 AM.',
+          target_roles: ['attendee', 'organizer'],
+          created_at: new Date().toISOString(),
+          sent_count: 1250,
+          status: 'sent'
+        },
+        {
+          id: '2',
+          title: 'New Payment Methods Available',
+          message: 'We have added support for mobile money and bank transfers.',
+          target_roles: ['attendee'],
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          sent_count: 890,
+          status: 'sent'
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low': return '#16a34a';
-      case 'medium': return '#f59e0b';
-      case 'high': return '#ea580c';
-      case 'urgent': return '#dc2626';
-      default: return '#6b7280';
+  const handleSendAnnouncement = async () => {
+    if (!formData.title || !formData.message) {
+      alert('Please fill in title and message');
+      return;
+    }
+
+    if (formData.target_roles.length === 0) {
+      alert('Please select at least one target audience');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await authenticatedFetch('http://localhost:8000/api/notifications/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          message: formData.message,
+          target_roles: formData.target_roles
+        })
+      });
+
+      if (response.success) {
+        alert('✅ Announcement sent successfully!');
+        setShowComposer(false);
+        setFormData({ title: '', message: '', target_roles: [], schedule_date: '' });
+        fetchAnnouncements();
+      } else {
+        alert(`Failed to send announcement: ${response.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending announcement:', error);
+      alert('Failed to send announcement. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft': return '#6b7280';
-      case 'published': return '#16a34a';
-      case 'scheduled': return '#3b82f6';
-      case 'archived': return '#9ca3af';
-      default: return '#6b7280';
-    }
+  const handleRoleToggle = (role: string) => {
+    setFormData(prev => ({
+      ...prev,
+      target_roles: prev.target_roles.includes(role)
+        ? prev.target_roles.filter(r => r !== role)
+        : [...prev.target_roles, role]
+    }));
   };
-
-  const handleCreateAnnouncement = () => {
-    const announcement: Announcement = {
-      id: Date.now().toString(),
-      ...newAnnouncement,
-      status: 'draft',
-      createdBy: 'Admin',
-      createdAt: new Date().toISOString(),
-      views: 0
-    };
-
-    setAnnouncements([announcement, ...announcements]);
-    setNewAnnouncement({
-      title: '',
-      content: '',
-      type: 'info',
-      targetAudience: 'all',
-      priority: 'medium',
-      publishDate: '',
-      expiryDate: ''
-    });
-    setShowCreateForm(false);
-  };
-
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loading}>
-          <div style={styles.spinner}></div>
-          <p>Loading announcements...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <div style={styles.titleSection}>
-          <button onClick={() => navigate('/admin/dashboard')} style={styles.backButton}>
-            ← Back
+      {/* Header */}
+      <header style={styles.header}>
+        <h1 style={styles.logo}>Grooovy Admin</h1>
+        <div style={styles.userMenu}>
+          <NotificationCenter />
+          <span style={styles.userName}>Admin: {user?.firstName}</span>
+          <button onClick={() => signOut()} style={styles.logoutButton}>
+            Logout
           </button>
-          <h1 style={styles.title}>📢 Announcements</h1>
         </div>
-        
-        <button 
-          onClick={() => setShowCreateForm(true)}
-          style={styles.createButton}
-        >
-          + Create Announcement
-        </button>
-      </div>
+      </header>
 
-      <div style={styles.stats}>
-        <div style={styles.statCard}>
-          <span style={styles.statNumber}>{announcements.length}</span>
-          <span style={styles.statLabel}>Total Announcements</span>
-        </div>
-        <div style={styles.statCard}>
-          <span style={styles.statNumber}>{announcements.filter(a => a.status === 'published').length}</span>
-          <span style={styles.statLabel}>Published</span>
-        </div>
-        <div style={styles.statCard}>
-          <span style={styles.statNumber}>{announcements.filter(a => a.priority === 'urgent').length}</span>
-          <span style={styles.statLabel}>Urgent</span>
-        </div>
-        <div style={styles.statCard}>
-          <span style={styles.statNumber}>{announcements.reduce((sum, a) => sum + a.views, 0).toLocaleString()}</span>
-          <span style={styles.statLabel}>Total Views</span>
-        </div>
-      </div>
+      <div style={styles.layout}>
+        {/* Sidebar */}
+        <aside style={styles.sidebar}>
+          <nav style={styles.nav}>
+            <NavItem icon="📊" label="Dashboard" onClick={() => navigate('/admin/dashboard')} />
+            <NavItem icon="👥" label="Users" onClick={() => navigate('/admin/users')} />
+            <NavItem icon="🎉" label="Events" onClick={() => navigate('/admin/events')} />
+            <NavItem icon="💰" label="Financials" onClick={() => navigate('/admin/financials')} />
+            <NavItem icon="📈" label="Analytics" onClick={() => navigate('/admin/analytics')} />
+            <NavItem icon="🔒" label="Security" onClick={() => navigate('/admin/security')} />
+            <NavItem icon="📢" label="Announcements" active />
+            <NavItem icon="⚙️" label="Settings" onClick={() => navigate('/admin/settings')} />
+          </nav>
+        </aside>
 
-      <div style={styles.controls}>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          style={styles.filterSelect}
-        >
-          <option value="all">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="archived">Archived</option>
-        </select>
-        
-        <select
-          value={filterAudience}
-          onChange={(e) => setFilterAudience(e.target.value)}
-          style={styles.filterSelect}
-        >
-          <option value="all">All Audiences</option>
-          <option value="all">Everyone</option>
-          <option value="organizers">Organizers</option>
-          <option value="attendees">Attendees</option>
-          <option value="admins">Admins</option>
-        </select>
-      </div>
-
-      {showCreateForm && (
-        <div style={styles.modal}>
-          <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>Create New Announcement</h3>
-              <button 
-                onClick={() => setShowCreateForm(false)}
-                style={styles.closeButton}
-              >
-                ×
-              </button>
+        {/* Main Content */}
+        <main style={styles.main}>
+          <div style={styles.titleRow}>
+            <div>
+              <h2 style={styles.pageTitle}>System Announcements</h2>
+              <p style={styles.pageSubtitle}>
+                Send platform-wide announcements to users
+              </p>
             </div>
-            
-            <div style={styles.form}>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Title</label>
-                <input
-                  type="text"
-                  value={newAnnouncement.title}
-                  onChange={(e) => setNewAnnouncement({...newAnnouncement, title: e.target.value})}
-                  style={styles.input}
-                  placeholder="Enter announcement title"
-                />
-              </div>
-              
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Content</label>
-                <textarea
-                  value={newAnnouncement.content}
-                  onChange={(e) => setNewAnnouncement({...newAnnouncement, content: e.target.value})}
-                  style={styles.textarea}
-                  placeholder="Enter announcement content"
-                  rows={4}
-                />
-              </div>
-              
-              <div style={styles.formRow}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Type</label>
-                  <select
-                    value={newAnnouncement.type}
-                    onChange={(e) => setNewAnnouncement({...newAnnouncement, type: e.target.value as any})}
-                    style={styles.select}
-                  >
-                    <option value="info">Info</option>
-                    <option value="warning">Warning</option>
-                    <option value="success">Success</option>
-                    <option value="error">Error</option>
-                  </select>
+            <button 
+              onClick={() => setShowComposer(true)} 
+              style={styles.composeButton}
+              disabled={loading}
+            >
+              📢 New Announcement
+            </button>
+          </div>
+
+          {/* Composer Modal */}
+          {showComposer && (
+            <div style={styles.modalOverlay}>
+              <div style={styles.modal}>
+                <div style={styles.modalHeader}>
+                  <h3 style={styles.modalTitle}>Create System Announcement</h3>
+                  <button onClick={() => setShowComposer(false)} style={styles.closeButton}>
+                    ×
+                  </button>
                 </div>
                 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Priority</label>
-                  <select
-                    value={newAnnouncement.priority}
-                    onChange={(e) => setNewAnnouncement({...newAnnouncement, priority: e.target.value as any})}
-                    style={styles.select}
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
+                <div style={styles.modalContent}>
+                  {/* Title */}
+                  <div style={styles.inputGroup}>
+                    <label style={styles.inputLabel}>Title *</label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Enter announcement title"
+                      style={styles.input}
+                    />
+                  </div>
+
+                  {/* Message */}
+                  <div style={styles.inputGroup}>
+                    <label style={styles.inputLabel}>Message *</label>
+                    <textarea
+                      value={formData.message}
+                      onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                      placeholder="Enter your announcement message"
+                      style={styles.textarea}
+                      rows={4}
+                    />
+                  </div>
+
+                  {/* Target Audience */}
+                  <div style={styles.inputGroup}>
+                    <label style={styles.inputLabel}>Target Audience *</label>
+                    <div style={styles.roleSelector}>
+                      {[
+                        { key: 'attendee', label: 'Attendees', icon: '👥' },
+                        { key: 'organizer', label: 'Organizers', icon: '🎯' },
+                        { key: 'admin', label: 'Admins', icon: '⚙️' }
+                      ].map(role => (
+                        <button
+                          key={role.key}
+                          type="button"
+                          onClick={() => handleRoleToggle(role.key)}
+                          style={{
+                            ...styles.roleButton,
+                            ...(formData.target_roles.includes(role.key) ? styles.roleButtonActive : {})
+                          }}
+                        >
+                          <span style={styles.roleIcon}>{role.icon}</span>
+                          {role.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Priority Level */}
+                  <div style={styles.inputGroup}>
+                    <label style={styles.inputLabel}>Priority Level</label>
+                    <select style={styles.select}>
+                      <option value="normal">Normal</option>
+                      <option value="high">High Priority</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={styles.modalActions}>
+                    <button 
+                      onClick={() => setShowComposer(false)} 
+                      style={styles.cancelButton}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleSendAnnouncement} 
+                      style={{...styles.sendButton, opacity: loading ? 0.7 : 1}}
+                      disabled={loading}
+                    >
+                      {loading ? 'Sending...' : 'Send Announcement'}
+                    </button>
+                  </div>
                 </div>
               </div>
-              
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Target Audience</label>
-                <select
-                  value={newAnnouncement.targetAudience}
-                  onChange={(e) => setNewAnnouncement({...newAnnouncement, targetAudience: e.target.value as any})}
-                  style={styles.select}
-                >
-                  <option value="all">Everyone</option>
-                  <option value="organizers">Organizers</option>
-                  <option value="attendees">Attendees</option>
-                  <option value="admins">Admins</option>
-                </select>
-              </div>
-              
-              <div style={styles.formActions}>
-                <button 
-                  onClick={() => setShowCreateForm(false)}
-                  style={styles.cancelButton}
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleCreateAnnouncement}
-                  style={styles.saveButton}
-                >
-                  Save as Draft
-                </button>
-              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      <div style={styles.announcementsList}>
-        {filteredAnnouncements.map((announcement) => (
-          <div key={announcement.id} style={styles.announcementCard}>
-            <div style={styles.announcementHeader}>
-              <div style={styles.announcementTitle}>
-                {announcement.title}
-              </div>
-              <div style={styles.announcementBadges}>
-                <span 
-                  style={{
-                    ...styles.typeBadge,
-                    backgroundColor: getTypeColor(announcement.type)
-                  }}
-                >
-                  {announcement.type}
-                </span>
-                <span 
-                  style={{
-                    ...styles.priorityBadge,
-                    backgroundColor: getPriorityColor(announcement.priority)
-                  }}
-                >
-                  {announcement.priority}
-                </span>
-                <span 
-                  style={{
-                    ...styles.statusBadge,
-                    backgroundColor: getStatusColor(announcement.status)
-                  }}
-                >
-                  {announcement.status}
-                </span>
-              </div>
-            </div>
+          {/* Announcements History */}
+          <div style={styles.historySection}>
+            <h3 style={styles.historyTitle}>Announcement History</h3>
             
-            <div style={styles.announcementContent}>
-              {announcement.content}
-            </div>
-            
-            <div style={styles.announcementMeta}>
-              <div style={styles.metaInfo}>
-                <span>👥 {announcement.targetAudience}</span>
-                <span>👁️ {announcement.views} views</span>
-                <span>👤 {announcement.createdBy}</span>
-                <span>📅 {new Date(announcement.createdAt).toLocaleDateString()}</span>
+            {loading ? (
+              <div style={styles.loadingState}>
+                <div style={styles.spinner}></div>
+                <p>Loading announcements...</p>
               </div>
-              
-              <div style={styles.announcementActions}>
-                <button style={styles.actionButton}>Edit</button>
-                <button style={styles.actionButton}>Publish</button>
-                <button style={styles.actionButton}>Archive</button>
-                <button style={{...styles.actionButton, color: '#dc2626'}}>Delete</button>
+            ) : announcements.length === 0 ? (
+              <div style={styles.emptyState}>
+                <div style={styles.emptyIcon}>📢</div>
+                <h3 style={styles.emptyTitle}>No announcements sent yet</h3>
+                <p style={styles.emptyText}>
+                  Click "New Announcement" to send your first system-wide message
+                </p>
               </div>
-            </div>
+            ) : (
+              <div style={styles.announcementsList}>
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} style={styles.announcementCard}>
+                    <div style={styles.announcementHeader}>
+                      <div style={styles.announcementInfo}>
+                        <h4 style={styles.announcementTitle}>{announcement.title}</h4>
+                        <p style={styles.announcementMeta}>
+                          Sent to {announcement.target_roles.join(', ')} • 
+                          {announcement.sent_count} recipients • 
+                          {new Date(announcement.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div style={styles.announcementStatus}>
+                        <span style={{
+                          ...styles.statusBadge,
+                          backgroundColor: announcement.status === 'sent' ? '#10b981' : '#f59e0b'
+                        }}>
+                          {announcement.status}
+                        </span>
+                      </div>
+                    </div>
+                    <p style={styles.announcementMessage}>{announcement.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
+        </main>
       </div>
-
-      {filteredAnnouncements.length === 0 && (
-        <div style={styles.noResults}>
-          <p>No announcements found for the selected criteria.</p>
-        </div>
-      )}
     </div>
+  );
+}
+
+function NavItem({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      style={{
+        ...styles.navItem,
+        ...(active ? styles.navItemActive : {}),
+      }}
+      onClick={onClick}
+    >
+      <span style={styles.navIcon}>{icon}</span>
+      <span>{label}</span>
+    </button>
   );
 }
 
 const styles = {
   container: {
-    padding: '20px',
-    maxWidth: '1400px',
-    margin: '0 auto',
-  },
-  loading: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '400px',
-    gap: '16px',
-  },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '4px solid #f3f4f6',
-    borderTop: '4px solid #3b82f6',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
+    minHeight: '100vh',
+    backgroundColor: '#f9fafb',
   },
   header: {
+    backgroundColor: '#1f2937',
+    padding: '16px 24px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '20px',
-    flexWrap: 'wrap' as const,
-    gap: '16px',
   },
-  titleSection: {
+  logo: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#ffffff',
+    margin: 0,
+  },
+  userMenu: {
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
   },
-  backButton: {
+  userName: {
+    fontSize: '14px',
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+  logoutButton: {
     padding: '8px 16px',
-    backgroundColor: '#6b7280',
-    color: 'white',
+    fontSize: '14px',
+    backgroundColor: '#374151',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '14px',
+    color: '#ffffff',
   },
-  title: {
+  layout: {
+    display: 'flex',
+  },
+  sidebar: {
+    width: '240px',
+    backgroundColor: '#ffffff',
+    borderRight: '1px solid #e5e7eb',
+    minHeight: 'calc(100vh - 65px)',
+    padding: '24px 0',
+  },
+  nav: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '4px',
+    padding: '0 12px',
+  },
+  navItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 16px',
+    fontSize: '14px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    color: '#6b7280',
+    textAlign: 'left' as const,
+    transition: 'all 0.2s',
+  },
+  navItemActive: {
+    backgroundColor: '#f5f7ff',
+    color: '#667eea',
+    fontWeight: '500',
+  },
+  navIcon: {
+    fontSize: '18px',
+  },
+  main: {
+    flex: 1,
+    padding: '32px',
+    maxWidth: '1200px',
+  },
+  titleRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '32px',
+  },
+  pageTitle: {
     fontSize: '28px',
     fontWeight: 'bold',
     color: '#1f2937',
+    margin: '0 0 4px 0',
+  },
+  pageSubtitle: {
+    fontSize: '16px',
+    color: '#6b7280',
     margin: 0,
   },
-  createButton: {
-    padding: '12px 20px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
+  composeButton: {
+    padding: '12px 24px',
     fontSize: '14px',
-    fontWeight: '500',
-  },
-  stats: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '16px',
-    marginBottom: '20px',
-  },
-  statCard: {
-    backgroundColor: '#ffffff',
-    padding: '20px',
+    fontWeight: '600',
+    backgroundColor: '#667eea',
+    color: '#ffffff',
+    border: 'none',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb',
+    cursor: 'pointer',
     display: 'flex',
-    flexDirection: 'column' as const,
     alignItems: 'center',
     gap: '8px',
+    transition: 'all 0.2s',
   },
-  statNumber: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  statLabel: {
-    fontSize: '14px',
-    color: '#6b7280',
-  },
-  controls: {
-    display: 'flex',
-    gap: '16px',
-    marginBottom: '20px',
-    flexWrap: 'wrap' as const,
-  },
-  filterSelect: {
-    padding: '12px 16px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '14px',
-    backgroundColor: 'white',
-  },
-  modal: {
+  modalOverlay: {
     position: 'fixed' as const,
     top: 0,
     left: 0,
@@ -506,20 +452,22 @@ const styles = {
     justifyContent: 'center',
     zIndex: 1000,
   },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    width: '90%',
+  modal: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    width: '100%',
     maxWidth: '600px',
+    margin: '16px',
     maxHeight: '90vh',
     overflow: 'auto',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '20px',
-    borderBottom: '1px solid #e5e7eb',
+    padding: '24px 24px 0 24px',
+    marginBottom: '24px',
   },
   modalTitle: {
     fontSize: '20px',
@@ -529,23 +477,19 @@ const styles = {
   },
   closeButton: {
     fontSize: '24px',
-    background: 'none',
+    backgroundColor: 'transparent',
     border: 'none',
     cursor: 'pointer',
     color: '#6b7280',
+    padding: '4px',
   },
-  form: {
-    padding: '20px',
+  modalContent: {
+    padding: '0 24px 24px 24px',
   },
-  formGroup: {
-    marginBottom: '16px',
+  inputGroup: {
+    marginBottom: '20px',
   },
-  formRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '16px',
-  },
-  label: {
+  inputLabel: {
     display: 'block',
     fontSize: '14px',
     fontWeight: '500',
@@ -555,48 +499,131 @@ const styles = {
   input: {
     width: '100%',
     padding: '12px',
+    fontSize: '14px',
     border: '1px solid #d1d5db',
     borderRadius: '6px',
-    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
   },
   textarea: {
     width: '100%',
     padding: '12px',
+    fontSize: '14px',
     border: '1px solid #d1d5db',
     borderRadius: '6px',
-    fontSize: '14px',
+    outline: 'none',
     resize: 'vertical' as const,
+    fontFamily: 'inherit',
+    transition: 'border-color 0.2s',
   },
   select: {
     width: '100%',
     padding: '12px',
+    fontSize: '14px',
     border: '1px solid #d1d5db',
     borderRadius: '6px',
-    fontSize: '14px',
-    backgroundColor: 'white',
+    outline: 'none',
+    backgroundColor: '#ffffff',
+    cursor: 'pointer',
   },
-  formActions: {
+  roleSelector: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap' as const,
+  },
+  roleButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 12px',
+    fontSize: '14px',
+    backgroundColor: '#f3f4f6',
+    color: '#374151',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  roleButtonActive: {
+    backgroundColor: '#667eea',
+    color: '#ffffff',
+    borderColor: '#667eea',
+  },
+  roleIcon: {
+    fontSize: '16px',
+  },
+  modalActions: {
     display: 'flex',
     gap: '12px',
     justifyContent: 'flex-end',
-    marginTop: '20px',
+    marginTop: '24px',
   },
   cancelButton: {
-    padding: '10px 20px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    backgroundColor: 'white',
-    cursor: 'pointer',
+    padding: '12px 24px',
     fontSize: '14px',
-  },
-  saveButton: {
-    padding: '10px 20px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
+    fontWeight: '500',
+    backgroundColor: '#f3f4f6',
+    color: '#374151',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
+  },
+  sendButton: {
+    padding: '12px 24px',
     fontSize: '14px',
+    fontWeight: '600',
+    backgroundColor: '#667eea',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
+  historySection: {
+    marginTop: '32px',
+  },
+  historyTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: '16px',
+  },
+  loadingState: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    padding: '48px',
+    color: '#6b7280',
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: '3px solid #f3f4f6',
+    borderTop: '3px solid #667eea',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+    marginBottom: '16px',
+  },
+  emptyState: {
+    backgroundColor: '#ffffff',
+    padding: '48px',
+    borderRadius: '12px',
+    textAlign: 'center' as const,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+  },
+  emptyIcon: {
+    fontSize: '48px',
+    marginBottom: '16px',
+  },
+  emptyTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: '8px',
+  },
+  emptyText: {
+    fontSize: '14px',
+    color: '#6b7280',
+    margin: 0,
   },
   announcementsList: {
     display: 'flex',
@@ -605,8 +632,9 @@ const styles = {
   },
   announcementCard: {
     backgroundColor: '#ffffff',
-    padding: '20px',
-    borderRadius: '8px',
+    padding: '24px',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
     border: '1px solid #e5e7eb',
   },
   announcementHeader: {
@@ -615,78 +643,37 @@ const styles = {
     alignItems: 'flex-start',
     marginBottom: '12px',
   },
-  announcementTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
+  announcementInfo: {
     flex: 1,
   },
-  announcementBadges: {
-    display: 'flex',
-    gap: '6px',
-    flexWrap: 'wrap' as const,
+  announcementTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#1f2937',
+    margin: '0 0 4px 0',
   },
-  typeBadge: {
-    padding: '4px 8px',
-    borderRadius: '4px',
-    color: 'white',
+  announcementMeta: {
     fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'capitalize' as const,
+    color: '#6b7280',
+    margin: 0,
   },
-  priorityBadge: {
-    padding: '4px 8px',
-    borderRadius: '4px',
-    color: 'white',
-    fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'capitalize' as const,
+  announcementStatus: {
+    marginLeft: '16px',
   },
   statusBadge: {
     padding: '4px 8px',
-    borderRadius: '4px',
-    color: 'white',
     fontSize: '12px',
     fontWeight: '500',
+    color: '#ffffff',
+    borderRadius: '4px',
     textTransform: 'capitalize' as const,
   },
-  announcementContent: {
+  announcementMessage: {
     fontSize: '14px',
     color: '#374151',
-    lineHeight: '1.6',
-    marginBottom: '16px',
-  },
-  announcementMeta: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap' as const,
-    gap: '12px',
-  },
-  metaInfo: {
-    display: 'flex',
-    gap: '16px',
-    fontSize: '12px',
-    color: '#6b7280',
-    flexWrap: 'wrap' as const,
-  },
-  announcementActions: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap' as const,
-  },
-  actionButton: {
-    padding: '6px 12px',
-    fontSize: '12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    backgroundColor: 'white',
-    cursor: 'pointer',
-    color: '#374151',
-  },
-  noResults: {
-    textAlign: 'center' as const,
-    padding: '40px',
-    color: '#6b7280',
+    margin: 0,
+    lineHeight: '1.5',
   },
 };
+
+export default AdminAnnouncements;

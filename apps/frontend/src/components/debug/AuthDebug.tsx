@@ -1,4 +1,4 @@
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 
 export function AuthDebug() {
   const { user, loading, session } = useAuth();

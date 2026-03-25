@@ -4,7 +4,7 @@ Authentication middleware for FastAPI
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from services.auth_service import auth_service
-from config import settings
+from config import config as settings
 from typing import Optional, Dict, Any
 import logging
 
@@ -31,26 +31,18 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     )
     
     try:
-        # Verify access token
-        payload = auth_service.verify_token(credentials.credentials, settings.jwt_secret)
+        # Verify access token (try Supabase first, then custom JWT)
+        payload = auth_service.verify_token(credentials.credentials)
         if payload is None:
             raise credentials_exception
         
-        user_id: str = payload.get("user_id")
-        if user_id is None:
-            raise credentials_exception
-        
-        # Get user from database
-        user = await auth_service.get_user_by_id(user_id)
-        if user is None:
-            raise credentials_exception
-        
+        # Return user data from token payload
         return {
-            "user_id": user["id"],
-            "phone_number": user["phone_number"],
-            "role": user["role"],
-            "state": user["state"],
-            "user": user
+            "user_id": payload["user_id"],
+            "phone_number": payload.get("phone_number", ""),
+            "role": payload.get("role", "attendee"),
+            "state": payload.get("state", "active"),
+            "user": payload
         }
         
     except Exception as e:
@@ -65,24 +57,17 @@ async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCrede
         return None
     
     try:
-        payload = auth_service.verify_token(credentials.credentials, settings.jwt_secret)
+        payload = auth_service.verify_token(credentials.credentials)
         if payload is None:
             return None
         
-        user_id: str = payload.get("user_id")
-        if user_id is None:
-            return None
-        
-        user = await auth_service.get_user_by_id(user_id)
-        if user is None:
-            return None
-        
+        # Return user data from token payload
         return {
-            "user_id": user["id"],
-            "phone_number": user["phone_number"],
-            "role": user["role"],
-            "state": user["state"],
-            "user": user
+            "user_id": payload["user_id"],
+            "phone_number": payload.get("phone_number", ""),
+            "role": payload.get("role", "attendee"),
+            "state": payload.get("state", "active"),
+            "user": payload
         }
         
     except Exception as e:

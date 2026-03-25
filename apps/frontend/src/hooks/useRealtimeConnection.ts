@@ -4,7 +4,7 @@ React hook for managing WebSocket connections to FastAPI backend
 */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/FastAPIAuthContext';
+import { useAuth } from '../contexts/SupabaseAuthContext';
 import realtimeService from '../services/realtimeService';
 
 interface UseRealtimeConnectionOptions {

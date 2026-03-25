@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { apiService } from '../services/api';
 
 interface LeaderboardEntry {
-  event_id: string;
-  user_id: string;
-  user_name: string;
-  amount: number;
-  message?: string;
-  updated_at: string;
+  sprayer_name: string;
+  total_amount: number;
+  spray_count: number;
+  rank: number;
+  is_anonymous: boolean;
 }
 
 export function useSprayMoneyLeaderboard(eventId: string) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [totalSprayed, setTotalSprayed] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,25 +19,28 @@ export function useSprayMoneyLeaderboard(eventId: string) {
     // Fetch initial leaderboard data
     const fetchLeaderboard = async () => {
       try {
-        if (!supabase) {
-          setError('Supabase not configured');
-          setLoading(false);
-          return;
+        const response = await apiService.request(`/events/${eventId}/spray-money-leaderboard?limit=10`, {
+          method: 'GET',
+          requireAuth: false
+        });
+        
+        if (response?.data?.success) {
+          setLeaderboard(response.data.data.leaderboard || []);
+          setTotalSprayed(response.data.data.total_sprayed || 0);
+          setError(null);
+        } else {
+          // Silently handle - set empty data
+          console.debug('Leaderboard data not available');
+          setLeaderboard([]);
+          setTotalSprayed(0);
+          setError(null);
         }
-
-        const { data, error } = await supabase
-          .from('spray_money_leaderboard')
-          .select('*')
-          .eq('event_id', eventId)
-          .order('amount', { ascending: false });
-
-        if (error) throw error;
-
-        setLeaderboard(data || []);
+      } catch (err: any) {
+        // Silently handle errors - don't show to user
+        console.debug('Error fetching leaderboard:', err.message);
+        setLeaderboard([]);
+        setTotalSprayed(0);
         setError(null);
-      } catch (err) {
-        console.error('Error fetching leaderboard:', err);
-        setError('Failed to load leaderboard');
       } finally {
         setLoading(false);
       }
@@ -45,54 +48,14 @@ export function useSprayMoneyLeaderboard(eventId: string) {
 
     fetchLeaderboard();
 
-    // Subscribe to real-time updates
-    if (!supabase) return;
-    
-    const channel = supabase
-      .channel(`spray-money-${eventId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'spray_money_leaderboard',
-          filter: `event_id=eq.${eventId}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            const newEntry = payload.new as LeaderboardEntry;
-            
-            setLeaderboard((prev) => {
-              // Update existing entry or add new one
-              const existingIndex = prev.findIndex(
-                (entry) => entry.user_id === newEntry.user_id
-              );
+    // Poll for updates every 5 seconds (simulating real-time)
+    const interval = setInterval(fetchLeaderboard, 5000);
 
-              if (existingIndex >= 0) {
-                const updated = [...prev];
-                updated[existingIndex] = newEntry;
-                return updated.sort((a, b) => b.amount - a.amount);
-              } else {
-                return [...prev, newEntry].sort((a, b) => b.amount - a.amount);
-              }
-            });
-          } else if (payload.eventType === 'DELETE') {
-            const deletedEntry = payload.old as LeaderboardEntry;
-            setLeaderboard((prev) =>
-              prev.filter((entry) => entry.user_id !== deletedEntry.user_id)
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on unmount
+    // Cleanup interval on unmount
     return () => {
-      if (supabase) {
-        supabase.removeChannel(channel);
-      }
+      clearInterval(interval);
     };
   }, [eventId]);
 
-  return { leaderboard, loading, error };
+  return { leaderboard, totalSprayed, loading, error };
 }

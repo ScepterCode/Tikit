@@ -71,7 +71,7 @@ class ApiService {
   /**
    * Make HTTP request to FastAPI backend
    */
-  private async request<T = any>(
+  public async request<T = any>(
     endpoint: string, 
     config: RequestConfig = {}
   ): Promise<ApiResponse<T>> {
@@ -117,13 +117,16 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
+        // Use debug logging for expected failures (404s, etc.) to avoid console noise
+        console.debug(`API request returned ${response.status} [${method} ${endpoint}]`);
         throw new Error(data.error?.message || data.detail || 'Request failed');
       }
 
       return data;
 
     } catch (error: any) {
-      console.error(`API request failed [${method} ${endpoint}]:`, error);
+      // Use debug logging instead of error logging to silence expected failures
+      console.debug(`API request failed [${method} ${endpoint}]:`, error.message);
       
       return {
         success: false,
@@ -178,6 +181,11 @@ class ApiService {
       console.log('- User role in response:', response.data.user.role);
     }
     
+    // Store access token for future requests
+    if (response.data?.access_token) {
+      localStorage.setItem('accessToken', response.data.access_token);
+    }
+    
     return response;
   }
 
@@ -188,21 +196,43 @@ class ApiService {
       password: credentials.password
     };
     
-    return this.request('/auth/login', {
+    const response = await this.request('/auth/login', {
       method: 'POST',
       body: backendData,
       requireAuth: false
     });
+    
+    // Store access token for future requests
+    if (response.data?.access_token) {
+      localStorage.setItem('accessToken', response.data.access_token);
+    }
+    
+    return response;
   }
 
   async logout() {
+    // Clear stored tokens
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userRole');
+    
     return this.request('/auth/logout', {
       method: 'POST'
     });
   }
 
   async getCurrentUser() {
-    return this.request('/auth/me');
+    // Get the stored access token from the last login/register
+    const token = localStorage.getItem('accessToken');
+    
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return this.request('/auth/me', {
+      headers,
+      requireAuth: true
+    });
   }
 
   async refreshToken(refreshToken: string) {
@@ -464,7 +494,16 @@ class ApiService {
 
   // Health check
   async healthCheck() {
-    return fetch(`${API_BASE_URL}/health`).then(res => res.json());
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.log('Health check failed:', error);
+      throw error;
+    }
   }
 }
 

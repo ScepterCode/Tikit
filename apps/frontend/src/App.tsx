@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { FastAPIAuthProvider } from './contexts/FastAPIAuthContext';
+import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Home } from './pages/Home';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { PreferencesPage } from './pages/PreferencesPage';
+import { PaymentSharePage } from './pages/PaymentSharePage';
+import { AuthDebug } from './pages/AuthDebug';
 import { DashboardRouter } from './pages/DashboardRouter';
 import { AttendeeDashboard } from './pages/attendee/AttendeeDashboard';
 import { MyTickets } from './pages/attendee/MyTickets';
@@ -11,53 +14,57 @@ import { Wallet } from './pages/attendee/Wallet';
 import { Referrals } from './pages/attendee/Referrals';
 import { Profile } from './pages/attendee/Profile';
 import { Events } from './pages/Events';
-import { EventDetails } from './pages/EventDetails';
+import { EventDetail } from './pages/EventDetail';
 import { Checkout } from './pages/Checkout';
 import { OrganizerDashboard } from './pages/organizer/OrganizerDashboard';
 import { OrganizerEvents } from './pages/organizer/OrganizerEvents';
 import { CreateEvent } from './pages/organizer/CreateEvent';
 import { OrganizerAttendees } from './pages/organizer/OrganizerAttendees';
 import { OrganizerFinancials } from './pages/organizer/OrganizerFinancials';
-import { FastAPITestPage } from './pages/FastAPITestPage';
 import { OrganizerBroadcast } from './pages/organizer/OrganizerBroadcast';
 import { OrganizerScanner } from './pages/organizer/OrganizerScanner';
 import { OrganizerSettings } from './pages/organizer/OrganizerSettings';
 import { OrganizerAnalytics } from './pages/organizer/OrganizerAnalytics';
+import OrganizerWallet from './pages/organizer/OrganizerWallet';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
-import { AdminInstructions } from './pages/AdminInstructions';
+import { AdminAnnouncements } from './pages/admin/AdminAnnouncements';
 import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminEvents } from './pages/admin/AdminEvents';
 import { AdminFinancials } from './pages/admin/AdminFinancials';
 import { AdminAnalytics } from './pages/admin/AdminAnalytics';
 import { AdminSecurity } from './pages/admin/AdminSecurity';
-import { AdminAnnouncements } from './pages/admin/AdminAnnouncements';
 import { AdminSettings } from './pages/admin/AdminSettings';
 import { PWAUpdatePrompt } from './components/common/PWAUpdatePrompt';
-import { RealtimeDemo } from './pages/RealtimeDemo';
-import { FeatureDemo } from './pages/FeatureDemo';
-import { EnvDebug } from './pages/EnvDebug';
-import { SupabaseTest } from './pages/SupabaseTest';
 import { ApiStatusIndicator } from './components/common/ApiStatusIndicator';
+import { NotificationCenter } from './components/notifications/NotificationCenter';
 
 function App() {
   return (
     <BrowserRouter>
-      <FastAPIAuthProvider>
+      <SupabaseAuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
+          <Route path="/debug/auth" element={<AuthDebug />} />
           
-          {/* Debug Routes */}
-          <Route path="/debug/env" element={<EnvDebug />} />
-          <Route path="/debug/supabase" element={<SupabaseTest />} />
-          <Route path="/debug/fastapi" element={<FastAPITestPage />} />
+          {/* Preferences - After registration */}
+          <Route 
+            path="/preferences" 
+            element={
+              <ProtectedRoute>
+                <PreferencesPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Payment Share - Public link for group buy */}
+          <Route path="/payment-share/pay/:purchaseId/:shareId" element={<PaymentSharePage />} />
           
           {/* Admin Login - Separate route for security */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/instructions" element={<AdminInstructions />} />
 
           {/* Dashboard Router - redirects based on role */}
           <Route
@@ -124,7 +131,7 @@ function App() {
             path="/events/:eventId"
             element={
               <ProtectedRoute>
-                <EventDetails />
+                <EventDetail />
               </ProtectedRoute>
             }
           />
@@ -135,19 +142,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <Checkout />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Feature Demo - accessible to all users */}
-          <Route path="/demo" element={<FeatureDemo />} />
-
-          {/* Real-time Demo - accessible to all authenticated users */}
-          <Route
-            path="/realtime-demo"
-            element={
-              <ProtectedRoute>
-                <RealtimeDemo />
               </ProtectedRoute>
             }
           />
@@ -182,6 +176,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['organizer']}>
                 <OrganizerAttendees />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/wallet"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <OrganizerWallet />
               </ProtectedRoute>
             }
           />
@@ -225,6 +227,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/organizer/notifications"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <NotificationCenter />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin Routes */}
           <Route
@@ -252,6 +262,30 @@ function App() {
             }
           />
           <Route
+            path="/admin/notifications"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <NotificationCenter />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendee/notifications"
+            element={
+              <ProtectedRoute allowedRoles={['attendee']}>
+                <NotificationCenter />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendee/settings"
+            element={
+              <ProtectedRoute allowedRoles={['attendee']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/financials"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
@@ -268,18 +302,18 @@ function App() {
             }
           />
           <Route
-            path="/admin/security"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminSecurity />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/admin/announcements"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminAnnouncements />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/security"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminSecurity />
               </ProtectedRoute>
             }
           />
@@ -311,7 +345,7 @@ function App() {
         </Routes>
         <PWAUpdatePrompt />
         <ApiStatusIndicator />
-      </FastAPIAuthProvider>
+      </SupabaseAuthProvider>
     </BrowserRouter>
   );
 }

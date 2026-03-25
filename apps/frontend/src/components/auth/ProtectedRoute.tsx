@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,12 +20,29 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!isAuthenticated) {
+    console.log('🔒 SECURITY: Unauthenticated access attempt, redirecting to login');
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Check role-based access
-  if (allowedRoles && user && !allowedRoles.includes(user.role as "attendee" | "organizer" | "admin")) {
-    return <Navigate to="/unauthorized" replace />;
+  // SECURITY: Validate user role and check access
+  if (allowedRoles && user) {
+    const userRole = user.role || 'attendee';
+    const validRoles = ['attendee', 'organizer', 'admin'];
+    
+    // Validate role is legitimate
+    if (!validRoles.includes(userRole)) {
+      console.error(`🚨 SECURITY: Invalid role "${userRole}" detected for user ${user.email}`);
+      return <Navigate to="/unauthorized" replace />;
+    }
+    
+    // Check if user has required role
+    if (!allowedRoles.includes(userRole as "attendee" | "organizer" | "admin")) {
+      console.warn(`🔒 SECURITY: Access denied - user ${user.email} (${userRole}) attempted to access ${allowedRoles.join(', ')} only route`);
+      return <Navigate to="/unauthorized" replace />;
+    }
+    
+    // Log successful access for audit trail
+    console.log(`✅ SECURITY: Access granted - user ${user.email} (${userRole}) accessing ${allowedRoles.join(', ')} route`);
   }
 
   return <>{children}</>;

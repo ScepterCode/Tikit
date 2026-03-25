@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/FastAPIAuthContext';
+import { useAuth } from '../contexts/SupabaseAuthContext';
 
 interface FormData {
-  phoneNumber: string;
+  email: string;
   password: string;
 }
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { signIn, loading: authLoading } = useAuth();
+  const { signIn, loading: authLoading, user, session } = useAuth();
   
   const [formData, setFormData] = useState<FormData>({
-    phoneNumber: '',
+    email: '',
     password: '',
   });
   
@@ -21,17 +21,25 @@ export function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
   const [showPassword, setShowPassword] = useState(false);
 
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (!authLoading && user && session) {
+      console.log('✅ User already logged in, redirecting to dashboard');
+      navigate('/dashboard');
+    }
+  }, [authLoading, user, session, navigate]);
+
   // Handle field-specific errors
   const handleFieldError = (errorMessage: string) => {
     const newFieldErrors: {[key: string]: string} = {};
     
-    if (errorMessage.toLowerCase().includes('phone number')) {
-      newFieldErrors.phoneNumber = errorMessage;
+    if (errorMessage.toLowerCase().includes('email')) {
+      newFieldErrors.email = errorMessage;
     } else if (errorMessage.toLowerCase().includes('password')) {
       newFieldErrors.password = errorMessage;
     } else if (errorMessage.toLowerCase().includes('invalid credentials')) {
-      newFieldErrors.phoneNumber = 'Invalid phone number or password';
-      newFieldErrors.password = 'Invalid phone number or password';
+      newFieldErrors.email = 'Invalid email or password';
+      newFieldErrors.password = 'Invalid email or password';
     }
     
     setFieldErrors(newFieldErrors);
@@ -39,7 +47,7 @@ export function LoginPage() {
 
   // Form validation
   const validateForm = (): string | null => {
-    if (!formData.phoneNumber.trim()) return 'Phone number is required';
+    if (!formData.email.trim()) return 'Email is required';
     if (!formData.password) return 'Password is required';
     return null;
   };
@@ -59,7 +67,7 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await signIn(formData.phoneNumber.trim(), formData.password);
+      const result = await signIn(formData.email.trim(), formData.password);
       
       if (result.success) {
         // Login successful - navigate to dashboard
@@ -123,22 +131,22 @@ export function LoginPage() {
         {/* Login Form */}
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.field}>
-            <label style={styles.label}>Phone Number</label>
+            <label style={styles.label}>Email</label>
             <input
-              type="tel"
-              value={formData.phoneNumber}
-              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               style={{
                 ...styles.input,
-                ...(fieldErrors.phoneNumber ? styles.inputError : {})
+                ...(fieldErrors.email ? styles.inputError : {})
               }}
-              placeholder="+234 800 000 0000"
+              placeholder="admin@grooovy.netlify.app"
               required
               autoComplete="username"
             />
-            <p style={styles.hint}>Use the same number you registered with</p>
-            {fieldErrors.phoneNumber && (
-              <p style={styles.fieldError}>{fieldErrors.phoneNumber}</p>
+            <p style={styles.hint}>Use the email you registered with</p>
+            {fieldErrors.email && (
+              <p style={styles.fieldError}>{fieldErrors.email}</p>
             )}
           </div>
 

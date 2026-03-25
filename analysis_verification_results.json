@@ -1,0 +1,994 @@
+{
+  "duplicate_functions": [
+    {
+      "file": "apps/backend-fastapi/services/multi_wallet_service.py",
+      "has_balance_logic": true,
+      "has_transfer_logic": true,
+      "has_withdrawal_logic": true,
+      "has_security_logic": true,
+      "line_count": 664
+    },
+    {
+      "file": "apps/backend-fastapi/services/wallet_security_service.py",
+      "has_balance_logic": false,
+      "has_transfer_logic": true,
+      "has_withdrawal_logic": true,
+      "has_security_logic": true,
+      "line_count": 331
+    },
+    {
+      "file": "apps/backend-fastapi/services/wallet_realtime_service.py",
+      "has_balance_logic": true,
+      "has_transfer_logic": false,
+      "has_withdrawal_logic": true,
+      "has_security_logic": true,
+      "line_count": 330
+    },
+    {
+      "file": "apps/backend-fastapi/services/withdrawal_service.py",
+      "has_balance_logic": false,
+      "has_transfer_logic": true,
+      "has_withdrawal_logic": true,
+      "has_security_logic": true,
+      "line_count": 581
+    }
+  ],
+  "authentication_conflicts": [
+    {
+      "file": "apps/backend-fastapi/jwt_validator.py",
+      "has_login": false,
+      "has_token_validation": true,
+      "has_user_database": false,
+      "has_jwt": true
+    },
+    {
+      "file": "apps/backend-fastapi/services/auth_service.py",
+      "has_login": true,
+      "has_token_validation": true,
+      "has_user_database": false,
+      "has_jwt": true
+    }
+  ],
+  "hardcoded_credentials": [
+    {
+      "file": "confirm_supabase_emails.py",
+      "line": 11,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "confirm_supabase_emails.py",
+      "line": 15,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "confirm_supabase_emails.py",
+      "line": 20,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "confirm_supabase_emails.py",
+      "line": 24,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "confirm_supabase_emails.py",
+      "line": 28,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "debug_jwt_issue.py",
+      "line": 12,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "debug_jwt_issue.py",
+      "line": 13,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "debug_jwt_issue.py",
+      "line": 26,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "debug_token.py",
+      "line": 10,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "debug_token.py",
+      "line": 11,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "debug_token.py",
+      "line": 19,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "setup_supabase_admin.py",
+      "line": 11,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "setup_supabase_admin.py",
+      "line": 12,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "setup_supabase_admin.py",
+      "line": 18,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "setup_supabase_admin.py",
+      "line": 29,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "setup_supabase_admin.py",
+      "line": 42,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "setup_supabase_users.py",
+      "line": 10,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "setup_supabase_users.py",
+      "line": 20,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "setup_supabase_users.py",
+      "line": 31,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "setup_supabase_users.py",
+      "line": 44,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_all_features.py",
+      "line": 16,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_all_features.py",
+      "line": 21,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_all_features.py",
+      "line": 26,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_analytics_navigation.py",
+      "line": 14,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_auth_complete.py",
+      "line": 12,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "test_auth_complete.py",
+      "line": 13,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "test_auth_debug.py",
+      "line": 22,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_complete_features.py",
+      "line": 17,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_complete_features.py",
+      "line": 22,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_fixes.py",
+      "line": 10,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "test_fixes.py",
+      "line": 11,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "test_fixes.py",
+      "line": 23,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_frontend_auth_flow.py",
+      "line": 11,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "test_frontend_auth_flow.py",
+      "line": 12,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "test_frontend_auth_flow.py",
+      "line": 25,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_frontend_login.py",
+      "line": 11,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "test_frontend_login.py",
+      "line": 12,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "test_frontend_login.py",
+      "line": 20,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_frontend_login.py",
+      "line": 25,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_frontend_login.py",
+      "line": 30,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_image_upload.py",
+      "line": 19,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_jwt_validation.py",
+      "line": 9,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "test_jwt_validation.py",
+      "line": 10,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "test_jwt_validation.py",
+      "line": 17,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_jwt_validation.py",
+      "line": 22,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_jwt_validation.py",
+      "line": 27,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_login.py",
+      "line": 19,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_login.py",
+      "line": 24,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_login.py",
+      "line": 29,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_login_flow.py",
+      "line": 13,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_login_flow.py",
+      "line": 18,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_login_flow.py",
+      "line": 23,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_new_features.py",
+      "line": 24,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_new_features.py",
+      "line": 29,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_premium_membership.py",
+      "line": 16,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_premium_membership.py",
+      "line": 20,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_premium_membership.py",
+      "line": 24,
+      "content": "\"password\": \"password123\""
+    },
+    {
+      "file": "test_supabase_auth.py",
+      "line": 9,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "test_supabase_auth.py",
+      "line": 10,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    },
+    {
+      "file": "test_supabase_auth.py",
+      "line": 15,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_supabase_auth.py",
+      "line": 20,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "test_supabase_auth.py",
+      "line": 25,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "apps\\backend-fastapi\\auth_utils.py",
+      "line": 26,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "apps\\backend-fastapi\\auth_utils.py",
+      "line": 45,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "apps\\backend-fastapi\\auth_utils.py",
+      "line": 66,
+      "content": "\"password\": \"password123\","
+    },
+    {
+      "file": "apps\\backend-fastapi\\jwt_validator.py",
+      "line": 11,
+      "content": "SUPABASE_URL = \"https://hwwzbsppzwcyvambeade.supabase.co\""
+    },
+    {
+      "file": "apps\\backend-fastapi\\jwt_validator.py",
+      "line": 12,
+      "content": "SUPABASE_ANON_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3..."
+    }
+  ],
+  "duplicate_files": [
+    {
+      "file": "apps/backend-fastapi/main.py",
+      "line_count": 191,
+      "has_auth_endpoints": true,
+      "has_events_endpoints": true,
+      "has_cors": true
+    },
+    {
+      "file": "apps/backend-fastapi/simple_main.py",
+      "line_count": 2758,
+      "has_auth_endpoints": true,
+      "has_events_endpoints": true,
+      "has_cors": true
+    }
+  ],
+  "in_memory_databases": [
+    {
+      "file": "apps\\backend-fastapi\\auth_utils.py",
+      "line": 9,
+      "database": "user_database: Dict[str, Dict[str, Any]] = {}"
+    },
+    {
+      "file": "apps\\backend-fastapi\\simple_main.py",
+      "line": 17,
+      "database": "notifications_database: Dict[str, List[Dict[str, Any]]] = {}"
+    },
+    {
+      "file": "apps\\backend-fastapi\\simple_main.py",
+      "line": 19,
+      "database": "events_database: Dict[str, Dict[str, Any]] = {}"
+    },
+    {
+      "file": "apps\\backend-fastapi\\simple_main.py",
+      "line": 21,
+      "database": "tickets_database: List[Dict[str, Any]] = []"
+    },
+    {
+      "file": "apps\\backend-fastapi\\routers\\realtime.py",
+      "line": 22,
+      "database": "self.active_connections: Dict[str, WebSocket] = {}"
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\multi_wallet_service.py",
+      "line": 26,
+      "database": "self.user_wallets: Dict[str, Dict[str, Dict[str, Any]]] = {}  # user_id -> wallet_type -> wallet_data"
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\realtime_service.py",
+      "line": 13,
+      "database": "active_connections: Dict[str, WebSocket] = {}"
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\secret_events_service.py",
+      "line": 14,
+      "database": "secret_events_database: Dict[str, Dict[str, Any]] = {}"
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\secret_events_service.py",
+      "line": 18,
+      "database": "anonymous_tickets_database: List[Dict[str, Any]] = []"
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\wallet_realtime_service.py",
+      "line": 15,
+      "database": "self.active_connections: Dict[str, Set[WebSocket]] = {}  # user_id -> {websockets}"
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\withdrawal_service.py",
+      "line": 28,
+      "database": "self.withdrawals = {}  # withdrawal_id -> withdrawal_data"
+    }
+  ],
+  "websocket_implementations": [
+    {
+      "file": "test_all_phases_complete.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "test_phase4_comprehensive.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "test_phase4_realtime_analytics.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "test_wallet_comprehensive.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "test_wallet_phase1.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "test_wallet_phase2.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "test_wallet_phase2_complete.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "verify_analysis_findings.py",
+      "websocket_endpoints": 1,
+      "has_connection_manager": true
+    },
+    {
+      "file": "apps\\backend-fastapi\\simple_main.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "apps\\backend-fastapi\\routers\\realtime.py",
+      "websocket_endpoints": 1,
+      "has_connection_manager": true
+    },
+    {
+      "file": "apps\\backend-fastapi\\routers\\wallet_websocket.py",
+      "websocket_endpoints": 1,
+      "has_connection_manager": false
+    },
+    {
+      "file": "apps\\backend-fastapi\\routers\\websocket.py",
+      "websocket_endpoints": 1,
+      "has_connection_manager": false
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\anonymous_chat_service.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": false
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\realtime_service.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": true
+    },
+    {
+      "file": "apps\\backend-fastapi\\services\\wallet_realtime_service.py",
+      "websocket_endpoints": 0,
+      "has_connection_manager": true
+    }
+  ],
+  "test_duplicates": {
+    "files": [
+      {
+        "file": "test_all_features.py",
+        "function_count": 7,
+        "functions": [
+          "test_wallet_system",
+          "test_ticket_system",
+          "test_secret_invites",
+          "test_event_updates",
+          "test_spray_money",
+          "test_group_buy",
+          "test_onboarding_preferences"
+        ],
+        "line_count": 728
+      },
+      {
+        "file": "test_all_phases_complete.py",
+        "function_count": 1,
+        "functions": [
+          "test_complete_secret_events_system"
+        ],
+        "line_count": 273
+      },
+      {
+        "file": "test_analytics_navigation.py",
+        "function_count": 1,
+        "functions": [
+          "test_analytics_navigation"
+        ],
+        "line_count": 104
+      },
+      {
+        "file": "test_auth_complete.py",
+        "function_count": 2,
+        "functions": [
+          "test_all_users",
+          "test_backend_status"
+        ],
+        "line_count": 131
+      },
+      {
+        "file": "test_auth_debug.py",
+        "function_count": 1,
+        "functions": [
+          "test_auth_debug"
+        ],
+        "line_count": 72
+      },
+      {
+        "file": "test_auth_fix.py",
+        "function_count": 2,
+        "functions": [
+          "test_membership_status",
+          "test_secret_events_accessible"
+        ],
+        "line_count": 81
+      },
+      {
+        "file": "test_complete_features.py",
+        "function_count": 1,
+        "functions": [
+          "test_complete_workflow"
+        ],
+        "line_count": 192
+      },
+      {
+        "file": "test_create_event.py",
+        "function_count": 0,
+        "functions": [],
+        "line_count": 30
+      },
+      {
+        "file": "test_fixes.py",
+        "function_count": 2,
+        "functions": [
+          "test_update_event_endpoint",
+          "test_backend_status"
+        ],
+        "line_count": 138
+      },
+      {
+        "file": "test_frontend_auth_flow.py",
+        "function_count": 1,
+        "functions": [
+          "test_complete_flow"
+        ],
+        "line_count": 128
+      },
+      {
+        "file": "test_frontend_complete.py",
+        "function_count": 2,
+        "functions": [
+          "test_frontend_pages",
+          "test_api_endpoints"
+        ],
+        "line_count": 90
+      },
+      {
+        "file": "test_frontend_login.py",
+        "function_count": 3,
+        "functions": [
+          "test_supabase_login",
+          "test_backend_health",
+          "test_frontend_health"
+        ],
+        "line_count": 143
+      },
+      {
+        "file": "test_frontend_secret_events.py",
+        "function_count": 2,
+        "functions": [
+          "test_frontend_running",
+          "test_backend_running"
+        ],
+        "line_count": 59
+      },
+      {
+        "file": "test_frontend_status.py",
+        "function_count": 1,
+        "functions": [
+          "test_frontend_status"
+        ],
+        "line_count": 40
+      },
+      {
+        "file": "test_frontend_working.py",
+        "function_count": 3,
+        "functions": [
+          "test_frontend_status",
+          "test_backend_status",
+          "test_auth_endpoints"
+        ],
+        "line_count": 88
+      },
+      {
+        "file": "test_full_flow.py",
+        "function_count": 0,
+        "functions": [],
+        "line_count": 161
+      },
+      {
+        "file": "test_image_upload.py",
+        "function_count": 2,
+        "functions": [
+          "test_image_upload",
+          "test_image_size_limits"
+        ],
+        "line_count": 240
+      },
+      {
+        "file": "test_jwt_validation.py",
+        "function_count": 1,
+        "functions": [
+          "test_backend_with_jwt"
+        ],
+        "line_count": 147
+      },
+      {
+        "file": "test_login.py",
+        "function_count": 1,
+        "functions": [
+          "test_login"
+        ],
+        "line_count": 75
+      },
+      {
+        "file": "test_login_flow.py",
+        "function_count": 2,
+        "functions": [
+          "test_backend_health",
+          "test_frontend_health"
+        ],
+        "line_count": 85
+      },
+      {
+        "file": "test_new_features.py",
+        "function_count": 5,
+        "functions": [
+          "test_create_event_with_tiers_and_images",
+          "test_event_updates_and_notifications",
+          "test_livestream_controls",
+          "test_spray_money_integration",
+          "test_event_detail_page"
+        ],
+        "line_count": 315
+      },
+      {
+        "file": "test_organizer_wallet_access.py",
+        "function_count": 2,
+        "functions": [
+          "test_organizer_wallet_access",
+          "test_frontend_navigation"
+        ],
+        "line_count": 138
+      },
+      {
+        "file": "test_phase3_anonymous_chat.py",
+        "function_count": 1,
+        "functions": [
+          "test_phase"
+        ],
+        "line_count": 351
+      },
+      {
+        "file": "test_phase4_comprehensive.py",
+        "function_count": 2,
+        "functions": [
+          "test_analytics_endpoints",
+          "test_secret_event_with_analytics"
+        ],
+        "line_count": 182
+      },
+      {
+        "file": "test_phase4_realtime_analytics.py",
+        "function_count": 1,
+        "functions": [
+          "test_phase"
+        ],
+        "line_count": 88
+      },
+      {
+        "file": "test_premium_membership.py",
+        "function_count": 2,
+        "functions": [
+          "test_premium_membership_system",
+          "test_membership_stats"
+        ],
+        "line_count": 222
+      },
+      {
+        "file": "test_premium_simple.py",
+        "function_count": 1,
+        "functions": [
+          "test_endpoints"
+        ],
+        "line_count": 89
+      },
+      {
+        "file": "test_premium_working.py",
+        "function_count": 2,
+        "functions": [
+          "test_premium_membership",
+          "test_attendee_membership"
+        ],
+        "line_count": 305
+      },
+      {
+        "file": "test_role_fix.py",
+        "function_count": 1,
+        "functions": [
+          "test_registration_and_login"
+        ],
+        "line_count": 220
+      },
+      {
+        "file": "test_secret_events.py",
+        "function_count": 3,
+        "functions": [
+          "test_secret_events_system",
+          "test_anonymous_tickets",
+          "test_vip_features"
+        ],
+        "line_count": 334
+      },
+      {
+        "file": "test_secret_simple.py",
+        "function_count": 1,
+        "functions": [
+          "test_endpoints"
+        ],
+        "line_count": 93
+      },
+      {
+        "file": "test_secret_working.py",
+        "function_count": 2,
+        "functions": [
+          "test_secret_events_phase",
+          "test_invite_validation"
+        ],
+        "line_count": 230
+      },
+      {
+        "file": "test_supabase_auth.py",
+        "function_count": 1,
+        "functions": [
+          "test_login"
+        ],
+        "line_count": 81
+      },
+      {
+        "file": "test_wallet_comprehensive.py",
+        "function_count": 4,
+        "functions": [
+          "test_wallet_balance",
+          "test_wallet_topup",
+          "test_spray_money",
+          "test_transaction_history"
+        ],
+        "line_count": 215
+      },
+      {
+        "file": "test_wallet_frontend_integration.py",
+        "function_count": 2,
+        "functions": [
+          "test_frontend_wallet_pages",
+          "test_api_endpoints_from_frontend"
+        ],
+        "line_count": 106
+      },
+      {
+        "file": "test_wallet_phase1.py",
+        "function_count": 6,
+        "functions": [
+          "test_wallet_security_features",
+          "test_bank_account_management",
+          "test_withdrawal_system",
+          "test_withdrawal_history",
+          "test_fraud_detection",
+          "test_integration_with_existing_wallet"
+        ],
+        "line_count": 321
+      },
+      {
+        "file": "test_wallet_phase2.py",
+        "function_count": 8,
+        "functions": [
+          "test_enhanced_transaction_history",
+          "test_multi_wallet_system",
+          "test_wallet_transfer",
+          "test_savings_features",
+          "test_goal_contribution",
+          "test_advanced_spray_money",
+          "test_wallet_analytics",
+          "test_interest_calculation"
+        ],
+        "line_count": 404
+      },
+      {
+        "file": "test_wallet_phase2_complete.py",
+        "function_count": 8,
+        "functions": [
+          "test_wallet_topup",
+          "test_enhanced_transaction_history",
+          "test_multi_wallet_system",
+          "test_savings_features",
+          "test_advanced_spray_money",
+          "test_wallet_analytics",
+          "test_interest_calculation",
+          "test_websocket_connection"
+        ],
+        "line_count": 373
+      },
+      {
+        "file": "apps\\backend-fastapi\\test_auth.py",
+        "function_count": 1,
+        "functions": [
+          "test_auth_flow"
+        ],
+        "line_count": 81
+      },
+      {
+        "file": "apps\\backend-fastapi\\test_complete_api.py",
+        "function_count": 0,
+        "functions": [],
+        "line_count": 458
+      },
+      {
+        "file": "apps\\backend-fastapi\\test_events.py",
+        "function_count": 1,
+        "functions": [
+          "test_events_flow"
+        ],
+        "line_count": 187
+      },
+      {
+        "file": "apps\\backend-fastapi\\test_schemas.py",
+        "function_count": 0,
+        "functions": [],
+        "line_count": 6
+      },
+      {
+        "file": "apps\\backend-fastapi\\test_tickets.py",
+        "function_count": 1,
+        "functions": [
+          "test_tickets_flow"
+        ],
+        "line_count": 229
+      }
+    ],
+    "duplicate_functions": {
+      "test_spray_money": [
+        "test_all_features.py",
+        "test_wallet_comprehensive.py"
+      ],
+      "test_backend_status": [
+        "test_auth_complete.py",
+        "test_fixes.py",
+        "test_frontend_working.py"
+      ],
+      "test_backend_health": [
+        "test_frontend_login.py",
+        "test_login_flow.py"
+      ],
+      "test_frontend_health": [
+        "test_frontend_login.py",
+        "test_login_flow.py"
+      ],
+      "test_frontend_status": [
+        "test_frontend_status.py",
+        "test_frontend_working.py"
+      ],
+      "test_login": [
+        "test_login.py",
+        "test_supabase_auth.py"
+      ],
+      "test_phase": [
+        "test_phase3_anonymous_chat.py",
+        "test_phase4_realtime_analytics.py"
+      ],
+      "test_endpoints": [
+        "test_premium_simple.py",
+        "test_secret_simple.py"
+      ],
+      "test_wallet_topup": [
+        "test_wallet_comprehensive.py",
+        "test_wallet_phase2_complete.py"
+      ],
+      "test_enhanced_transaction_history": [
+        "test_wallet_phase2.py",
+        "test_wallet_phase2_complete.py"
+      ],
+      "test_multi_wallet_system": [
+        "test_wallet_phase2.py",
+        "test_wallet_phase2_complete.py"
+      ],
+      "test_savings_features": [
+        "test_wallet_phase2.py",
+        "test_wallet_phase2_complete.py"
+      ],
+      "test_advanced_spray_money": [
+        "test_wallet_phase2.py",
+        "test_wallet_phase2_complete.py"
+      ],
+      "test_wallet_analytics": [
+        "test_wallet_phase2.py",
+        "test_wallet_phase2_complete.py"
+      ],
+      "test_interest_calculation": [
+        "test_wallet_phase2.py",
+        "test_wallet_phase2_complete.py"
+      ]
+    }
+  },
+  "import_issues": []
+}

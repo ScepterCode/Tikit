@@ -30,40 +30,41 @@ if (!isConfigured) {
 }
 
 // Create Supabase client for frontend (using anon key)
-export const supabase = isConfigured 
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        flowType: 'pkce'
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-      global: {
-        headers: {
-          'X-Client-Info': 'grooovy-frontend@1.0.0',
-        },
-      },
-    })
-  : null;
+// Use a singleton pattern to prevent multiple client instances
+let supabaseInstance: any = null;
 
-console.log('✅ Supabase client created:', !!supabase);
+function createSupabaseClient() {
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
 
-// Test connection on client creation
-if (supabase) {
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      console.error('❌ Session check failed:', error.message);
-    } else {
-      console.log('✅ Session check successful:', !!data.session);
-    }
-  }).catch(err => {
-    console.error('❌ Session check error:', err.message);
+  if (!isConfigured) {
+    return null;
+  }
+
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce'
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'grooovy-frontend@1.0.0',
+      },
+    },
   });
+
+  console.log('✅ Supabase client created');
+  return supabaseInstance;
 }
+
+export const supabase = createSupabaseClient();
 
 export default supabase;

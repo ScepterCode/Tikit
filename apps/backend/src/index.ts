@@ -5,11 +5,11 @@ import dotenv from 'dotenv';
 import prisma from './lib/prisma.js';
 import redisClient from './lib/redis.js';
 import supabase from './lib/supabase.js';
-import authRoutes from './routes/auth.routes.js';
-import securityRoutes from './routes/security.routes.js';
-import eventRoutes from './routes/event.routes.js';
+// import authRoutes from './routes/auth.routes.js';
+// import securityRoutes from './routes/security.routes.js';
+// import eventRoutes from './routes/event.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
-import ticketRoutes from './routes/ticket.routes.js';
+// import ticketRoutes from './routes/ticket.routes.js';
 import groupBuyRoutes from './routes/groupbuy.routes.js';
 import recommendationRoutes from './routes/recommendation.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
@@ -130,11 +130,11 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/security', securityRoutes);
-app.use('/api/events', eventRoutes);
+// app.use('/api/auth', authRoutes);
+// app.use('/api/security', securityRoutes);
+// app.use('/api/events', eventRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/tickets', ticketRoutes);
+// app.use('/api/tickets', ticketRoutes);
 app.use('/api/group-buy', groupBuyRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/notifications', notificationRoutes);

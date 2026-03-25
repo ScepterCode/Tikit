@@ -63,6 +63,9 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
       return;
     }
     
+    // SOLUTION 3: Prevent auth state change from overwriting role immediately after login
+    let isInitialLoad = true;
+    
     // Listen for Supabase auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -70,11 +73,22 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
         setSession(session);
         
         if (session?.user) {
-          await fetchUserFromAPI();
+          // SOLUTION 3: Don't fetch from API immediately after sign-in
+          // The signIn/signUp methods already set the user with correct role
+          if (event === 'SIGNED_IN' && !isInitialLoad) {
+            console.log('⚠️ SIGNED_IN event detected, skipping API fetch to preserve role from login response');
+            // Don't call fetchUserFromAPI here - it would overwrite the role
+            // The user is already set by signIn() with the correct role
+          } else if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || isInitialLoad) {
+            console.log('🔄 Fetching user data from API due to:', event);
+            await fetchUserFromAPI();
+          }
         } else {
           setUser(null);
+          localStorage.removeItem('userRole'); // Clear stored role on logout
         }
         
+        isInitialLoad = false;
         setLoading(false);
       }
     );
@@ -116,7 +130,7 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
       
       if (response.success && response.data) {
         const backendUser = response.data;
-        setUser({
+        const mappedUser = {
           id: backendUser.id,
           phoneNumber: backendUser.phone_number,
           firstName: backendUser.first_name,
@@ -130,13 +144,30 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
           organizationType: backendUser.organization_type,
           isVerified: backendUser.is_verified || false,
           createdAt: backendUser.created_at
-        });
+        };
+        
+        // SOLUTION 2: Persist role in localStorage
+        if (mappedUser.role) {
+          localStorage.setItem('userRole', mappedUser.role);
+          console.log('✅ Role persisted to localStorage:', mappedUser.role);
+        }
+        
+        setUser(mappedUser);
       } else {
         console.error('Failed to fetch user from API:', response.error);
         // If API fails, try to get basic info from Supabase
         if (supabase) {
           const { data: { user: supabaseUser } } = await supabase.auth.getUser();
           if (supabaseUser) {
+            // SOLUTION 2: Try localStorage first, then Supabase metadata, then default
+            const storedRole = localStorage.getItem('userRole');
+            const role = storedRole || supabaseUser.user_metadata?.role || 'attendee';
+            
+            console.log('⚠️ Using fallback user data');
+            console.log('- Stored role from localStorage:', storedRole);
+            console.log('- Supabase metadata role:', supabaseUser.user_metadata?.role);
+            console.log('- Final role used:', role);
+            
             // Create minimal user object from Supabase data
             setUser({
               id: supabaseUser.id,
@@ -145,7 +176,7 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
               lastName: supabaseUser.user_metadata?.lastName || '',
               email: supabaseUser.email || '',
               state: supabaseUser.user_metadata?.state || '',
-              role: supabaseUser.user_metadata?.role || 'attendee',
+              role: role,
               walletBalance: 0,
               referralCode: '',
               isVerified: supabaseUser.email_confirmed_at !== null,
@@ -235,6 +266,11 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
         };
         console.log('✅ Setting user after registration:', mappedUser);
         console.log('- Final user role:', mappedUser.role);
+        
+        // SOLUTION 2: Persist role in localStorage
+        localStorage.setItem('userRole', mappedUser.role);
+        console.log('✅ Role persisted to localStorage:', mappedUser.role);
+        
         setUser(mappedUser);
       }
 
@@ -255,8 +291,12 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true);
 
+      console.log('🔐 Starting login process for:', phoneNumber);
+
       // First, authenticate with FastAPI backend
       const apiResponse = await apiService.login({ phoneNumber, password });
+      
+      console.log('📥 API login response:', apiResponse);
       
       if (!apiResponse.success) {
         return {
@@ -265,45 +305,55 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
         };
       }
 
-      // Then sign in to Supabase
-      if (supabase) {
-        const email = apiResponse.data?.user?.email || `${phoneNumber}@grooovy.temp`;
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+      // SOLUTION 3: Set user immediately from API response with correct role
+      if (apiResponse.data?.user) {
+        const backendUser = apiResponse.data.user;
+        const mappedUser = {
+          id: backendUser.id,
+          phoneNumber: backendUser.phone_number,
+          firstName: backendUser.first_name,
+          lastName: backendUser.last_name,
+          email: backendUser.email,
+          state: backendUser.state,
+          role: backendUser.role,
+          walletBalance: backendUser.wallet_balance || 0,
+          referralCode: backendUser.referral_code || '',
+          organizationName: backendUser.organization_name,
+          organizationType: backendUser.organization_type,
+          isVerified: backendUser.is_verified || false,
+          createdAt: backendUser.created_at
+        };
+        
+        console.log('✅ Setting user from login response:', mappedUser);
+        console.log('- User role:', mappedUser.role);
+        
+        // SOLUTION 2: Persist role in localStorage
+        localStorage.setItem('userRole', mappedUser.role);
+        console.log('✅ Role persisted to localStorage:', mappedUser.role);
+        
+        // Set user BEFORE Supabase auth to prevent overwrite
+        setUser(mappedUser);
+      }
 
-        if (error) {
-          console.error('Supabase signin error:', error);
-          // API login succeeded but Supabase failed
-          // This is okay for hybrid mode, set user from API
-          if (apiResponse.data?.user) {
-            setUser(apiResponse.data.user);
+      // Then sign in to Supabase (optional - don't fail if it errors)
+      if (supabase) {
+        try {
+          const email = apiResponse.data?.user?.email || `${phoneNumber}@grooovy.temp`;
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (error) {
+            console.warn('⚠️ Supabase signin failed (continuing with FastAPI only):', error.message);
+            // API login succeeded, continue without Supabase
+          } else {
+            console.log('✅ Supabase sign-in successful');
+            setSession(data.session);
           }
-        } else {
-          // Both succeeded, user will be set via auth state change
-          setSession(data.session);
-        }
-      } else {
-        // No Supabase, just use API data
-        if (apiResponse.data?.user) {
-          const backendUser = apiResponse.data.user;
-          const mappedUser = {
-            id: backendUser.id,
-            phoneNumber: backendUser.phone_number,
-            firstName: backendUser.first_name,
-            lastName: backendUser.last_name,
-            email: backendUser.email,
-            state: backendUser.state,
-            role: backendUser.role,
-            walletBalance: backendUser.wallet_balance || 0,
-            referralCode: backendUser.referral_code || '',
-            organizationName: backendUser.organization_name,
-            organizationType: backendUser.organization_type,
-            isVerified: backendUser.is_verified || false,
-            createdAt: backendUser.created_at
-          };
-          setUser(mappedUser);
+        } catch (error: any) {
+          console.warn('⚠️ Supabase signin error (continuing with FastAPI only):', error.message);
+          // Continue anyway - FastAPI login succeeded
         }
       }
 
@@ -333,6 +383,10 @@ export function FastAPIAuthProvider({ children }: AuthProviderProps) {
 
       setUser(null);
       setSession(null);
+      
+      // SOLUTION 2: Clear localStorage on logout
+      localStorage.removeItem('userRole');
+      console.log('✅ User logged out, role cleared from localStorage');
 
     } catch (error) {
       console.error('Signout error:', error);

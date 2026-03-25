@@ -1,9 +1,157 @@
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
+import { authenticatedFetch } from '../../utils/auth';
+
+interface ScanResult {
+  id: string;
+  ticketId: string;
+  attendeeName: string;
+  eventName: string;
+  status: 'valid' | 'invalid' | 'already_used';
+  timestamp: string;
+  message: string;
+}
 
 export function OrganizerScanner() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isScanning, setIsScanning] = useState(false);
+  const [manualCode, setManualCode] = useState('');
+  const [scanHistory, setScanHistory] = useState<ScanResult[]>([]);
+  const [stats, setStats] = useState({
+    validToday: 0,
+    invalidToday: 0,
+    totalScanned: 0
+  });
+  const [selectedEvent, setSelectedEvent] = useState<string>('all');
+  const [events, setEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchEvents();
+    fetchScanHistory();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await authenticatedFetch('http://localhost:8000/api/events');
+      const data = await response.json();
+      if (data.success) {
+        setEvents(data.data.events || []);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  const fetchScanHistory = async () => {
+    // Mock data for now - replace with actual API call
+    const mockHistory: ScanResult[] = [
+      {
+        id: '1',
+        ticketId: 'TKT-001',
+        attendeeName: 'John Doe',
+        eventName: 'Tech Conference 2024',
+        status: 'valid',
+        timestamp: new Date().toISOString(),
+        message: 'Ticket verified successfully'
+      }
+    ];
+    setScanHistory(mockHistory);
+    
+    // Update stats
+    const valid = mockHistory.filter(s => s.status === 'valid').length;
+    const invalid = mockHistory.filter(s => s.status === 'invalid' || s.status === 'already_used').length;
+    setStats({
+      validToday: valid,
+      invalidToday: invalid,
+      totalScanned: mockHistory.length
+    });
+  };
+
+  const handleStartScanning = () => {
+    setIsScanning(true);
+    // In a real implementation, this would activate the camera
+    alert('Camera scanning would start here.\n\nFor now, use the manual code entry below to test ticket verification.');
+  };
+
+  const handleStopScanning = () => {
+    setIsScanning(false);
+  };
+
+  const handleManualVerification = async () => {
+    if (!manualCode.trim()) {
+      alert('Please enter a ticket code');
+      return;
+    }
+
+    try {
+      // Mock verification - replace with actual API call
+      const newScan: ScanResult = {
+        id: Date.now().toString(),
+        ticketId: manualCode,
+        attendeeName: 'Test Attendee',
+        eventName: 'Test Event',
+        status: manualCode.includes('INVALID') ? 'invalid' : 'valid',
+        timestamp: new Date().toISOString(),
+        message: manualCode.includes('INVALID') ? 'Invalid ticket code' : 'Ticket verified successfully'
+      };
+
+      setScanHistory([newScan, ...scanHistory]);
+      setManualCode('');
+
+      // Update stats
+      if (newScan.status === 'valid') {
+        setStats(prev => ({
+          ...prev,
+          validToday: prev.validToday + 1,
+          totalScanned: prev.totalScanned + 1
+        }));
+      } else {
+        setStats(prev => ({
+          ...prev,
+          invalidToday: prev.invalidToday + 1,
+          totalScanned: prev.totalScanned + 1
+        }));
+      }
+
+      // Show result
+      if (newScan.status === 'valid') {
+        alert('✅ Valid Ticket!\n\nAttendee: ' + newScan.attendeeName + '\nEvent: ' + newScan.eventName);
+      } else {
+        alert('❌ Invalid Ticket!\n\n' + newScan.message);
+      }
+    } catch (error) {
+      console.error('Error verifying ticket:', error);
+      alert('Failed to verify ticket. Please try again.');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'valid':
+        return '#10b981';
+      case 'invalid':
+        return '#ef4444';
+      case 'already_used':
+        return '#f59e0b';
+      default:
+        return '#6b7280';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'valid':
+        return '✅';
+      case 'invalid':
+        return '❌';
+      case 'already_used':
+        return '⚠️';
+      default:
+        return '❓';
+    }
+  };
 
   return (
     <div style={styles.container}>
@@ -44,34 +192,137 @@ export function OrganizerScanner() {
             </div>
           </div>
 
-          <div style={styles.content}>
-            <div style={styles.scannerCard}>
-              <div style={styles.scannerIcon}>📱</div>
-              <h3 style={styles.scannerTitle}>QR Code Scanner</h3>
-              <p style={styles.scannerText}>
-                Use your device camera to scan attendee tickets and verify their authenticity.
-              </p>
-              <button style={styles.scanButton} onClick={() => alert('Scanner will be implemented soon!')}>
-                Start Scanning
-              </button>
+          {/* Stats Cards */}
+          <div style={styles.statsGrid}>
+            <div style={styles.statCard}>
+              <div style={{...styles.statIcon, color: '#10b981'}}>✅</div>
+              <div style={styles.statContent}>
+                <h4 style={styles.statTitle}>Valid Scans Today</h4>
+                <p style={styles.statValue}>{stats.validToday}</p>
+              </div>
             </div>
+            <div style={styles.statCard}>
+              <div style={{...styles.statIcon, color: '#ef4444'}}>❌</div>
+              <div style={styles.statContent}>
+                <h4 style={styles.statTitle}>Invalid Scans Today</h4>
+                <p style={styles.statValue}>{stats.invalidToday}</p>
+              </div>
+            </div>
+            <div style={styles.statCard}>
+              <div style={{...styles.statIcon, color: '#3b82f6'}}>📊</div>
+              <div style={styles.statContent}>
+                <h4 style={styles.statTitle}>Total Scanned</h4>
+                <p style={styles.statValue}>{stats.totalScanned}</p>
+              </div>
+            </div>
+          </div>
 
-            <div style={styles.statsGrid}>
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>✅</div>
-                <div style={styles.statContent}>
-                  <h4 style={styles.statTitle}>Verified Today</h4>
-                  <p style={styles.statValue}>0</p>
-                </div>
+          {/* Scanner Section */}
+          <div style={styles.scannerSection}>
+            <div style={styles.scannerCard}>
+              <div style={styles.scannerHeader}>
+                <h3 style={styles.scannerTitle}>QR Code Scanner</h3>
+                <select
+                  value={selectedEvent}
+                  onChange={(e) => setSelectedEvent(e.target.value)}
+                  style={styles.eventSelect}
+                >
+                  <option value="all">All Events</option>
+                  {events.map(event => (
+                    <option key={event.id} value={event.id}>{event.title}</option>
+                  ))}
+                </select>
               </div>
-              <div style={styles.statCard}>
-                <div style={styles.statIcon}>❌</div>
-                <div style={styles.statContent}>
-                  <h4 style={styles.statTitle}>Invalid Scans</h4>
-                  <p style={styles.statValue}>0</p>
+
+              {!isScanning ? (
+                <div style={styles.scannerPlaceholder}>
+                  <div style={styles.scannerIcon}>📱</div>
+                  <p style={styles.scannerText}>
+                    Click the button below to start scanning QR codes with your device camera
+                  </p>
+                  <button onClick={handleStartScanning} style={styles.startButton}>
+                    Start Camera Scanner
+                  </button>
                 </div>
+              ) : (
+                <div style={styles.scannerActive}>
+                  <div style={styles.cameraPlaceholder}>
+                    <div style={styles.scanFrame}>
+                      <div style={styles.scanCorner} />
+                      <div style={{...styles.scanCorner, right: 0}} />
+                      <div style={{...styles.scanCorner, bottom: 0}} />
+                      <div style={{...styles.scanCorner, bottom: 0, right: 0}} />
+                      <p style={styles.scanInstruction}>Position QR code within frame</p>
+                    </div>
+                  </div>
+                  <button onClick={handleStopScanning} style={styles.stopButton}>
+                    Stop Scanner
+                  </button>
+                </div>
+              )}
+
+              {/* Manual Entry */}
+              <div style={styles.manualEntry}>
+                <h4 style={styles.manualTitle}>Manual Ticket Verification</h4>
+                <p style={styles.manualSubtitle}>Enter ticket code manually if QR scan fails</p>
+                <div style={styles.manualInputGroup}>
+                  <input
+                    type="text"
+                    value={manualCode}
+                    onChange={(e) => setManualCode(e.target.value)}
+                    placeholder="Enter ticket code (e.g., TKT-12345)"
+                    style={styles.manualInput}
+                    onKeyPress={(e) => e.key === 'Enter' && handleManualVerification()}
+                  />
+                  <button onClick={handleManualVerification} style={styles.verifyButton}>
+                    Verify
+                  </button>
+                </div>
+                <p style={styles.helpText}>
+                  💡 Tip: Try entering "TKT-VALID" or "TKT-INVALID" to test
+                </p>
               </div>
             </div>
+          </div>
+
+          {/* Scan History */}
+          <div style={styles.historySection}>
+            <h3 style={styles.historyTitle}>Recent Scans</h3>
+            {scanHistory.length === 0 ? (
+              <div style={styles.emptyHistory}>
+                <p style={styles.emptyText}>No scans yet. Start scanning tickets to see history here.</p>
+              </div>
+            ) : (
+              <div style={styles.historyList}>
+                {scanHistory.map((scan) => (
+                  <div key={scan.id} style={styles.historyItem}>
+                    <div style={styles.historyIcon}>
+                      {getStatusIcon(scan.status)}
+                    </div>
+                    <div style={styles.historyContent}>
+                      <div style={styles.historyHeader}>
+                        <span style={styles.historyTicketId}>{scan.ticketId}</span>
+                        <span 
+                          style={{
+                            ...styles.historyStatus,
+                            backgroundColor: getStatusColor(scan.status) + '20',
+                            color: getStatusColor(scan.status)
+                          }}
+                        >
+                          {scan.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </div>
+                      <p style={styles.historyName}>{scan.attendeeName}</p>
+                      <p style={styles.historyEvent}>{scan.eventName}</p>
+                      <p style={styles.historyMessage}>{scan.message}</p>
+                      <p style={styles.historyTime}>
+                        {new Date(scan.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -198,49 +449,11 @@ const styles = {
     fontSize: '14px',
     color: '#6b7280',
   },
-  content: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '24px',
-  },
-  scannerCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '48px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    textAlign: 'center' as const,
-  },
-  scannerIcon: {
-    fontSize: '64px',
-    marginBottom: '16px',
-  },
-  scannerTitle: {
-    fontSize: '24px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '8px',
-  },
-  scannerText: {
-    fontSize: '14px',
-    color: '#6b7280',
-    marginBottom: '24px',
-    maxWidth: '400px',
-    margin: '0 auto 24px',
-  },
-  scanButton: {
-    padding: '12px 32px',
-    fontSize: '16px',
-    fontWeight: '600',
-    backgroundColor: '#667eea',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  },
   statsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '16px',
+    marginBottom: '24px',
   },
   statCard: {
     backgroundColor: '#ffffff',
@@ -261,10 +474,236 @@ const styles = {
     fontSize: '14px',
     color: '#6b7280',
     marginBottom: '4px',
+    margin: 0,
   },
   statValue: {
     fontSize: '24px',
     fontWeight: 'bold',
     color: '#1f2937',
+    margin: 0,
+  },
+  scannerSection: {
+    marginBottom: '24px',
+  },
+  scannerCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    padding: '32px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+  },
+  scannerHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px',
+  },
+  scannerTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1f2937',
+    margin: 0,
+  },
+  eventSelect: {
+    padding: '8px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: 'white',
+  },
+  scannerPlaceholder: {
+    textAlign: 'center' as const,
+    padding: '48px 24px',
+  },
+  scannerIcon: {
+    fontSize: '64px',
+    marginBottom: '16px',
+  },
+  scannerText: {
+    fontSize: '14px',
+    color: '#6b7280',
+    marginBottom: '24px',
+    maxWidth: '400px',
+    margin: '0 auto 24px',
+  },
+  startButton: {
+    padding: '12px 32px',
+    fontSize: '16px',
+    fontWeight: '600',
+    backgroundColor: '#667eea',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
+  scannerActive: {
+    textAlign: 'center' as const,
+  },
+  cameraPlaceholder: {
+    backgroundColor: '#000000',
+    borderRadius: '12px',
+    padding: '48px',
+    marginBottom: '16px',
+    position: 'relative' as const,
+    minHeight: '400px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanFrame: {
+    width: '300px',
+    height: '300px',
+    border: '3px solid #667eea',
+    borderRadius: '12px',
+    position: 'relative' as const,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanCorner: {
+    position: 'absolute' as const,
+    width: '40px',
+    height: '40px',
+    borderTop: '4px solid #ffffff',
+    borderLeft: '4px solid #ffffff',
+    top: -2,
+    left: -2,
+  },
+  scanInstruction: {
+    color: '#ffffff',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  stopButton: {
+    padding: '12px 32px',
+    fontSize: '16px',
+    fontWeight: '600',
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
+  manualEntry: {
+    marginTop: '32px',
+    padding: '24px',
+    backgroundColor: '#f9fafb',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+  },
+  manualTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: '4px',
+  },
+  manualSubtitle: {
+    fontSize: '14px',
+    color: '#6b7280',
+    marginBottom: '16px',
+  },
+  manualInputGroup: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '8px',
+  },
+  manualInput: {
+    flex: 1,
+    padding: '12px',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    fontSize: '14px',
+  },
+  verifyButton: {
+    padding: '12px 24px',
+    fontSize: '14px',
+    fontWeight: '600',
+    backgroundColor: '#667eea',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+  },
+  helpText: {
+    fontSize: '12px',
+    color: '#6b7280',
+    margin: 0,
+  },
+  historySection: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    padding: '32px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+  },
+  historyTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: '20px',
+  },
+  emptyHistory: {
+    textAlign: 'center' as const,
+    padding: '48px 24px',
+  },
+  emptyText: {
+    fontSize: '14px',
+    color: '#6b7280',
+  },
+  historyList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+  historyItem: {
+    display: 'flex',
+    gap: '16px',
+    padding: '16px',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    backgroundColor: '#f9fafb',
+  },
+  historyIcon: {
+    fontSize: '24px',
+  },
+  historyContent: {
+    flex: 1,
+  },
+  historyHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
+  },
+  historyTicketId: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  historyStatus: {
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    fontWeight: '600',
+  },
+  historyName: {
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#374151',
+    margin: '0 0 4px 0',
+  },
+  historyEvent: {
+    fontSize: '14px',
+    color: '#6b7280',
+    margin: '0 0 4px 0',
+  },
+  historyMessage: {
+    fontSize: '13px',
+    color: '#6b7280',
+    fontStyle: 'italic' as const,
+    margin: '0 0 8px 0',
+  },
+  historyTime: {
+    fontSize: '12px',
+    color: '#9ca3af',
+    margin: 0,
   },
 };

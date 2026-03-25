@@ -4,7 +4,7 @@ import { VerificationResult } from './VerificationResult';
 import { BackupCodeInput } from './BackupCodeInput';
 import { offlineScanQueue } from '../../services/offlineScanQueue';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/FastAPIAuthContext';
+import { useAuth } from '../../contexts/SupabaseAuthContext';
 
 interface VerificationResponse {
   valid: boolean;

@@ -9,8 +9,8 @@
   base = "apps/frontend"
 
 [build.environment]
-  # Node version - use LTS
-  NODE_VERSION = "18.20.4"
+  # Node version - use Node 20 for compatibility
+  NODE_VERSION = "20"
   
   # NPM version
   NPM_VERSION = "10"

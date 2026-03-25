@@ -1,5 +1,5 @@
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { apiService } from '../../services/api';
 import { NotificationCenter } from '../../components/notifications/NotificationCenter';

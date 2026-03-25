@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { PremiumStatus } from '../../components/premium/PremiumStatus';
 
 interface ProfileData {

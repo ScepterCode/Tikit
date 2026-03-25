@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/SupabaseAuthContext';
 import { PaymentMethodSelector, PaymentMethod } from '../components/tickets/PaymentMethodSelector';
 import { PaymentErrorHandler } from '../components/tickets/PaymentErrorHandler';

@@ -1,5 +1,5 @@
 import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { SprayMoneyLeaderboard } from '../../components/events/SprayMoneyLeaderboard';
 import { GroupBuyCreator } from '../../components/tickets/GroupBuyCreator';

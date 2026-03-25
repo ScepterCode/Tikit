@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { AccessCodeModal } from '../components/modals/AccessCodeModal';
 import { SecretInviteModal } from '../components/modals/SecretInviteModal';
 import { authenticatedFetch } from '../utils/auth';

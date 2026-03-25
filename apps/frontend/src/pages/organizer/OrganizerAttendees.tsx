@@ -1,5 +1,5 @@
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 export function OrganizerAttendees() {
   const { user, signOut } = useAuth();

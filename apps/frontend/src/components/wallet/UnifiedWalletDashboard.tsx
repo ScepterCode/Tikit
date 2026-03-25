@@ -545,7 +545,7 @@ const WithdrawModal: React.FC<{
           <button onClick={onClose} style={styles.closeButton}>×</button>
         </div>
         <div style={styles.modalContent}>
-          <div style={styles.balanceInfo}>
+          <div style={styles.modalBalanceInfo}>
             <p>Available: ₦{availableBalance.toLocaleString()}</p>
           </div>
           
@@ -659,7 +659,7 @@ const SendMoneyModal: React.FC<{
           <button onClick={onClose} style={styles.closeButton}>×</button>
         </div>
         <div style={styles.modalContent}>
-          <div style={styles.balanceInfo}>
+          <div style={styles.modalBalanceInfo}>
             <p>Available: ₦{availableBalance.toLocaleString()}</p>
           </div>
           
@@ -1091,7 +1091,7 @@ const styles = {
     backgroundColor: '#ffffff',
     cursor: 'pointer',
   },
-  balanceInfo: {
+  modalBalanceInfo: {
     padding: '12px',
     backgroundColor: '#f3f4f6',
     borderRadius: '6px',

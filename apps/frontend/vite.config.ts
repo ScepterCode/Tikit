@@ -130,7 +130,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           // Vendor chunks for better caching
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'react-vendor': ['react', 'react-dom', 'react-router'],
           'i18n-vendor': ['i18next', 'react-i18next'],
         },
         // Add content hash to filenames for cache busting
@@ -155,7 +155,7 @@ export default defineConfig({
   
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: ['react', 'react-dom', 'react-router'],
   },
   
   test: {

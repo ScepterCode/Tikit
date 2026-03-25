@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/SupabaseAuthContext';
 import { SprayMoneyWidget } from '../components/spray-money/SprayMoneyWidget';
 import { SprayMoneyFeed } from '../components/spray-money/SprayMoneyFeed';

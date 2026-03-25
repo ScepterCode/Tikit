@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
 import UnifiedWalletDashboard from '../../components/wallet/UnifiedWalletDashboard';
 

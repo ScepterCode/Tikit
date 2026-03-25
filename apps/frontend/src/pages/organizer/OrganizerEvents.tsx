@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { EditEventModal } from '../../components/modals/EditEventModal';
 import { LivestreamControls } from '../../components/organizer/LivestreamControls';
 import { TicketTierManager } from '../../components/organizer/TicketTierManager';

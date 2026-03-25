@@ -1,6 +1,6 @@
 [build]
-  # Build command - explicitly install devDependencies
-  command = "npm install --include=dev && npm run build"
+  # Build command - use npm ci for reliable dependency installation
+  command = "npm ci --include=dev && npm run build"
   
   # Publish directory (relative to base directory)
   publish = "dist"
@@ -9,14 +9,17 @@
   base = "apps/frontend"
 
 [build.environment]
-  # Node version
-  NODE_VERSION = "18"
+  # Node version - use LTS
+  NODE_VERSION = "18.20.4"
   
   # NPM version
-  NPM_VERSION = "9"
+  NPM_VERSION = "10"
   
-  # Ensure devDependencies are installed (needed for TypeScript)
+  # Ensure devDependencies are installed
   NPM_CONFIG_PRODUCTION = "false"
+  
+  # Force clean install
+  NPM_CONFIG_CACHE = "/tmp/.npm"
 
 # SPA routing - redirect all routes to index.html
 [[redirects]]

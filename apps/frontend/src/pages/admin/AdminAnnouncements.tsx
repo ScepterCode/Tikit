@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { authenticatedFetch } from '../../utils/auth';
 import { NotificationCenter } from '../../components/notifications/NotificationCenter';
 

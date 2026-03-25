@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useAuth } from '../contexts/SupabaseAuthContext';
 import { apiService } from '../services/api';
 import { TicketSelector } from '../components/tickets/TicketSelector';

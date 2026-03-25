@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { PremiumStatus } from '../../components/premium/PremiumStatus';
 
 export function OrganizerSettings() {

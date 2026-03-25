@@ -1,5 +1,5 @@
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import UnifiedWalletDashboard from '../../components/wallet/UnifiedWalletDashboard';
 
 export function Wallet() {

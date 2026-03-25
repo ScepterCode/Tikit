@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { HiUser, HiChevronDown, HiLogout, HiCog, HiTicket, HiBell } from 'react-icons/hi';
 
 interface NavUser {

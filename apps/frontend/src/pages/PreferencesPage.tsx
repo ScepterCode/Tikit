@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../contexts/SupabaseAuthContext';
 import { supabase } from '../lib/supabase';
 import { EventPreferencesSelector, EventType } from '../components/onboarding/EventPreferencesSelector';

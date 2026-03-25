@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PaymentModal } from '../payment/PaymentModal';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 interface PurchaseButtonProps {
   eventId: string;

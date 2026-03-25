@@ -1,441 +1,335 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
-import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+/*
+Supabase-Only Authentication Context
+Pure Supabase authentication without FastAPI hybrid mode
+*/
 
-// Types
-interface User {
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import { supabase } from '../lib/supabase';
+import { Session } from '@supabase/supabase-js';
+import { clearAllStorage } from '../utils/clearStorage';
+
+interface AuthUser {
   id: string;
-  phoneNumber: string;
+  email: string;
+  phoneNumber?: string;
   firstName: string;
   lastName: string;
-  email?: string;
-  role: 'attendee' | 'organizer' | 'admin';
   state: string;
+  role: string;
+  walletBalance: number;
   organizationName?: string;
   organizationType?: string;
-  referralCode: string;
-  walletBalance: number;
   isVerified: boolean;
   createdAt: string;
 }
 
-interface AuthState {
-  user: User | null;
-  supabaseUser: SupabaseUser | null;
+interface AuthContextType {
+  user: AuthUser | null;
   session: Session | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
-
-interface AuthContextType extends AuthState {
-  login: (phoneNumber: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  loading: boolean;
+  signUp: (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    state: string;
+    role?: string;
+    organizationName?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signOut: () => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
-interface RegisterData {
-  phoneNumber: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  state: string;
-  role?: 'attendee' | 'organizer';
-  organizationName?: string;
-  organizationType?: string;
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-// Create context
-const SupabaseAuthContext = createContext<AuthContextType | undefined>(undefined);
+export function SupabaseAuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const initializationRef = useRef(false);
+  const subscriptionRef = useRef<any>(null);
 
-// Supabase Setup Component
-function SupabaseSetupScreen() {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '20px',
-      backgroundColor: '#f9fafb',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
-      <div style={{
-        maxWidth: '600px',
-        backgroundColor: 'white',
-        padding: '40px',
-        borderRadius: '12px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        textAlign: 'center'
-      }}>
-        <h1 style={{ color: '#10b981', marginBottom: '20px' }}>🔥 Supabase Setup Required</h1>
-        <p style={{ fontSize: '18px', marginBottom: '30px', color: '#374151' }}>
-          Grooovy is ready to launch! Just connect your Supabase database to get started.
-        </p>
-        
-        <div style={{ textAlign: 'left', marginBottom: '30px' }}>
-          <h3 style={{ color: '#1f2937' }}>Quick Setup (5 minutes):</h3>
-          <ol style={{ color: '#4b5563', lineHeight: '1.6' }}>
-            <li>Create a Supabase project at <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" style={{ color: '#10b981' }}>supabase.com</a></li>
-            <li>Go to Settings → API and copy your credentials</li>
-            <li>Add environment variables to Vercel:
-              <ul style={{ marginTop: '10px' }}>
-                <li><code>VITE_SUPABASE_URL</code></li>
-                <li><code>VITE_SUPABASE_ANON_KEY</code></li>
-              </ul>
-            </li>
-            <li>Run the database schema (see setup guide)</li>
-            <li>Redeploy your app</li>
-          </ol>
-        </div>
-        
-        <div style={{ backgroundColor: '#f3f4f6', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-          <p style={{ margin: 0, color: '#6b7280' }}>
-            <strong>No localhost dependencies!</strong> This app uses Supabase for all backend functionality.
-          </p>
-        </div>
-        
-        <a 
-          href="https://supabase.com" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-block',
-            backgroundColor: '#10b981',
-            color: 'white',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            textDecoration: 'none',
-            fontWeight: '600'
-          }}
-        >
-          Create Supabase Project
-        </a>
-      </div>
-    </div>
-  );
-}
-
-// Auth Provider Component
-export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    supabaseUser: null,
-    session: null,
-    isAuthenticated: false,
-    isLoading: true
-  });
-
-  // Check if Supabase is configured
-  if (!supabase) {
-    return <SupabaseSetupScreen />;
-  }
-
-  // Load auth state from Supabase
-  useEffect(() => {
-    if (!supabase) return;
-    
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleAuthChange(session);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleAuthChange(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Handle auth state changes
-  const handleAuthChange = async (session: Session | null) => {
-    if (session?.user) {
-      // Fetch user profile from our users table
-      const userProfile = await fetchUserProfile(session.user.id);
-      
-      setState({
-        user: userProfile,
-        supabaseUser: session.user,
-        session,
-        isAuthenticated: true,
-        isLoading: false
-      });
-      
-      console.log('✅ User authenticated:', userProfile?.firstName || session.user.email);
-    } else {
-      setState({
-        user: null,
-        supabaseUser: null,
-        session: null,
-        isAuthenticated: false,
-        isLoading: false
-      });
-      
-      console.log('👋 User signed out');
-    }
+  // Helper function to map session user to AuthUser
+  const mapSessionToUser = (sessionUser: any): AuthUser => {
+    const metadata = sessionUser.user_metadata || {};
+    return {
+      id: sessionUser.id,
+      email: sessionUser.email || '',
+      phoneNumber: sessionUser.phone || metadata.phone_number,
+      firstName: metadata.first_name || '',
+      lastName: metadata.last_name || '',
+      state: metadata.state || '',
+      role: metadata.role || 'attendee',
+      walletBalance: metadata.wallet_balance || 10000,
+      organizationName: metadata.organization_name,
+      organizationType: metadata.organization_type,
+      isVerified: sessionUser.email_confirmed_at !== null,
+      createdAt: sessionUser.created_at
+    };
   };
 
-  // Fetch user profile from database
-  const fetchUserProfile = async (userId: string): Promise<User | null> => {
-    if (!supabase) return null;
-    
-    try {
-      let { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+  // Initialize authentication state - COMPLETELY disable auto-login
+  useEffect(() => {
+    if (!supabase || initializationRef.current) {
+      return;
+    }
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No profile found - this can happen if registration was interrupted
-          console.warn('⚠️ No user profile found for authenticated user');
-          console.warn('This might be from an interrupted registration');
-          
-          // Get user info from auth metadata
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.user_metadata) {
-            console.log('🔧 Attempting to create missing user profile...');
+    initializationRef.current = true;
+    let isMounted = true;
+
+    const initAuth = async () => {
+      try {
+        console.log('🔐 Initializing auth...');
+        
+        // SECURITY FIX: Clear any existing sessions and storage immediately
+        clearAllStorage();
+        await supabase!.auth.signOut({ scope: 'local' });
+        
+        console.log('🔐 No automatic session loading - user must login explicitly');
+        
+        if (isMounted) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          console.log('✅ Auth initialization complete - no auto-login');
+        }
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initAuth();
+
+    // Listen for Supabase auth changes - but ONLY for explicit user actions
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange(
+      async (event: string, session: Session | null) => {
+        console.log('🔐 Auth state changed:', event);
+        
+        // SECURITY: Only process explicit sign-in from login form
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Check if this is from an explicit login (not auto-restore)
+          const isExplicitLogin = (window as any).__explicitLogin;
+          if (isExplicitLogin) {
+            console.log('🔐 Explicit sign-in detected');
+            const mappedUser = mapSessionToUser(session.user);
             
-            // Try to create profile from auth metadata
-            const referralCode = generateReferralCode(
-              user.user_metadata.first_name || 'User',
-              user.user_metadata.last_name || 'Profile'
-            );
+            console.log(`🔐 SECURITY: User signed in - ${mappedUser.email} (${mappedUser.role}) at ${new Date().toISOString()}`);
             
-            const { data: newProfile, error: createError } = await supabase
-              .from('users')
-              .insert({
-                id: userId,
-                phone_number: user.user_metadata.phone_number || user.phone || '',
-                first_name: user.user_metadata.first_name || 'User',
-                last_name: user.user_metadata.last_name || 'Profile',
-                email: user.email,
-                role: 'attendee',
-                state: 'Lagos', // Default state
-                referral_code: referralCode,
-                wallet_balance: 0,
-                is_verified: false
-              })
-              .select()
-              .single();
-              
-            if (createError) {
-              console.error('Failed to create missing profile:', createError);
-              return null;
+            if (isMounted) {
+              setSession(session);
+              setUser(mappedUser);
+              setLoading(false);
             }
             
-            console.log('✅ Created missing user profile');
-            data = newProfile;
+            // Clear the flag
+            (window as any).__explicitLogin = false;
           } else {
-            console.error('No user metadata available to create profile');
-            return null;
+            console.log('🔐 Ignoring automatic SIGNED_IN event');
+            // Force sign out if this wasn't explicit
+            await supabase!.auth.signOut({ scope: 'local' });
           }
-        } else {
-          console.error('Error fetching user profile:', error);
-          return null;
+        } else if (event === 'SIGNED_OUT') {
+          console.log('🔐 User signed out');
+          if (isMounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
+        }
+        
+        // Ignore all other events to prevent auto-login
+        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+          console.log(`🔐 Ignoring ${event} to prevent auto-login`);
+          // Force clear session if it tries to auto-restore
+          if (session) {
+            await supabase!.auth.signOut({ scope: 'local' });
+          }
         }
       }
+    );
 
-      return {
-        id: data.id,
-        phoneNumber: data.phone_number,
-        firstName: data.first_name,
-        lastName: data.last_name,
-        email: data.email,
-        role: data.role,
-        state: data.state,
-        organizationName: data.organization_name,
-        organizationType: data.organization_type,
-        referralCode: data.referral_code,
-        walletBalance: data.wallet_balance,
-        isVerified: data.is_verified,
-        createdAt: data.created_at
-      };
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-  };
+    subscriptionRef.current = subscription;
 
-  // Generate referral code
-  const generateReferralCode = (firstName: string, lastName: string): string => {
-    const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `${initials}${randomNum}`;
-  };
+    return () => {
+      isMounted = false;
+      subscriptionRef.current?.unsubscribe();
+    };
+  }, []);
 
-  // Register function
-  const register = async (data: RegisterData): Promise<void> => {
-    if (!supabase) throw new Error('Supabase not configured');
-    
+  const signUp = async (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    state: string;
+    role?: string;
+    organizationName?: string;
+  }) => {
     try {
-      console.log('📝 Registering user with Supabase...');
+      setLoading(true);
 
-      // Use email if provided, otherwise create email from phone number
-      const email = data.email || `${data.phoneNumber.replace(/[^0-9]/g, '')}@grooovy.app`;
-      
-      console.log('📧 Using email for registration:', email);
-      
-      // Sign up with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: data.password,
+      if (!supabase) {
+        return { success: false, error: 'Supabase not configured' };
+      }
+
+      console.log('📝 Signing up user:', userData.email);
+
+      const { data, error } = await supabase!.auth.signUp({
+        email: userData.email,
+        password: userData.password,
         options: {
           data: {
-            phone_number: data.phoneNumber,
-            first_name: data.firstName,
-            last_name: data.lastName,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            phone_number: userData.phoneNumber,
+            state: userData.state,
+            role: userData.role || 'attendee',
+            organization_name: userData.organizationName,
+            wallet_balance: 10000
           }
         }
       });
 
-      if (authError) {
-        console.error('Auth error:', authError);
-        throw new Error(authError.message);
+      if (error) {
+        console.error('❌ Signup error:', error);
+        return { success: false, error: error.message };
       }
 
-      if (!authData.user) {
-        throw new Error('Failed to create user');
+      if (data.user) {
+        console.log('✅ User signed up successfully');
+        const mappedUser = mapSessionToUser(data.user);
+        setUser(mappedUser);
+        return { success: true };
       }
 
-      console.log('✅ Auth user created:', authData.user.id);
-
-      // Create user profile in our users table
-      const referralCode = generateReferralCode(data.firstName, data.lastName);
-      
-      // Try to create user profile, but handle conflicts gracefully
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          phone_number: data.phoneNumber,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          email: data.email,
-          role: data.role || 'attendee',
-          state: data.state,
-          organization_name: data.organizationName,
-          organization_type: data.organizationType,
-          referral_code: referralCode,
-          wallet_balance: 0,
-          is_verified: false
-        });
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        
-        // Handle different error types
-        if (profileError.code === '42501') {
-          // RLS policy prevented creation
-          console.warn('⚠️ RLS policy prevented profile creation, but auth user exists');
-          console.warn('User can still log in, profile will be created on first login');
-          return;
-        } else if (profileError.code === '23505') {
-          // Unique constraint violation (duplicate phone/email)
-          console.warn('⚠️ User profile already exists (duplicate phone/email)');
-          console.warn('This might be a re-registration attempt');
-          
-          // Check if profile already exists for this auth user
-          const { data: existingProfile } = await supabase
-            .from('users')
-            .select('id')
-            .eq('id', authData.user.id)
-            .single();
-            
-          if (existingProfile) {
-            console.log('✅ User profile already exists, registration successful');
-            return;
-          } else {
-            // Profile exists for different user - this is a real conflict
-            await supabase.auth.signOut();
-            throw new Error('An account with this phone number or email already exists. Please use different credentials or try logging in.');
-          }
-        } else {
-          // Other errors - clean up auth user
-          await supabase.auth.signOut();
-          throw new Error(`Failed to create user profile: ${profileError.message}`);
-        }
-      }
-
-      console.log('✅ Registration successful');
-    } catch (error) {
-      console.error('❌ Registration error:', error);
-      throw error;
+      return { success: false, error: 'Signup failed' };
+    } catch (error: any) {
+      console.error('❌ Signup exception:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Login function
-  const login = async (phoneNumber: string, password: string): Promise<void> => {
-    if (!supabase) throw new Error('Supabase not configured');
-    
+  const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔐 Logging in user...');
+      setLoading(true);
 
-      // Use email format for login - clean phone number first
-      const cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
-      const email = phoneNumber.includes('@') ? phoneNumber : `${cleanPhone}@grooovy.app`;
-      
-      console.log('📧 Using email for login:', email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
+      if (!supabase) {
+        return { success: false, error: 'Supabase not configured' };
+      }
+
+      console.log('🔐 Signing in user:', email);
+
+      // Set flag to indicate this is an explicit login
+      (window as any).__explicitLogin = true;
+
+      const { data, error } = await supabase!.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        console.error('Login error details:', error);
-        throw new Error(error.message);
+        console.error('❌ Signin error:', error);
+        (window as any).__explicitLogin = false; // Clear flag on error
+        
+        if (error.message.includes('Email not confirmed')) {
+          return { 
+            success: false, 
+            error: 'Please confirm your email first. Check your inbox for a confirmation link.' 
+          };
+        }
+        
+        return { success: false, error: error.message };
       }
 
-      if (!data.user) {
-        throw new Error('Login failed - no user returned');
+      if (data.session) {
+        console.log('✅ User signed in successfully');
+        // The auth state change handler will process this with the explicit flag
+        return { success: true };
       }
 
-      console.log('✅ Login successful');
-    } catch (error) {
-      console.error('❌ Login error:', error);
-      throw error;
+      (window as any).__explicitLogin = false; // Clear flag if no session
+      return { success: false, error: 'Signin failed' };
+    } catch (error: any) {
+      console.error('❌ Signin exception:', error);
+      (window as any).__explicitLogin = false; // Clear flag on exception
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Logout function
-  const logout = async (): Promise<void> => {
-    if (!supabase) return;
-    
+  const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      setLoading(true);
+
+      if (!supabase) return;
+
+      const { error } = await supabase!.auth.signOut();
+
       if (error) {
-        console.error('Logout error:', error);
+        console.error('❌ Signout error:', error);
+      } else {
+        console.log('✅ User signed out');
+        setUser(null);
+        setSession(null);
       }
     } catch (error) {
-      console.error('❌ Logout error:', error);
+      console.error('❌ Signout exception:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const contextValue: AuthContextType = {
-    ...state,
-    login,
-    register,
-    logout
+  // Alias for logout (used by components)
+  const logout = async () => {
+    await signOut();
+  };
+
+  const refreshUser = async () => {
+    if (session?.user) {
+      const mappedUser = mapSessionToUser(session.user);
+      setUser(mappedUser);
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    session,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+    logout,
+    refreshUser
   };
 
   return (
-    <SupabaseAuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
-    </SupabaseAuthContext.Provider>
+    </AuthContext.Provider>
   );
 }
 
-// Hook to use auth context
-export function useSupabaseAuth(): AuthContextType {
-  const context = useContext(SupabaseAuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider');
+    throw new Error('useAuth must be used within SupabaseAuthProvider');
   }
   return context;
 }
 
-export default SupabaseAuthContext;
+// Alias for useSupabaseAuth (used by components)
+export const useSupabaseAuth = useAuth;

@@ -113,32 +113,33 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         safe_methods = ["GET", "HEAD", "OPTIONS"]
         skip_csrf_paths = ["/health", "/docs", "/redoc", "/openapi.json", "/api/webhooks"]
         
+        # SECURITY: CSRF validation for all state-changing operations (NO BYPASS)
         if (request.method not in safe_methods and 
             not any(request.url.path.startswith(path) for path in skip_csrf_paths)):
             
-            # CSRF validation for state-changing operations
             csrf_token = request.headers.get("x-csrf-token")
             session_id = request.headers.get("x-session-id")
             
-            # Skip CSRF in development mode
-            if not (request.headers.get("x-development-mode") == "true"):
-                if not csrf_token or not session_id:
-                    raise HTTPException(
-                        status_code=403,
-                        detail={
-                            "code": "CSRF_TOKEN_MISSING",
-                            "message": "CSRF token required for this operation"
-                        }
-                    )
-                
-                if not self.validate_csrf_token(session_id, csrf_token):
-                    raise HTTPException(
-                        status_code=403,
-                        detail={
-                            "code": "INVALID_CSRF_TOKEN",
-                            "message": "Invalid or expired CSRF token"
-                        }
-                    )
+            # SECURITY: Strict CSRF enforcement (removed development bypass)
+            if not csrf_token or not session_id:
+                logger.warning(f"CSRF token missing for {request.method} {request.url.path} from {request.client.host if request.client else 'unknown'}")
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": "CSRF_TOKEN_MISSING",
+                        "message": "CSRF token required for this operation"
+                    }
+                )
+            
+            if not self.validate_csrf_token(session_id, csrf_token):
+                logger.warning(f"Invalid CSRF token for {request.method} {request.url.path} from {request.client.host if request.client else 'unknown'}")
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": "INVALID_CSRF_TOKEN",
+                        "message": "Invalid or expired CSRF token"
+                    }
+                )
         
         # Validate request size (prevent large payload attacks)
         content_length = request.headers.get("content-length")

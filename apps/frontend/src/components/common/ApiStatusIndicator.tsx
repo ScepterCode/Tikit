@@ -3,7 +3,7 @@ API Status Indicator
 Shows the connection status to FastAPI backend and Supabase
 */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { supabase } from '../../lib/supabase';
 import { useRealtimeConnection } from '../../hooks/useRealtimeConnection';
@@ -14,6 +14,11 @@ interface ApiStatus {
   realtime: 'connected' | 'disconnected' | 'connecting';
 }
 
+interface Position {
+  x: number;
+  y: number;
+}
+
 export function ApiStatusIndicator() {
   const [status, setStatus] = useState<ApiStatus>({
     fastapi: 'checking',
@@ -21,6 +26,12 @@ export function ApiStatusIndicator() {
     realtime: 'disconnected'
   });
   const [isExpanded, setIsExpanded] = useState(false);
+  const [position, setPosition] = useState<Position>({ x: 20, y: 80 }); // Start below navbar
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isMinimized, setIsMinimized] = useState(false);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
   const realtimeConnection = useRealtimeConnection({ autoConnect: false });
 
   useEffect(() => {
@@ -37,11 +48,57 @@ export function ApiStatusIndicator() {
     }));
   }, [realtimeConnection.connected, realtimeConnection.connecting]);
 
+  // Dragging functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isExpanded) return; // Don't drag when expanded
+    
+    setIsDragging(true);
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      
+      // Keep within viewport bounds
+      const maxX = window.innerWidth - 100;
+      const maxY = window.innerHeight - 50;
+      
+      setPosition({
+        x: Math.max(10, Math.min(newX, maxX)),
+        y: Math.max(10, Math.min(newY, maxY))
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
   const checkApiStatus = async () => {
-    // Check FastAPI with better error handling for Render sleep/wake
+    // Check FastAPI with better error handling
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
       const health = await apiService.healthCheck();
       clearTimeout(timeoutId);
@@ -52,23 +109,15 @@ export function ApiStatusIndicator() {
       }));
     } catch (error: any) {
       console.log('FastAPI health check failed:', error.message);
-      
-      // Handle specific Render sleep/wake scenarios
-      if (error.message?.includes('ERR_CONNECTION_CLOSED') || 
-          error.message?.includes('Failed to fetch')) {
-        console.log('Backend may be sleeping (Render free tier), this is normal');
-      }
-      
       setStatus(prev => ({ ...prev, fastapi: 'disconnected' }));
     }
 
     // Check Supabase (less frequently to reduce load)
     try {
       if (supabase) {
-        // Only check if we haven't checked recently or if status is disconnected
         const now = Date.now();
         const lastCheck = (window as any).__supabaseLastCheck || 0;
-        const shouldCheck = now - lastCheck > 60000 || status.supabase === 'disconnected'; // Check every 60 seconds
+        const shouldCheck = now - lastCheck > 60000 || status.supabase === 'disconnected';
         
         if (shouldCheck) {
           const { error } = await supabase.from('users').select('id').limit(1);
@@ -108,15 +157,52 @@ export function ApiStatusIndicator() {
                        Object.values(status).some(s => s === 'connecting' || s === 'checking') ? 'checking' :
                        'disconnected';
 
+  if (isMinimized) {
+    return (
+      <div 
+        ref={containerRef}
+        style={{
+          ...styles.container,
+          left: position.x,
+          top: position.y,
+        }}
+      >
+        <div 
+          style={{
+            ...styles.minimizedIndicator,
+            backgroundColor: getStatusColor(overallStatus)
+          }}
+          onClick={() => setIsMinimized(false)}
+          title="API Status (Click to expand)"
+        >
+          {getStatusIcon(overallStatus)}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={styles.container}>
+    <div 
+      ref={containerRef}
+      style={{
+        ...styles.container,
+        left: position.x,
+        top: position.y,
+        cursor: isDragging ? 'grabbing' : 'grab'
+      }}
+    >
       <div 
         style={{
           ...styles.indicator,
           backgroundColor: getStatusColor(overallStatus)
         }}
-        onClick={() => setIsExpanded(!isExpanded)}
-        title="API Connection Status"
+        onMouseDown={handleMouseDown}
+        onClick={(e) => {
+          if (!isDragging) {
+            setIsExpanded(!isExpanded);
+          }
+        }}
+        title="API Connection Status (Drag to move)"
       >
         <span style={styles.indicatorIcon}>
           {getStatusIcon(overallStatus)}
@@ -124,6 +210,16 @@ export function ApiStatusIndicator() {
         <span style={styles.indicatorText}>
           API
         </span>
+        <button
+          style={styles.minimizeButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMinimized(true);
+          }}
+          title="Minimize"
+        >
+          −
+        </button>
       </div>
 
       {isExpanded && (
@@ -178,10 +274,10 @@ export function ApiStatusIndicator() {
               Refresh
             </button>
             <button 
-              onClick={() => window.open('/debug/fastapi', '_blank')}
+              onClick={() => window.open('http://localhost:8000/docs', '_blank')}
               style={styles.actionButton}
             >
-              Test API
+              API Docs
             </button>
           </div>
         </div>
@@ -193,9 +289,8 @@ export function ApiStatusIndicator() {
 const styles = {
   container: {
     position: 'fixed' as const,
-    top: '20px',
-    right: '20px',
-    zIndex: 1000
+    zIndex: 1000,
+    userSelect: 'none' as const
   },
   indicator: {
     display: 'flex',
@@ -206,9 +301,39 @@ const styles = {
     color: 'white',
     fontSize: '12px',
     fontWeight: 'bold',
+    cursor: 'grab',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+    transition: 'all 0.2s ease',
+    minWidth: '70px',
+    position: 'relative' as const
+  },
+  minimizedIndicator: {
+    width: '30px',
+    height: '30px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    transition: 'all 0.2s ease'
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+    fontSize: '14px'
+  },
+  minimizeButton: {
+    position: 'absolute' as const,
+    top: '-5px',
+    right: '-5px',
+    width: '18px',
+    height: '18px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    color: '#666',
+    border: 'none',
+    fontSize: '12px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 'bold'
   },
   indicatorIcon: {
     fontSize: '14px'
@@ -219,14 +344,15 @@ const styles = {
   dropdown: {
     position: 'absolute' as const,
     top: '100%',
-    right: '0',
+    left: '0',
     marginTop: '8px',
     backgroundColor: 'white',
     border: '1px solid #e2e8f0',
     borderRadius: '8px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
     minWidth: '280px',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    zIndex: 1001
   },
   dropdownHeader: {
     display: 'flex',

@@ -75,7 +75,7 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
     };
   };
 
-  // Initialize authentication state - COMPLETELY disable auto-login
+  // Initialize authentication state - Allow proper session persistence
   useEffect(() => {
     if (!supabase || initializationRef.current) {
       return;
@@ -88,17 +88,25 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
       try {
         console.log('🔐 Initializing auth...');
         
-        // SECURITY FIX: Clear any existing sessions and storage immediately
-        clearAllStorage();
-        await supabase!.auth.signOut({ scope: 'local' });
+        // Get current session without clearing it
+        const { data: { session }, error } = await supabase!.auth.getSession();
         
-        console.log('🔐 No automatic session loading - user must login explicitly');
+        if (error) {
+          console.error('❌ Session error:', error);
+        }
+        
+        if (session?.user && isMounted) {
+          console.log('🔐 Found existing session for:', session.user.email);
+          const mappedUser = mapSessionToUser(session.user);
+          setSession(session);
+          setUser(mappedUser);
+          // Set global user role for navigation
+          (window as any).__userRole = mappedUser.role;
+        }
         
         if (isMounted) {
-          setSession(null);
-          setUser(null);
           setLoading(false);
-          console.log('✅ Auth initialization complete - no auto-login');
+          console.log('✅ Auth initialization complete');
         }
       } catch (error) {
         console.error('❌ Auth initialization error:', error);
@@ -110,33 +118,21 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
 
     initAuth();
 
-    // Listen for Supabase auth changes - but ONLY for explicit user actions
+    // Listen for Supabase auth changes
     const { data: { subscription } } = supabase!.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
         console.log('🔐 Auth state changed:', event);
         
-        // SECURITY: Only process explicit sign-in from login form
         if (event === 'SIGNED_IN' && session?.user) {
-          // Check if this is from an explicit login (not auto-restore)
-          const isExplicitLogin = (window as any).__explicitLogin;
-          if (isExplicitLogin) {
-            console.log('🔐 Explicit sign-in detected');
-            const mappedUser = mapSessionToUser(session.user);
-            
-            console.log(`🔐 SECURITY: User signed in - ${mappedUser.email} (${mappedUser.role}) at ${new Date().toISOString()}`);
-            
-            if (isMounted) {
-              setSession(session);
-              setUser(mappedUser);
-              setLoading(false);
-            }
-            
-            // Clear the flag
-            (window as any).__explicitLogin = false;
-          } else {
-            console.log('🔐 Ignoring automatic SIGNED_IN event');
-            // Force sign out if this wasn't explicit
-            await supabase!.auth.signOut({ scope: 'local' });
+          console.log('🔐 User signed in:', session.user.email);
+          const mappedUser = mapSessionToUser(session.user);
+          
+          if (isMounted) {
+            setSession(session);
+            setUser(mappedUser);
+            setLoading(false);
+            // Set global user role for navigation
+            (window as any).__userRole = mappedUser.role;
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('🔐 User signed out');
@@ -145,14 +141,12 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
             setUser(null);
             setLoading(false);
           }
-        }
-        
-        // Ignore all other events to prevent auto-login
-        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-          console.log(`🔐 Ignoring ${event} to prevent auto-login`);
-          // Force clear session if it tries to auto-restore
-          if (session) {
-            await supabase!.auth.signOut({ scope: 'local' });
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('🔐 Token refreshed');
+          const mappedUser = mapSessionToUser(session.user);
+          if (isMounted) {
+            setSession(session);
+            setUser(mappedUser);
           }
         }
       }
@@ -232,9 +226,6 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
 
       console.log('🔐 Signing in user:', email);
 
-      // Set flag to indicate this is an explicit login
-      (window as any).__explicitLogin = true;
-
       const { data, error } = await supabase!.auth.signInWithPassword({
         email,
         password
@@ -242,7 +233,6 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
 
       if (error) {
         console.error('❌ Signin error:', error);
-        (window as any).__explicitLogin = false; // Clear flag on error
         
         if (error.message.includes('Email not confirmed')) {
           return { 
@@ -256,15 +246,12 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
 
       if (data.session) {
         console.log('✅ User signed in successfully');
-        // The auth state change handler will process this with the explicit flag
         return { success: true };
       }
 
-      (window as any).__explicitLogin = false; // Clear flag if no session
       return { success: false, error: 'Signin failed' };
     } catch (error: any) {
       console.error('❌ Signin exception:', error);
-      (window as any).__explicitLogin = false; // Clear flag on exception
       return { success: false, error: error.message };
     } finally {
       setLoading(false);

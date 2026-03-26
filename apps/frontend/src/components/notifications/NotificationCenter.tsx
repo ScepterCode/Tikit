@@ -149,8 +149,9 @@ export function NotificationCenter() {
               <button
                 style={styles.viewAllButton}
                 onClick={() => {
-                  // Navigate to notifications page
-                  window.location.href = '/notifications';
+                  // Navigate to notifications page based on user role
+                  const role = (window as any).__userRole || 'attendee';
+                  window.location.href = `/${role}/notifications`;
                 }}
               >
                 View all notifications

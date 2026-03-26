@@ -1,4 +1,5 @@
 import { useServiceWorker } from '../../hooks/useServiceWorker';
+import { useState, useEffect } from 'react';
 
 /**
  * Component to prompt users when a new version is available
@@ -6,8 +7,21 @@ import { useServiceWorker } from '../../hooks/useServiceWorker';
  */
 export function PWAUpdatePrompt() {
   const { needRefresh, offlineReady, updateServiceWorker } = useServiceWorker();
+  const [showOfflineReady, setShowOfflineReady] = useState(false);
 
-  if (!needRefresh && !offlineReady) {
+  // Only show offline ready notification once and allow dismissal
+  useEffect(() => {
+    if (offlineReady && !localStorage.getItem('pwa-offline-dismissed')) {
+      setShowOfflineReady(true);
+    }
+  }, [offlineReady]);
+
+  const dismissOfflineReady = () => {
+    setShowOfflineReady(false);
+    localStorage.setItem('pwa-offline-dismissed', 'true');
+  };
+
+  if (!needRefresh && !showOfflineReady) {
     return null;
   }
 
@@ -40,7 +54,7 @@ export function PWAUpdatePrompt() {
         </div>
       )}
 
-      {offlineReady && !needRefresh && (
+      {showOfflineReady && (
         <div className="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
           <div className="flex items-start">
             <div className="flex-1">
@@ -50,13 +64,8 @@ export function PWAUpdatePrompt() {
               </p>
             </div>
             <button
-              onClick={() => {
-                // Close notification
-                const element = document.querySelector('[data-offline-ready]');
-                element?.remove();
-              }}
-              className="ml-2 text-white hover:text-gray-200"
-              data-offline-ready
+              onClick={dismissOfflineReady}
+              className="ml-2 text-white hover:text-gray-200 text-lg leading-none"
             >
               ✕
             </button>

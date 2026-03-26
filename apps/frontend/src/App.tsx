@@ -38,6 +38,7 @@ import { AdminSettings } from './pages/admin/AdminSettings';
 import { PWAUpdatePrompt } from './components/common/PWAUpdatePrompt';
 import { ApiStatusIndicator } from './components/common/ApiStatusIndicator';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
+import { NotificationsPage } from './pages/NotificationsPage';
 
 function App() {
   return (
@@ -231,7 +232,7 @@ function App() {
             path="/organizer/notifications"
             element={
               <ProtectedRoute allowedRoles={['organizer']}>
-                <NotificationCenter />
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />
@@ -265,7 +266,7 @@ function App() {
             path="/admin/notifications"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <NotificationCenter />
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />
@@ -273,7 +274,7 @@ function App() {
             path="/attendee/notifications"
             element={
               <ProtectedRoute allowedRoles={['attendee']}>
-                <NotificationCenter />
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />

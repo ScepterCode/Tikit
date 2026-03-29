@@ -67,7 +67,7 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
       lastName: metadata.last_name || '',
       state: metadata.state || '',
       role: metadata.role || 'attendee',
-      walletBalance: metadata.wallet_balance || 10000,
+      walletBalance: metadata.wallet_balance || 0,
       organizationName: metadata.organization_name,
       organizationType: metadata.organization_type,
       isVerified: sessionUser.email_confirmed_at !== null,
@@ -190,7 +190,7 @@ export function SupabaseAuthProvider({ children }: AuthProviderProps) {
             state: userData.state,
             role: userData.role || 'attendee',
             organization_name: userData.organizationName,
-            wallet_balance: 10000
+            wallet_balance: 0
           }
         }
       });

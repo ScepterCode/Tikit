@@ -1,0 +1,229 @@
+================================================================================
+GETTING IP ADDRESSES FOR RENDER + NETLIFY DEPLOYMENT
+================================================================================
+
+YOUR SETUP:
+  • Backend: Render (FastAPI)
+  • Frontend: Netlify (React)
+  • Payment: Flutterwave
+
+WHICH IPS DO YOU NEED?
+  ✅ Render backend IP - YES (this makes Flutterwave calls)
+  ❌ Netlify frontend IP - NO (doesn't call Flutterwave directly)
+
+================================================================================
+CURRENT STATUS:
+================================================================================
+
+DEVELOPMENT (Local):
+  ✅ Your IP: 102.89.68.25
+  ✅ Action: Whitelist this on Flutterwave NOW
+  ✅ Result: Test withdrawals locally
+
+PRODUCTION (Render):
+  ⚠️  Need to get Render's IP
+  ⚠️  Render uses dynamic IPs (can change)
+  ⚠️  Need special handling
+
+================================================================================
+HOW TO GET RENDER'S IP ADDRESS:
+================================================================================
+
+METHOD 1: Use IP Detection Endpoint (EASIEST)
+---------------------------------------------
+I just added an endpoint to your backend!
+
+1. Deploy your backend to Render:
+   git add .
+   git commit -m "Add IP detection endpoint"
+   git push
+
+2. Wait for Render to deploy (2-5 minutes)
+
+3. Visit this URL in your browser:
+   https://your-backend.onrender.com/api/wallet/my-ip
+
+4. You'll see something like:
+   {
+     "success": true,
+     "ip": "54.123.45.67",
+     "note": "This is the IP that Flutterwave sees..."
+   }
+
+5. Copy that IP address
+
+6. Whitelist it on Flutterwave Dashboard
+
+METHOD 2: Get Render's Static IP Add-on (BEST FOR PRODUCTION)
+-------------------------------------------------------------
+Cost: $5-10/month
+Benefit: Single static IP that never changes
+
+1. Go to: https://dashboard.render.com/
+2. Select your backend service
+3. Click "Settings"
+4. Look for "Static Outbound IP" add-on
+5. Enable it (costs $5-10/month)
+6. You'll get a dedicated static IP
+7. Whitelist that IP on Flutterwave
+8. Done! Never worry about IP changes again
+
+METHOD 3: Contact Render Support
+---------------------------------
+1. Go to Render Dashboard
+2. Click on your service
+3. Use support chat
+4. Ask: "What are the outbound IP addresses for my service?"
+5. They'll give you a list (usually 3-10 IPs)
+6. Whitelist ALL of them on Flutterwave
+
+================================================================================
+RECOMMENDED APPROACH:
+================================================================================
+
+FOR NOW (Testing):
+  1. Whitelist your local IP: 102.89.68.25
+  2. Test withdrawals on localhost
+  3. Verify everything works
+
+FOR PRODUCTION (Best Practice):
+  1. Get Render's Static IP add-on ($5-10/month)
+  2. Whitelist that single static IP
+  3. Deploy and test
+  4. Never worry about IP changes
+
+FOR PRODUCTION (Free Alternative):
+  1. Deploy the IP detection endpoint
+  2. Get Render's current IP
+  3. Whitelist it on Flutterwave
+  4. Monitor for IP changes
+  5. Re-whitelist if IP changes
+
+================================================================================
+WHY YOU DON'T NEED NETLIFY'S IP:
+================================================================================
+
+Flow of requests:
+  User → Netlify (Frontend) → Render (Backend) → Flutterwave
+
+Flutterwave only sees:
+  ✅ Render's IP (backend makes the API call)
+  ❌ NOT Netlify's IP (frontend doesn't call Flutterwave)
+  ❌ NOT User's IP (user doesn't call Flutterwave)
+
+So you ONLY need to whitelist Render's backend IP!
+
+================================================================================
+TESTING THE IP DETECTION ENDPOINT:
+================================================================================
+
+LOCAL (After adding endpoint):
+  http://localhost:8000/api/wallet/my-ip
+  
+  Response:
+  {
+    "success": true,
+    "ip": "102.89.68.25",
+    "note": "This is the IP that Flutterwave sees..."
+  }
+
+PRODUCTION (After deploying to Render):
+  https://your-backend.onrender.com/api/wallet/my-ip
+  
+  Response:
+  {
+    "success": true,
+    "ip": "54.123.45.67",  ← This is what you need!
+    "note": "This is the IP that Flutterwave sees..."
+  }
+
+================================================================================
+STEP-BY-STEP PRODUCTION DEPLOYMENT:
+================================================================================
+
+1. WHITELIST LOCAL IP (Do this NOW):
+   ✅ IP: 102.89.68.25
+   ✅ Dashboard: https://dashboard.flutterwave.com/
+   ✅ Settings → Whitelisted IP addresses
+   ✅ Add IP → Verify OTP
+   ✅ Test locally
+
+2. DEPLOY TO RENDER:
+   ✅ git add .
+   ✅ git commit -m "Add IP detection endpoint"
+   ✅ git push
+   ✅ Wait for Render to deploy
+
+3. GET RENDER'S IP:
+   ✅ Visit: https://your-backend.onrender.com/api/wallet/my-ip
+   ✅ Copy the IP from response
+
+4. WHITELIST RENDER'S IP:
+   ✅ Dashboard: https://dashboard.flutterwave.com/
+   ✅ Settings → Whitelisted IP addresses
+   ✅ Add Render's IP → Verify OTP
+
+5. TEST PRODUCTION:
+   ✅ Go to your live site
+   ✅ Try a withdrawal
+   ✅ Should work! 🎉
+
+================================================================================
+IMPORTANT NOTES:
+================================================================================
+
+RENDER'S FREE TIER:
+  • Uses dynamic IPs (can change)
+  • IP might change on restart/redeploy
+  • Need to monitor and re-whitelist if needed
+
+RENDER'S STATIC IP ADD-ON:
+  • Costs $5-10/month
+  • Single IP that never changes
+  • Worth it for production!
+  • Saves time and headaches
+
+MULTIPLE ENVIRONMENTS:
+  • Development: 102.89.68.25 (your local)
+  • Staging: (if you have staging server)
+  • Production: (Render's IP)
+  • Can whitelist all of them!
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+"IP detection endpoint returns different IP each time":
+  → Render is using multiple IPs
+  → Need to whitelist all of them
+  → OR get Static IP add-on
+
+"Withdrawal works locally but not on Render":
+  → Render's IP not whitelisted
+  → Get Render's IP using /my-ip endpoint
+  → Whitelist it on Flutterwave
+
+"Can't access /my-ip endpoint":
+  → Make sure you deployed the latest code
+  → Check Render deployment logs
+  → Verify endpoint is in wallet router
+
+================================================================================
+SUMMARY:
+================================================================================
+
+WHAT TO DO NOW:
+  1. ✅ Whitelist local IP (102.89.68.25) - Do this NOW
+  2. ✅ Test withdrawals locally
+  3. ✅ Deploy IP detection endpoint to Render
+  4. ✅ Get Render's IP from /my-ip endpoint
+  5. ✅ Whitelist Render's IP on Flutterwave
+  6. ✅ Test withdrawals on production
+
+BEST PRACTICE FOR PRODUCTION:
+  💰 Get Render's Static IP add-on ($5-10/month)
+  ✅ Single IP that never changes
+  ✅ Reliable and professional
+  ✅ Worth the investment!
+
+================================================================================

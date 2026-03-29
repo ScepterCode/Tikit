@@ -20,56 +20,7 @@ interface Event {
   organizer: string;
 }
 
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Lagos Tech Conference 2024',
-    description: 'Join the biggest tech conference in West Africa featuring industry leaders and innovators.',
-    date: '2024-03-15',
-    time: '09:00 AM',
-    location: 'Eko Convention Centre, Lagos',
-    price: 15000,
-    image: '🏢',
-    category: 'Technology',
-    organizer: 'TechLagos'
-  },
-  {
-    id: '2',
-    title: 'Afrobeats Live Concert',
-    description: 'Experience the best of Afrobeats with top artists performing live.',
-    date: '2024-03-20',
-    time: '07:00 PM',
-    location: 'National Theatre, Lagos',
-    price: 8000,
-    image: '🎵',
-    category: 'Music',
-    organizer: 'Music Events NG'
-  },
-  {
-    id: '3',
-    title: 'Nigerian Food Festival',
-    description: 'Celebrate Nigerian cuisine with food tastings, cooking demos, and cultural performances.',
-    date: '2024-03-25',
-    time: '12:00 PM',
-    location: 'Tafawa Balewa Square, Lagos',
-    price: 3000,
-    image: '🍲',
-    category: 'Food & Drink',
-    organizer: 'Naija Food Co'
-  },
-  {
-    id: '4',
-    title: 'Startup Pitch Competition',
-    description: 'Watch innovative startups pitch their ideas to top investors.',
-    date: '2024-04-01',
-    time: '02:00 PM',
-    location: 'Co-Creation Hub, Yaba',
-    price: 5000,
-    image: '💡',
-    category: 'Business',
-    organizer: 'StartupNG'
-  }
-];
+// Mock events removed - using API data
 
 export function Events() {
   const { user, signOut } = useAuth();
@@ -116,13 +67,13 @@ export function Events() {
         }));
         setAllEvents(formattedEvents);
       } else {
-        // Fallback to mock events if API fails
-        setAllEvents(mockEvents);
+        // No events available
+        setAllEvents([]);
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
-      // Use mock events as fallback
-      setAllEvents(mockEvents);
+      // Set empty array on error
+      setAllEvents([]);
     } finally {
       setLoading(false);
     }

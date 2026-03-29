@@ -29,57 +29,24 @@ export function AdminFinancials() {
   const [dateRange, setDateRange] = useState<string>('30');
   const navigate = useNavigate();
 
-  // Mock data for now - replace with API call
+  // Load financial data from API
   useEffect(() => {
     const loadFinancials = async () => {
       try {
         setLoading(true);
         
-        // Fetch revenue breakdown from dashboard API
-        const response = await apiService.request('/admin/dashboard/stats');
+        // Fetch financial data from API
+        const [summaryResponse, transactionsResponse] = await Promise.all([
+          apiService.request('/admin/financials/summary'),
+          apiService.request('/admin/financials/transactions')
+        ]);
         
-        if (response.success && response.data) {
-          const stats = response.data;
-          
-          // Create financial summary from stats
-          const summary: FinancialSummary = {
-            totalRevenue: stats.platform_revenue || 0,
-            totalCommission: stats.platform_revenue || 0,
-            totalRefunds: 0,
-            pendingPayouts: 0,
-            monthlyGrowth: 0
-          };
-          
-          setSummary(summary);
-          
-          // Create sample transactions based on stats
-          const transactions: Transaction[] = [];
-          
-          if (stats.tickets_sold > 0) {
-            transactions.push({
-              id: '1',
-              type: 'ticket_sale',
-              amount: stats.platform_revenue / 0.05, // Reverse calculate from commission
-              description: `${stats.tickets_sold} tickets sold`,
-              eventTitle: 'Various Events',
-              userName: 'Attendees',
-              status: 'completed',
-              createdAt: new Date().toISOString()
-            });
-            
-            transactions.push({
-              id: '2',
-              type: 'commission',
-              amount: stats.platform_revenue,
-              description: 'Platform commission (5%)',
-              eventTitle: 'Various Events',
-              userName: 'Platform',
-              status: 'completed',
-              createdAt: new Date().toISOString()
-            });
-          }
-          
-          setTransactions(transactions);
+        if (summaryResponse.success && summaryResponse.data) {
+          setSummary(summaryResponse.data);
+        }
+        
+        if (transactionsResponse.success && transactionsResponse.data) {
+          setTransactions(transactionsResponse.data.transactions || []);
         }
       } catch (error) {
         console.error('Error loading financials:', error);

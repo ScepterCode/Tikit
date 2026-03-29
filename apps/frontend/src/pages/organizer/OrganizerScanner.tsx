@@ -45,28 +45,31 @@ export function OrganizerScanner() {
   };
 
   const fetchScanHistory = async () => {
-    // Mock data for now - replace with actual API call
-    const mockHistory: ScanResult[] = [
-      {
-        id: '1',
-        ticketId: 'TKT-001',
-        attendeeName: 'John Doe',
-        eventName: 'Tech Conference 2024',
-        status: 'valid',
-        timestamp: new Date().toISOString(),
-        message: 'Ticket verified successfully'
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/organizer/scan-history`, {
+        headers: {
+          'Authorization': `Bearer ${user?.session?.access_token}`,
+        },
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setScanHistory(data.data || []);
+        
+        // Update stats
+        const valid = data.data.filter((s: any) => s.status === 'valid').length;
+        const invalid = data.data.filter((s: any) => s.status === 'invalid' || s.status === 'already_used').length;
+        setStats({
+          validToday: valid,
+          invalidToday: invalid,
+          totalScanned: data.data.length
+        });
       }
-    ];
-    setScanHistory(mockHistory);
-    
-    // Update stats
-    const valid = mockHistory.filter(s => s.status === 'valid').length;
-    const invalid = mockHistory.filter(s => s.status === 'invalid' || s.status === 'already_used').length;
-    setStats({
-      validToday: valid,
-      invalidToday: invalid,
-      totalScanned: mockHistory.length
-    });
+    } catch (error) {
+      console.error('Error fetching scan history:', error);
+      setScanHistory([]);
+      setStats({ validToday: 0, invalidToday: 0, totalScanned: 0 });
+    }
   };
 
   const handleStartScanning = () => {
@@ -86,44 +89,51 @@ export function OrganizerScanner() {
     }
 
     try {
-      // Mock verification - replace with actual API call
-      const newScan: ScanResult = {
-        id: Date.now().toString(),
-        ticketId: manualCode,
-        attendeeName: 'Test Attendee',
-        eventName: 'Test Event',
-        status: manualCode.includes('INVALID') ? 'invalid' : 'valid',
-        timestamp: new Date().toISOString(),
-        message: manualCode.includes('INVALID') ? 'Invalid ticket code' : 'Ticket verified successfully'
-      };
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/organizer/verify-ticket`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          ticket_code: manualCode,
+          event_id: selectedEvent
+        }),
+      });
 
-      setScanHistory([newScan, ...scanHistory]);
-      setManualCode('');
+      const data = await response.json();
+      
+      if (data.success) {
+        const newScan: ScanResult = {
+          id: Date.now().toString(),
+          ticketId: manualCode,
+          attendeeName: data.attendee_name || 'Unknown',
+          eventName: data.event_name || 'Unknown Event',
+          status: data.status,
+          timestamp: new Date().toISOString(),
+          message: data.message
+        };
 
-      // Update stats
-      if (newScan.status === 'valid') {
-        setStats(prev => ({
-          ...prev,
-          validToday: prev.validToday + 1,
-          totalScanned: prev.totalScanned + 1
-        }));
+        setScanHistory([newScan, ...scanHistory]);
+        setManualCode('');
+        
+        // Update stats
+        const newStats = { ...stats };
+        if (data.status === 'valid') {
+          newStats.validToday += 1;
+        } else {
+          newStats.invalidToday += 1;
+        }
+        newStats.totalScanned += 1;
+        setStats(newStats);
+        
+        alert(data.message);
       } else {
-        setStats(prev => ({
-          ...prev,
-          invalidToday: prev.invalidToday + 1,
-          totalScanned: prev.totalScanned + 1
-        }));
-      }
-
-      // Show result
-      if (newScan.status === 'valid') {
-        alert('✅ Valid Ticket!\n\nAttendee: ' + newScan.attendeeName + '\nEvent: ' + newScan.eventName);
-      } else {
-        alert('❌ Invalid Ticket!\n\n' + newScan.message);
+        alert(data.error?.message || 'Verification failed');
       }
     } catch (error) {
       console.error('Error verifying ticket:', error);
-      alert('Failed to verify ticket. Please try again.');
+      alert('Error verifying ticket. Please try again.');
     }
   };
 

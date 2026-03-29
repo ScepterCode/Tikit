@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PaymentModal } from '../payment/PaymentModal';
+import { SecurePaymentModal } from '../payment/SecurePaymentModal';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -52,11 +52,11 @@ export function PurchaseButton({
     
     try {
       // Create tickets after successful payment
-      const response = await fetch('http://localhost:8000/api/tickets/create', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tickets/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.access_token}`,
+          'Authorization': `Bearer ${user?.session?.access_token}`,
         },
         body: JSON.stringify({
           event_id: eventId,
@@ -146,7 +146,7 @@ export function PurchaseButton({
         )}
       </button>
 
-      <PaymentModal
+      <SecurePaymentModal
         isOpen={showPaymentModal}
         onClose={handleCloseModal}
         onSuccess={handlePaymentSuccess}

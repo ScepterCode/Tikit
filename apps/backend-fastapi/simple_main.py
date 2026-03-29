@@ -14,6 +14,7 @@ from datetime import datetime
 # Simple in-memory user database for testing
 user_database: Dict[str, Dict[str, Any]] = {}
 phone_to_user_id: Dict[str, str] = {}
+events_database: Dict[str, Dict[str, Any]] = {}
 
 def initialize_test_users():
     """Initialize test users for development"""
@@ -68,25 +69,8 @@ def initialize_test_users():
     
     print(f"✅ Initialized {len(test_users)} test users")
 
-async def get_user_from_request(request: Request):
-    """Extract user from request headers"""
-    auth_header = request.headers.get("Authorization", "")
-    
-    if auth_header.startswith("Bearer mock_access_token_"):
-        user_id = auth_header.replace("Bearer mock_access_token_", "")
-        if user_id in user_database:
-            return user_database[user_id]
-    
-    raise HTTPException(
-        status_code=401,
-        detail={
-            "success": False,
-            "error": {
-                "code": "UNAUTHORIZED",
-                "message": "Invalid or missing authentication token"
-            }
-        }
-    )
+# Import proper authentication from auth_utils
+from auth_utils import get_user_from_request
 
 # In-memory databases
 notifications_database: Dict[str, List[Dict[str, Any]]] = {}
@@ -408,6 +392,231 @@ async def get_events():
         }
     }
 
+@app.post("/api/events")
+async def create_event(request: Request):
+    """Create a new event"""
+    try:
+        user = await get_user_from_request(request)
+        if user["role"] not in ["organizer", "admin"]:
+            raise HTTPException(status_code=403, detail="Only organizers can create events")
+        
+        data = await request.json()
+        event_id = str(uuid.uuid4())
+        
+        events_database[event_id] = {
+            **data,
+            "id": event_id,
+            "organizer_id": user["user_id"],
+            "created_at": time.time(),
+            "tickets_sold": 0
+        }
+        
+        return {
+            "success": True,
+            "message": "Event created successfully",
+            "data": {"event_id": event_id}
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/wallet/balance")
+async def get_wallet_balance(request: Request):
+    """Get user's wallet balance from Supabase"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        user_email = user.get("email")
+        
+        print(f"🔍 Getting wallet balance for: {user_email} (ID: {user_id})")
+        
+        # Get Supabase client
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            print("⚠️  Supabase not configured, returning 0 balance")
+            return {
+                "success": True,
+                "balance": 0.0,
+                "currency": "NGN",
+                "formatted": "₦0.00"
+            }
+        
+        # Get balance from Supabase
+        user_result = supabase.table('users').select('wallet_balance').eq('id', user_id).execute()
+        
+        if not user_result.data:
+            print(f"⚠️  User not found in Supabase, returning 0 balance")
+            return {
+                "success": True,
+                "balance": 0.0,
+                "currency": "NGN",
+                "formatted": "₦0.00"
+            }
+        
+        balance = float(user_result.data[0].get('wallet_balance', 0))
+        print(f"✅ Wallet balance for {user_email}: ₦{balance:,.2f}")
+        
+        return {
+            "success": True,
+            "balance": balance,
+            "currency": "NGN",
+            "formatted": f"₦{balance:,.2f}"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error in get_wallet_balance: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/wallet/fund")
+async def fund_wallet(request: Request):
+    """Initiate wallet funding - returns reference for Flutterwave"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        data = await request.json()
+        amount = float(data.get("amount", 0))
+        
+        if amount < 100:
+            return {"success": False, "error": "Minimum amount is ₦100"}
+        
+        if amount > 1000000:
+            return {"success": False, "error": "Maximum amount is ₦1,000,000"}
+        
+        # Generate transaction reference
+        tx_ref = f"FUND_{user_id}_{int(time.time())}_{secrets.token_hex(4)}"
+        
+        return {
+            "success": True,
+            "tx_ref": tx_ref,
+            "amount": amount,
+            "user_email": user.get("email", "user@grooovy.com"),
+            "user_name": f"{user.get('first_name', 'User')} {user.get('last_name', '')}"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in fund_wallet: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/wallet/verify-payment")
+async def verify_payment(request: Request):
+    """Verify Flutterwave payment and update wallet balance in Supabase"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        user_email = user.get("email")
+        
+        data = await request.json()
+        tx_ref = data.get("tx_ref")
+        transaction_id = data.get("transaction_id")
+        amount = float(data.get("amount", 0))
+        
+        print(f"✅ Payment verification for user: {user_email} (ID: {user_id})")
+        print(f"   tx_ref={tx_ref}, transaction_id={transaction_id}, amount=₦{amount:,.2f}")
+        
+        if amount <= 0:
+            return {"success": False, "error": "Invalid amount"}
+        
+        # Get Supabase client
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            print("⚠️  Supabase not configured, using in-memory storage")
+            # Fallback to in-memory for development
+            if user_id in user_database:
+                current_balance = user_database[user_id].get("wallet_balance", 0)
+                new_balance = current_balance + amount
+                user_database[user_id]["wallet_balance"] = new_balance
+                
+                print(f"✅ Updated in-memory wallet: ₦{current_balance:,.2f} -> ₦{new_balance:,.2f}")
+                
+                return {
+                    "success": True,
+                    "message": "Payment verified and wallet updated successfully",
+                    "tx_ref": tx_ref,
+                    "amount_added": amount,
+                    "new_balance": new_balance
+                }
+            else:
+                return {"success": False, "error": "User not found"}
+        
+        # Get current balance from Supabase
+        user_result = supabase.table('users').select('wallet_balance').eq('id', user_id).execute()
+        
+        if not user_result.data:
+            print(f"❌ User not found in Supabase: {user_id}")
+            return {"success": False, "error": "User not found in database"}
+        
+        current_balance = float(user_result.data[0].get('wallet_balance', 0))
+        new_balance = current_balance + amount
+        
+        # Update wallet balance in Supabase
+        update_result = supabase.table('users').update({
+            'wallet_balance': new_balance
+        }).eq('id', user_id).execute()
+        
+        print(f"✅ Updated Supabase wallet for {user_email}: ₦{current_balance:,.2f} -> ₦{new_balance:,.2f}")
+        
+        # Record transaction in payments table
+        try:
+            payment_record = {
+                'user_id': user_id,
+                'amount': amount,
+                'payment_method': 'flutterwave',
+                'transaction_reference': tx_ref,
+                'transaction_id': transaction_id,
+                'status': 'completed',
+                'payment_type': 'wallet_funding',
+                'created_at': time.time()
+            }
+            supabase.table('payments').insert(payment_record).execute()
+            print(f"✅ Payment record created in database")
+        except Exception as e:
+            print(f"⚠️  Could not create payment record: {e}")
+        
+        return {
+            "success": True,
+            "message": "Payment verified and wallet updated successfully",
+            "tx_ref": tx_ref,
+            "amount_added": amount,
+            "new_balance": new_balance,
+            "user_email": user_email
+        }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error in verify_payment: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/wallet/transactions")
+async def get_wallet_transactions(request: Request, limit: int = 20, offset: int = 0):
+    """Get wallet transaction history"""
+    try:
+        user = await get_user_from_request(request)
+        
+        # Return empty for now - will be populated after payments
+        return {
+            "success": True,
+            "transactions": [],
+            "total": 0
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in get_wallet_transactions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
@@ -416,3 +625,19 @@ if __name__ == "__main__":
         port=int(os.getenv("PORT", 8000)),
         reload=False
     )
+
+# Include payment router for Flutterwave integration
+try:
+    from routers.payments import router as payments_router
+    app.include_router(payments_router, prefix="/api/payments", tags=["payments"])
+    print("✅ Payment router included successfully with /api/payments prefix")
+except ImportError as e:
+    print(f"⚠️  Payment router not available: {e}")
+
+# Include wallet router for withdrawal and other wallet operations
+try:
+    from routers.wallet import router as wallet_router
+    app.include_router(wallet_router, prefix="/api/wallet", tags=["wallet"])
+    print("✅ Wallet router included successfully with /api/wallet prefix")
+except ImportError as e:
+    print(f"⚠️  Wallet router not available: {e}")

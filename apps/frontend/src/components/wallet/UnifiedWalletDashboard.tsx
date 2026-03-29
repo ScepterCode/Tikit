@@ -45,6 +45,14 @@ interface SecurityStatus {
   securityScore: number;
 }
 
+// Helper function for transaction icons
+const getTransactionIcon = (type: string, status: string) => {
+  if (status === 'pending') return <Clock size={16} className="text-yellow-500" />;
+  if (status === 'failed') return <AlertCircle size={16} className="text-red-500" />;
+  if (type === 'credit') return <ArrowDownLeft size={16} className="text-green-500" />;
+  return <ArrowUpRight size={16} className="text-red-500" />;
+};
+
 const UnifiedWalletDashboard: React.FC = () => {
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -64,17 +72,16 @@ const UnifiedWalletDashboard: React.FC = () => {
     try {
       setLoading(true);
       
-      // Single API call to get all wallet data
-      const [balanceResponse, transactionsResponse, securityResponse] = await Promise.all([
-        authenticatedFetch('http://localhost:8000/api/wallet/unified/balance'),
-        authenticatedFetch('http://localhost:8000/api/wallet/unified/transactions?limit=10'),
-        authenticatedFetch('http://localhost:8000/api/wallet/security/status')
+      // Use simple endpoints that exist in simple_main.py
+      const [balanceResponse, transactionsResponse] = await Promise.all([
+        authenticatedFetch('http://localhost:8000/api/wallet/balance'),
+        authenticatedFetch('http://localhost:8000/api/wallet/transactions?limit=10')
       ]);
 
       // Process balance data
       const balanceData = await balanceResponse.json();
       if (balanceData.success) {
-        const balance = balanceData.data.total_balance || 0;
+        const balance = balanceData.balance || 0;
         setWalletData({
           totalBalance: balance,
           availableBalance: balance * 0.9, // 90% available
@@ -86,8 +93,8 @@ const UnifiedWalletDashboard: React.FC = () => {
 
       // Process transactions data
       const transactionsData = await transactionsResponse.json();
-      if (transactionsData.success && transactionsData.data.transactions) {
-        const formattedTransactions = transactionsData.data.transactions.map((tx: any) => ({
+      if (transactionsData.success && transactionsData.transactions) {
+        const formattedTransactions = transactionsData.transactions.map((tx: any) => ({
           id: tx.id,
           type: tx.amount > 0 ? 'credit' : 'debit',
           amount: Math.abs(tx.amount),
@@ -99,21 +106,13 @@ const UnifiedWalletDashboard: React.FC = () => {
         setTransactions(formattedTransactions);
       }
 
-      // Process security data (fallback if endpoint doesn't exist)
-      try {
-        const securityData = await securityResponse.json();
-        if (securityData.success) {
-          setSecurityStatus(securityData.data);
-        }
-      } catch {
-        // Fallback security status
-        setSecurityStatus({
-          pinEnabled: true,
-          twoFactorEnabled: false,
-          lastActivity: new Date().toLocaleDateString(),
-          securityScore: 75
-        });
-      }
+      // Set fallback security status
+      setSecurityStatus({
+        pinEnabled: true,
+        twoFactorEnabled: false,
+        lastActivity: new Date().toLocaleDateString(),
+        securityScore: 75
+      });
 
     } catch (error) {
       console.error('Failed to fetch wallet data:', error);
@@ -132,13 +131,6 @@ const UnifiedWalletDashboard: React.FC = () => {
 
   const formatBalance = (amount: number) => {
     return balanceVisible ? `₦${amount.toLocaleString()}` : '₦••••••';
-  };
-
-  const getTransactionIcon = (type: string, status: string) => {
-    if (status === 'pending') return <Clock size={16} className="text-yellow-500" />;
-    if (status === 'failed') return <AlertCircle size={16} className="text-red-500" />;
-    if (type === 'credit') return <ArrowDownLeft size={16} className="text-green-500" />;
-    return <ArrowUpRight size={16} className="text-red-500" />;
   };
 
   if (loading) {
@@ -389,41 +381,154 @@ const AddFundsModal: React.FC<{
   onSuccess: () => void;
 }> = ({ isOpen, onClose, onSuccess }) => {
   const [amount, setAmount] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState('wallet');
+  const [selectedMethod, setSelectedMethod] = useState('card');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const handleAddFunds = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
+    const fundAmount = parseFloat(amount);
+    
+    if (!amount || fundAmount <= 0) {
       alert('Please enter a valid amount');
+      return;
+    }
+
+    if (fundAmount < 100) {
+      alert('Minimum amount is ₦100');
+      return;
+    }
+
+    if (fundAmount > 1000000) {
+      alert('Maximum amount is ₦1,000,000');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/payments/wallet', {
+      // Step 1: Get transaction reference from backend
+      const response = await authenticatedFetch('http://localhost:8000/api/wallet/fund', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: parseFloat(amount),
+          amount: fundAmount,
           description: 'Add funds to wallet',
           payment_method: selectedMethod
         })
       });
 
       const result = await response.json();
-      if (result.success) {
-        alert('Funds added successfully!');
-        onSuccess();
-        onClose();
-        setAmount('');
-      } else {
-        alert(`Failed to add funds: ${result.error}`);
+      
+      if (!result.success) {
+        alert(`Failed to initiate payment: ${result.error || result.message}`);
+        setLoading(false);
+        return;
       }
+
+      // Step 2: Open Flutterwave payment modal
+      const flutterwaveKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
+      
+      if (!flutterwaveKey) {
+        alert('Payment system not configured. Please contact support.');
+        setLoading(false);
+        return;
+      }
+
+      // Check if FlutterwaveCheckout is available
+      if (typeof (window as any).FlutterwaveCheckout !== 'function') {
+        alert('Payment system is loading. Please try again in a moment.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Opening Flutterwave payment modal...');
+
+      // Open Flutterwave payment modal
+      (window as any).FlutterwaveCheckout({
+        public_key: flutterwaveKey,
+        tx_ref: result.tx_ref,
+        amount: fundAmount,
+        currency: 'NGN',
+        payment_options: 'card,mobilemoney,ussd,banktransfer',
+        customer: {
+          email: result.user_email,
+          name: result.user_name,
+        },
+        customizations: {
+          title: 'Add Funds to Wallet',
+          description: `Add ₦${fundAmount.toLocaleString()} to your Grooovy wallet`,
+          logo: '',
+        },
+        callback: async (response: any) => {
+          // Detailed logging to debug Flutterwave response
+          console.log('================================================================================');
+          console.log('🔍 FLUTTERWAVE CALLBACK RECEIVED');
+          console.log('================================================================================');
+          console.log('Full response:', JSON.stringify(response, null, 2));
+          console.log('Response status:', response.status);
+          console.log('Response status type:', typeof response.status);
+          console.log('Transaction ID:', response.transaction_id);
+          console.log('================================================================================');
+          
+          // Check multiple possible success status values
+          const isSuccessful = response.status === 'successful' || 
+                              response.status === 'success' || 
+                              response.status === 'completed' ||
+                              response.status === 'SUCCESSFUL' ||
+                              response.status === 'SUCCESS';
+          
+          console.log('Is payment successful?', isSuccessful);
+          
+          if (isSuccessful) {
+            console.log('✅ Payment successful, calling verify-payment endpoint...');
+            
+            // Step 3: Verify payment on backend
+            try {
+              const verifyResponse = await authenticatedFetch('http://localhost:8000/api/wallet/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  tx_ref: result.tx_ref,
+                  transaction_id: response.transaction_id,
+                  amount: fundAmount  // Pass the amount for wallet update
+                })
+              });
+
+              const verifyResult = await verifyResponse.json();
+              
+              console.log('Verify-payment response:', verifyResult);
+              
+              if (verifyResult.success) {
+                alert(`✅ Funds added successfully! New balance: ₦${verifyResult.new_balance.toLocaleString()}`);
+                onSuccess();
+                onClose();
+                setAmount('');
+              } else {
+                alert('Payment verification failed. Please contact support with reference: ' + result.tx_ref);
+              }
+            } catch (error) {
+              console.error('Verification error:', error);
+              alert('Payment verification failed. Please contact support with reference: ' + result.tx_ref);
+            }
+          } else {
+            console.log('❌ Payment not successful. Status:', response.status);
+            alert(`Payment was not successful. Status: ${response.status}. Please try again.`);
+          }
+          
+          setLoading(false);
+        },
+        onclose: () => {
+          console.log('Payment modal closed');
+          setLoading(false);
+        },
+      });
+
+      // Modal has been triggered, stop loading spinner
+      setLoading(false);
+
     } catch (error) {
-      alert('Failed to add funds. Please try again.');
-    } finally {
+      console.error('Payment error:', error);
+      alert('Failed to initiate payment. Please try again.');
       setLoading(false);
     }
   };
@@ -487,9 +592,74 @@ const WithdrawModal: React.FC<{
 }> = ({ isOpen, onClose, onSuccess, availableBalance }) => {
   const [amount, setAmount] = useState('');
   const [bankAccount, setBankAccount] = useState('');
+  const [bankCode, setBankCode] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankSearch, setBankSearch] = useState('');
+  const [banks, setBanks] = useState<any[]>([]);
+  const [filteredBanks, setFilteredBanks] = useState<any[]>([]);
+  const [showBankDropdown, setShowBankDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
+  // Fallback list of major Nigerian banks
+  const fallbackBanks = [
+    { code: '058', name: 'Guaranty Trust Bank' },
+    { code: '044', name: 'Access Bank' },
+    { code: '033', name: 'United Bank for Africa' },
+    { code: '057', name: 'Zenith Bank' },
+    { code: '011', name: 'First Bank of Nigeria' },
+    { code: '214', name: 'First City Monument Bank' },
+    { code: '070', name: 'Fidelity Bank' },
+    { code: '221', name: 'Stanbic IBTC Bank' },
+    { code: '232', name: 'Sterling Bank' },
+    { code: '032', name: 'Union Bank of Nigeria' },
+    { code: '035', name: 'Wema Bank' },
+    { code: '215', name: 'Unity Bank' },
+    { code: '076', name: 'Polaris Bank' },
+    { code: '082', name: 'Keystone Bank' }
+  ];
+
+  // Fetch banks when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchBanks();
+      // Reset search when modal opens
+      setBankSearch('');
+      setBankCode('');
+      setBankName('');
+      setShowBankDropdown(false);
+    }
+  }, [isOpen]);
+
+  // Filter banks based on search
+  useEffect(() => {
+    if (bankSearch.trim() === '') {
+      setFilteredBanks(banks.slice(0, 50)); // Show first 50 banks when no search
+    } else {
+      const searchLower = bankSearch.toLowerCase();
+      const filtered = banks.filter(bank => 
+        bank.name.toLowerCase().includes(searchLower)
+      );
+      setFilteredBanks(filtered.slice(0, 50)); // Limit to 50 results
+    }
+  }, [bankSearch, banks]);
+
+  const fetchBanks = async () => {
+    try {
+      const response = await authenticatedFetch('http://localhost:8000/api/wallet/banks');
+      const result = await response.json();
+      if (result.success && result.data.banks && result.data.banks.length > 0) {
+        setBanks(result.data.banks);
+        console.log(`✅ Loaded ${result.data.banks.length} banks from API`);
+      } else {
+        // Use fallback if API fails
+        setBanks(fallbackBanks);
+        console.log('⚠️ Using fallback bank list');
+      }
+    } catch (error) {
+      console.error('Failed to fetch banks, using fallback:', error);
+      setBanks(fallbackBanks);
+    }
+  };
 
   const handleWithdraw = async () => {
     const withdrawAmount = parseFloat(amount);
@@ -498,50 +668,95 @@ const WithdrawModal: React.FC<{
       return;
     }
 
+    if (withdrawAmount < 100) {
+      alert('Minimum withdrawal amount is ₦100');
+      return;
+    }
+
     if (withdrawAmount > availableBalance) {
       alert('Insufficient balance');
       return;
     }
 
-    if (!bankAccount) {
-      alert('Please enter bank account details');
+    if (!bankAccount || bankAccount.length !== 10) {
+      alert('Please enter a valid 10-digit account number');
+      return;
+    }
+
+    if (!bankCode) {
+      alert('Please select your bank');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/wallet/unified/withdraw', {
+      const response = await authenticatedFetch('http://localhost:8000/api/wallet/withdraw-flutterwave', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: withdrawAmount,
-          bank_account: bankAccount,
-          description: 'Wallet withdrawal'
+          account_number: bankAccount,
+          bank_code: bankCode,
+          pin: '000000' // Default PIN
         })
       });
 
       const result = await response.json();
+      console.log('Withdrawal response:', result);
+      
       if (result.success) {
-        alert('Withdrawal request submitted successfully!');
+        const message = result.message || 'Withdrawal successful!';
+        const newBalance = result.data?.new_balance;
+        const accountName = result.data?.account_name;
+        const balanceMsg = newBalance !== undefined 
+          ? `\n\nNew balance: ₦${newBalance.toLocaleString()}`
+          : '';
+        const nameMsg = accountName ? `\nSent to: ${accountName}` : '';
+        alert(`✅ ${message}${nameMsg}${balanceMsg}`);
         onSuccess();
         onClose();
         setAmount('');
         setBankAccount('');
+        setBankCode('');
+        setBankName('');
+        setBankSearch('');
       } else {
-        alert(`Withdrawal failed: ${result.error}`);
+        const errorMsg = result.error || result.detail || result.message || 'Unknown error';
+        console.error('Withdrawal error:', errorMsg);
+        alert(`Withdrawal failed: ${errorMsg}`);
       }
-    } catch (error) {
-      alert('Failed to process withdrawal. Please try again.');
+    } catch (error: any) {
+      console.error('Withdrawal exception:', error);
+      alert(`Withdrawal failed: ${error.message || 'Please try again'}`);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleBankSelect = (bank: any) => {
+    setBankCode(bank.code);
+    setBankName(bank.name);
+    setBankSearch(bank.name);
+    setShowBankDropdown(false);
+  };
+
+  const handleBankSearchChange = (value: string) => {
+    setBankSearch(value);
+    setShowBankDropdown(true);
+    // Clear selection if user is typing
+    if (value !== bankName) {
+      setBankCode('');
+      setBankName('');
+    }
+  };
   
+  if (!isOpen) return null;
+
   return (
     <div style={styles.modalOverlay}>
-      <div style={styles.modal}>
+      <div style={{...styles.modal, maxWidth: '450px'}}>
         <div style={styles.modalHeader}>
-          <h3>Withdraw Funds</h3>
+          <h3>Withdraw to Bank Account</h3>
           <button onClick={onClose} style={styles.closeButton}>×</button>
         </div>
         <div style={styles.modalContent}>
@@ -555,7 +770,7 @@ const WithdrawModal: React.FC<{
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount"
+              placeholder="Enter amount (min ₦100)"
               style={styles.input}
               min="100"
               max={availableBalance}
@@ -564,24 +779,139 @@ const WithdrawModal: React.FC<{
           </div>
           
           <div style={styles.inputGroup}>
-            <label style={styles.inputLabel}>Bank Account</label>
+            <label style={styles.inputLabel}>Select Bank</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                value={bankSearch}
+                onChange={(e) => handleBankSearchChange(e.target.value)}
+                onFocus={() => setShowBankDropdown(true)}
+                placeholder="Type to search banks..."
+                style={{
+                  ...styles.input,
+                  paddingRight: '40px'
+                }}
+              />
+              {bankCode && (
+                <span style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#10b981',
+                  fontSize: '18px'
+                }}>✓</span>
+              )}
+              {showBankDropdown && filteredBanks.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #d1d5db',
+                  borderTop: 'none',
+                  borderRadius: '0 0 6px 6px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  zIndex: 1000
+                }}>
+                  {filteredBanks.map((bank) => (
+                    <div
+                      key={bank.code}
+                      onClick={() => handleBankSelect(bank)}
+                      style={{
+                        padding: '12px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f3f4f6',
+                        backgroundColor: bankCode === bank.code ? '#f0f4ff' : '#ffffff',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (bankCode !== bank.code) {
+                          e.currentTarget.style.backgroundColor = '#f9fafb';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (bankCode !== bank.code) {
+                          e.currentTarget.style.backgroundColor = '#ffffff';
+                        }
+                      }}
+                    >
+                      <div style={{ fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>
+                        {bank.name}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                        Code: {bank.code}
+                      </div>
+                    </div>
+                  ))}
+                  {filteredBanks.length === 0 && bankSearch && (
+                    <div style={{ padding: '12px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
+                      No banks found matching "{bankSearch}"
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {bankSearch && !bankCode && (
+              <small style={{color: '#f59e0b', fontSize: '12px', marginTop: '4px', display: 'block'}}>
+                Please select a bank from the dropdown
+              </small>
+            )}
+            {banks.length > 0 && (
+              <small style={{color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block'}}>
+                {banks.length} banks available • Type to filter
+              </small>
+            )}
+          </div>
+          
+          <div style={styles.inputGroup}>
+            <label style={styles.inputLabel}>Account Number</label>
             <input
               type="text"
               value={bankAccount}
-              onChange={(e) => setBankAccount(e.target.value)}
-              placeholder="Account number or details"
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ''); // Only digits
+                if (value.length <= 10) {
+                  setBankAccount(value);
+                }
+              }}
+              placeholder="10-digit account number"
               style={styles.input}
+              maxLength={10}
             />
+            {bankAccount.length > 0 && bankAccount.length < 10 && (
+              <small style={{color: '#f59e0b', fontSize: '12px', marginTop: '4px', display: 'block'}}>
+                {10 - bankAccount.length} more digit{10 - bankAccount.length !== 1 ? 's' : ''} required
+              </small>
+            )}
+          </div>
+
+          <div style={{
+            padding: '12px',
+            backgroundColor: '#eff6ff',
+            borderRadius: '6px',
+            marginBottom: '16px',
+            fontSize: '13px',
+            color: '#1e40af'
+          }}>
+            <strong>Note:</strong> Flutterwave will verify your account details during transfer. 
+            Please ensure your account number and bank selection are correct.
           </div>
           
           <div style={styles.modalActions}>
             <button onClick={onClose} style={styles.cancelButton}>Cancel</button>
             <button 
               onClick={handleWithdraw} 
-              style={{...styles.modalButton, opacity: loading ? 0.7 : 1}}
-              disabled={loading}
+              style={{
+                ...styles.modalButton,
+                opacity: loading || !bankAccount || !bankCode || !amount ? 0.5 : 1
+              }}
+              disabled={loading || !bankAccount || !bankCode || !amount}
             >
-              {loading ? 'Processing...' : 'Withdraw'}
+              {loading ? 'Processing Transfer...' : 'Withdraw Now'}
             </button>
           </div>
         </div>

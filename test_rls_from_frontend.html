@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test RLS Implementation</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .test-section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fff;
+            border: 1px solid #ddd;
+        }
+        .login-form {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 250px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.logged-in {
+            background: #c8e6c9;
+            border: 1px solid #4CAF50;
+        }
+        .status.logged-out {
+            background: #ffcdd2;
+            border: 1px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 RLS Implementation Test Suite</h1>
+        <p>This page tests that Row Level Security is working correctly on your Supabase database.</p>
+
+        <div class="login-form">
+            <h2>Step 1: Login</h2>
+            <div id="loginStatus" class="status logged-out">
+                ❌ Not logged in
+            </div>
+            <div>
+                <input type="email" id="email" placeholder="Email" value="organizer@grooovy.netlify.app">
+                <input type="password" id="password" placeholder="Password" value="">
+                <button onclick="login()">Login</button>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 1: View All Users (Should Only See Your Own)</h2>
+            <p>This tests that RLS prevents you from seeing other users' data.</p>
+            <button onclick="testViewAllUsers()">Run Test 1</button>
+            <div id="test1Result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 2: Try to Update Your Wallet Balance (Should Fail)</h2>
+            <p>This tests that users cannot directly modify their wallet balance.</p>
+            <button onclick="testUpdateWalletBalance()">Run Test 2</button>
+            <div id="test2Result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 3: View Events (Should See Published + Your Own)</h2>
+            <p>This tests that you can see published events and your own events.</p>
+            <button onclick="testViewEvents()">Run Test 3</button>
+            <div id="test3Result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 4: View Your Own Bookings</h2>
+            <p>This tests that you can see your own bookings but not others'.</p>
+            <button onclick="testViewBookings()">Run Test 4</button>
+            <div id="test4Result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 5: View Your Own Tickets</h2>
+            <p>This tests that you can see your own tickets but not others'.</p>
+            <button onclick="testViewTickets()">Run Test 5</button>
+            <div id="test5Result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 6: View Your Own Payments</h2>
+            <p>This tests that you can see your own payments but not others'.</p>
+            <button onclick="testViewPayments()">Run Test 6</button>
+            <div id="test6Result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 7: Check Your User Role</h2>
+            <p>This tests that your user has a role assigned.</p>
+            <button onclick="testUserRole()">Run Test 7</button>
+            <div id="test7Result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Run All Tests</h2>
+            <button onclick="runAllTests()" style="background: #2196F3;">Run All Tests</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        // REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+        let supabase;
+        let currentUser = null;
+
+        // Initialize on page load
+        window.onload = function() {
+            // Try to get credentials from localStorage or prompt user
+            const savedUrl = localStorage.getItem('supabase_url');
+            const savedKey = localStorage.getItem('supabase_key');
+
+            if (savedUrl && savedKey) {
+                initSupabase(savedUrl, savedKey);
+            } else {
+                promptForCredentials();
+            }
+        };
+
+        function promptForCredentials() {
+            const url = prompt('Enter your Supabase URL:', SUPABASE_URL);
+            const key = prompt('Enter your Supabase Anon Key:', SUPABASE_ANON_KEY);
+            
+            if (url && key) {
+                localStorage.setItem('supabase_url', url);
+                localStorage.setItem('supabase_key', key);
+                initSupabase(url, key);
+            }
+        }
+
+        function initSupabase(url, key) {
+            supabase = window.supabase.createClient(url, key);
+            checkAuthStatus();
+        }
+
+        async function checkAuthStatus() {
+            const { data: { user } } = await supabase.auth.getUser();
+            currentUser = user;
+            updateLoginStatus();
+        }
+
+        function updateLoginStatus() {
+            const statusDiv = document.getElementById('loginStatus');
+            if (currentUser) {
+                statusDiv.className = 'status logged-in';
+                statusDiv.innerHTML = `✅ Logged in as: ${currentUser.email}<br>User ID: ${currentUser.id}`;
+            } else {
+                statusDiv.className = 'status logged-out';
+                statusDiv.innerHTML = '❌ Not logged in';
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                alert('Login failed: ' + error.message);
+            } else {
+                currentUser = data.user;
+                updateLoginStatus();
+                alert('Login successful!');
+            }
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            updateLoginStatus();
+        }
+
+        async function testViewAllUsers() {
+            const resultDiv = document.getElementById('test1Result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*');
+
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error: ${error.message}</p>
+                        <p>This might mean RLS is too restrictive or you're not logged in.</p>
+                    `;
+                } else {
+                    const userCount = data.length;
+                    if (userCount === 1) {
+                        resultDiv.innerHTML = `
+                            <p class="success">✅ PASS: RLS is working correctly!</p>
+                            <p>You can only see your own user (${userCount} user returned).</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `;
+                    } else if (userCount > 1) {
+                        resultDiv.innerHTML = `
+                            <p class="error">❌ FAIL: RLS is NOT working!</p>
+                            <p>You can see ${userCount} users. You should only see 1 (yourself).</p>
+                            <p>This means RLS is not properly configured.</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <p class="warning">⚠️ WARNING: No users returned</p>
+                            <p>This might mean you're not logged in or RLS is too restrictive.</p>
+                        `;
+                    }
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Exception: ${err.message}</p>`;
+            }
+        }
+
+        async function testUpdateWalletBalance() {
+            const resultDiv = document.getElementById('test2Result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+
+            if (!currentUser) {
+                resultDiv.innerHTML = '<p class="error">❌ Please login first</p>';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .update({ wallet_balance: 999999 })
+                    .eq('id', currentUser.id)
+                    .select();
+
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ PASS: RLS is protecting wallet balance!</p>
+                        <p>Error: ${error.message}</p>
+                        <p>Users cannot directly modify their wallet balance (this is correct).</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ FAIL: RLS is NOT protecting wallet balance!</p>
+                        <p>You were able to update your wallet balance directly.</p>
+                        <p>This is a security vulnerability!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Exception: ${err.message}</p>`;
+            }
+        }
+
+        async function testViewEvents() {
+            const resultDiv = document.getElementById('test3Result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .select('*');
+
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error: ${error.message}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Query successful</p>
+                        <p>Found ${data.length} events</p>
+                        <p>You should see: published events + your own events (any status)</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Exception: ${err.message}</p>`;
+            }
+        }
+
+        async function testViewBookings() {
+            const resultDiv = document.getElementById('test4Result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('*');
+
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error: ${error.message}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Query successful</p>
+                        <p>Found ${data.length} bookings</p>
+                        <p>You should only see your own bookings.</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Exception: ${err.message}</p>`;
+            }
+        }
+
+        async function testViewTickets() {
+            const resultDiv = document.getElementById('test5Result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('tickets')
+                    .select('*');
+
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error: ${error.message}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Query successful</p>
+                        <p>Found ${data.length} tickets</p>
+                        <p>You should only see your own tickets.</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Exception: ${err.message}</p>`;
+            }
+        }
+
+        async function testViewPayments() {
+            const resultDiv = document.getElementById('test6Result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('payments')
+                    .select('*');
+
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error: ${error.message}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Query successful</p>
+                        <p>Found ${data.length} payments</p>
+                        <p>You should only see your own payments.</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Exception: ${err.message}</p>`;
+            }
+        }
+
+        async function testUserRole() {
+            const resultDiv = document.getElementById('test7Result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+
+            if (!currentUser) {
+                resultDiv.innerHTML = '<p class="error">❌ Please login first</p>';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('id, email, role, organization_name, wallet_balance')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error: ${error.message}</p>
+                    `;
+                } else {
+                    if (data.role) {
+                        resultDiv.innerHTML = `
+                            <p class="success">✅ PASS: User has role assigned</p>
+                            <p><strong>Role:</strong> ${data.role}</p>
+                            <p><strong>Email:</strong> ${data.email}</p>
+                            <p><strong>Organization:</strong> ${data.organization_name || 'N/A'}</p>
+                            <p><strong>Wallet Balance:</strong> ₦${data.wallet_balance || 0}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <p class="error">❌ FAIL: User has no role assigned</p>
+                            <p>Role column might not exist or is NULL.</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `;
+                    }
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ Exception: ${err.message}</p>`;
+            }
+        }
+
+        async function runAllTests() {
+            if (!currentUser) {
+                alert('Please login first!');
+                return;
+            }
+
+            await testViewAllUsers();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testUpdateWalletBalance();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testViewEvents();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testViewBookings();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testViewTickets();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testViewPayments();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testUserRole();
+
+            alert('All tests completed! Check the results above.');
+        }
+    </script>
+</body>
+</html>

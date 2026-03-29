@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Flutterwave SDK Loading</title>
+    <script src="https://checkout.flutterwave.com/v3.js"></script>
+</head>
+<body>
+    <h1>Flutterwave SDK Test</h1>
+    <button onclick="testFlutterwave()">Test Flutterwave</button>
+    <div id="result"></div>
+
+    <script>
+        function testFlutterwave() {
+            const resultDiv = document.getElementById('result');
+            
+            console.log('Testing Flutterwave SDK...');
+            console.log('window.FlutterwaveCheckout:', window.FlutterwaveCheckout);
+            console.log('typeof window.FlutterwaveCheckout:', typeof window.FlutterwaveCheckout);
+            
+            if (typeof window.FlutterwaveCheckout === 'function') {
+                resultDiv.innerHTML = '<p style="color: green;">✅ Flutterwave SDK is loaded and ready!</p>';
+                
+                // Try to open modal
+                window.FlutterwaveCheckout({
+                    public_key: 'FLWPUBK-8b7d138c4436a54926dece2bdc89beca-X',
+                    tx_ref: 'TEST_' + Date.now(),
+                    amount: 1000,
+                    currency: 'NGN',
+                    payment_options: 'card',
+                    customer: {
+                        email: 'test@example.com',
+                        name: 'Test User',
+                    },
+                    customizations: {
+                        title: 'Test Payment',
+                        description: 'Testing Flutterwave integration',
+                    },
+                    callback: function(response) {
+                        console.log('Payment response:', response);
+                        alert('Payment completed: ' + response.status);
+                    },
+                    onclose: function() {
+                        console.log('Payment modal closed');
+                        alert('Payment modal was closed');
+                    },
+                });
+            } else {
+                resultDiv.innerHTML = '<p style="color: red;">❌ Flutterwave SDK is NOT loaded!</p>';
+                resultDiv.innerHTML += '<p>Type: ' + typeof window.FlutterwaveCheckout + '</p>';
+            }
+        }
+        
+        // Test on page load
+        window.addEventListener('load', function() {
+            console.log('Page loaded');
+            console.log('FlutterwaveCheckout available:', typeof window.FlutterwaveCheckout);
+        });
+    </script>
+</body>
+</html>

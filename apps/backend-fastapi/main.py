@@ -14,7 +14,7 @@ import logging
 from typing import Dict, Any
 
 # Import routers
-from routers import auth, events, tickets, payments, admin, notifications, analytics, realtime
+from routers import auth, events, tickets, payments, admin, notifications, analytics, realtime, wallet
 from services.supabase_client import get_supabase_client
 from middleware.rate_limiter import RateLimitMiddleware
 from middleware.security import SecurityMiddleware
@@ -174,6 +174,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(events.router, prefix="/api/events", tags=["Events"])
 app.include_router(tickets.router, prefix="/api/tickets", tags=["Tickets"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
+app.include_router(wallet.router, prefix="/api/wallet", tags=["Wallet"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])

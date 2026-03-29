@@ -17,22 +17,16 @@ interface PaymentModalProps {
   eventId: string;
 }
 
-interface PaystackResponse {
-  reference: string;
+interface FlutterwaveResponse {
+  transaction_id: string;
+  tx_ref: string;
+  flw_ref: string;
   status: string;
-  trans: string;
-  transaction: string;
-  trxref: string;
-  redirecturl: string;
 }
 
 declare global {
   interface Window {
-    PaystackPop: {
-      setup: (options: any) => {
-        openIframe: () => void;
-      };
-    };
+    FlutterwaveCheckout: (options: any) => void;
   }
 }
 
@@ -49,15 +43,15 @@ export function PaymentModal({
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');
   const [processing, setProcessing] = useState(false);
-  const [userWalletBalance, setUserWalletBalance] = useState(10000); // Default balance
+  const [userWalletBalance, setUserWalletBalance] = useState(0); // Fetch from API
   const [step, setStep] = useState<'method' | 'processing' | 'success' | 'error'>('method');
   const [transactionRef, setTransactionRef] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
-      // Load Paystack script
+      // Load Flutterwave script
       const script = document.createElement('script');
-      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.src = 'https://checkout.flutterwave.com/v3.js';
       script.async = true;
       document.body.appendChild(script);
 
@@ -65,16 +59,18 @@ export function PaymentModal({
       fetchWalletBalance();
 
       return () => {
-        document.body.removeChild(script);
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
       };
     }
   }, [isOpen]);
 
   const fetchWalletBalance = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/payments/balance', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/wallet/balance`, {
         headers: {
-          'Authorization': `Bearer ${user?.access_token}`,
+          'Authorization': `Bearer ${user?.session?.access_token}`,
         },
       });
       const data = await response.json();
@@ -83,6 +79,7 @@ export function PaymentModal({
       }
     } catch (error) {
       console.error('Error fetching wallet balance:', error);
+      setUserWalletBalance(0);
     }
   };
 
@@ -160,7 +157,7 @@ export function PaymentModal({
   };
 
   const handleCardPayment = async (reference: string) => {
-    const paystackKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || 'pk_test_your_key_here';
+    const paystackKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || 'process.env.VITE_FLUTTERWAVE_PUBLIC_KEY';
     
     const handler = window.PaystackPop.setup({
       key: paystackKey,

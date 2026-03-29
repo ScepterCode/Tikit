@@ -1,0 +1,121 @@
+================================================================================
+FLUTTERWAVE IP WHITELISTING - QUICK FIX
+================================================================================
+
+ERROR YOU'RE GETTING:
+  "Transfer failed: Please enable IP Whitelisting to access this service"
+
+WHAT IT MEANS:
+  ✅ This is NORMAL - Flutterwave requires IP whitelisting for security
+  ✅ It's a security feature, not a bug
+  ✅ Prevents unauthorized transfers from your account
+
+YOUR PUBLIC IP ADDRESS:
+  102.89.68.25
+
+================================================================================
+HOW TO FIX (5 MINUTES):
+================================================================================
+
+1. Go to: https://dashboard.flutterwave.com/
+
+2. Click: Settings (left sidebar)
+
+3. Click: Whitelisted IP addresses
+
+4. Click: "Add IP Address" button
+
+5. Enter: 102.89.68.25
+
+6. Select: IPv4 format (from dropdown)
+
+7. Click: Add/Save
+
+8. Verify: Enter OTP sent to your email or WhatsApp
+
+9. Done: Your IP is now whitelisted!
+
+10. Test: Try withdrawal again - should work now! ✅
+
+================================================================================
+IMPORTANT NOTES:
+================================================================================
+
+FOR DEVELOPMENT (Now):
+  • Your IP: 102.89.68.25
+  • This is your home/office IP
+  • May change if you have dynamic IP
+  • Re-whitelist if it changes
+
+FOR PRODUCTION (Later):
+  • Get your production server's IP
+  • Whitelist that IP separately
+  • Keep dev and prod IPs separate
+
+MULTIPLE IPs:
+  • You can whitelist multiple IPs
+  • One for development
+  • One for production
+  • One for staging
+
+IF IP CHANGES:
+  • Run: python get_my_ip.py
+  • Get new IP
+  • Add to whitelist
+  • Remove old IP
+
+================================================================================
+WHY FLUTTERWAVE REQUIRES THIS:
+================================================================================
+
+Security:
+  • Only whitelisted IPs can process payouts
+  • Prevents unauthorized transfers
+  • Extra layer of protection
+
+Even if someone steals your API keys:
+  • They can't make transfers
+  • Unless they're on whitelisted IP
+  • Your money stays safe
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+Still getting error after whitelisting?
+
+1. Wait 2-5 minutes for changes to propagate
+
+2. Verify IP is correct:
+   python get_my_ip.py
+   
+3. Check whitelist status in dashboard:
+   Should show "Active" not "Pending"
+
+4. Ensure OTP was verified
+
+5. Try withdrawal again
+
+================================================================================
+ALTERNATIVE FOR TESTING:
+================================================================================
+
+If you want to test without whitelisting:
+  • Use Flutterwave TEST keys
+  • Test mode doesn't require IP whitelisting
+  • Switch to LIVE keys when ready for production
+
+================================================================================
+SUMMARY:
+================================================================================
+
+✅ Your IP: 102.89.68.25
+✅ Action: Whitelist this IP on Flutterwave dashboard
+✅ Location: Settings → Whitelisted IP addresses
+✅ Time: 5 minutes
+✅ Result: Withdrawals will work!
+
+This is a required security feature. Once you whitelist your IP, 
+everything will work perfectly! 🔒✅
+
+================================================================================

@@ -27,39 +27,13 @@ export function AdminUsers() {
     const loadUsers = async () => {
       try {
         setLoading(true);
-        // Fetch user breakdown from dashboard API
-        const response = await apiService.request('/admin/dashboard/user-breakdown');
+        const response = await apiService.request('/admin/users');
         
         if (response.success && response.data) {
-          // Convert breakdown to user list format
-          const userCounts = response.data;
-          const users: User[] = [];
-          
-          // Create sample users for each role based on counts
-          let userId = 1;
-          for (const [role, count] of Object.entries(userCounts)) {
-            for (let i = 0; i < (count as number); i++) {
-              users.push({
-                id: userId.toString(),
-                phoneNumber: `+234${800000000 + userId}`,
-                firstName: `User${userId}`,
-                lastName: role.charAt(0).toUpperCase() + role.slice(1),
-                email: `user${userId}@grooovy.com`,
-                role: role as 'attendee' | 'organizer' | 'admin',
-                state: 'Lagos',
-                isVerified: Math.random() > 0.3,
-                walletBalance: Math.floor(Math.random() * 50000),
-                createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-              });
-              userId++;
-            }
-          }
-          
-          setUsers(users);
+          setUsers(response.data.users || []);
         }
       } catch (error) {
         console.error('Error loading users:', error);
-        // Fallback to empty list
         setUsers([]);
       } finally {
         setLoading(false);

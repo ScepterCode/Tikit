@@ -12,7 +12,7 @@ from middleware.auth import get_current_user
 from datetime import datetime
 from typing import Dict, Any
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(tags=["authentication"])
 
 @router.post("/register", response_model=TokenResponse)
 async def register_user(user_data: UserCreate):
@@ -229,6 +229,16 @@ async def logout_user(current_user: Dict[str, Any] = Depends(get_current_user)):
 async def send_otp(otp_request: OTPRequest):
     """
     Send OTP to phone number (placeholder - not implemented yet)
+    """
+    return {
+        "success": True,
+        "message": "OTP functionality will be implemented in next phase"
+    }
+
+@router.post("/verify-otp", response_model=SuccessResponse)
+async def verify_otp(otp_verify: OTPVerifyRequest):
+    """
+    Verify OTP code (placeholder - not implemented yet)
     """
     return {
         "success": True,

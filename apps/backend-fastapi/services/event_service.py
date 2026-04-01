@@ -5,22 +5,21 @@ from config import config
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import logging
+from services.supabase_client import get_supabase_client
 
 logger = logging.getLogger(__name__)
 
 # Check if Supabase is configured
-SUPABASE_CONFIGURED = bool(config.SUPABASE_URL and config.SUPABASE_ANON_KEY)
+SUPABASE_CONFIGURED = bool(config.SUPABASE_URL and config.SUPABASE_SERVICE_KEY)
 
 # For development, let's use mock service to avoid database issues
-USE_MOCK_SERVICE = True  # Set to False when Supabase database is properly set up
+USE_MOCK_SERVICE = False  # Set to False when Supabase database is properly set up
 
 if SUPABASE_CONFIGURED and not USE_MOCK_SERVICE:
     try:
-        from supabase import create_client, Client
-        
         class EventService:
             def __init__(self):
-                self.supabase: Client = create_client(config.SUPABASE_URL, config.SUPABASE_ANON_KEY)
+                self.supabase = get_supabase_client()
             
             async def create_event(self, event_data: dict) -> Optional[dict]:
                 """Create a new event in the database"""
@@ -66,14 +65,67 @@ if SUPABASE_CONFIGURED and not USE_MOCK_SERVICE:
                     logger.error(f"Error listing events: {str(e)}")
                     return []
             
-            async def update_event(self, event_id: str, update_data: dict) -> Optional[dict]:
-                """Update event data"""
+            async def update_event(self, event_id: str, update_data: dict) -> dict:
+                """Update event data including ticket tiers"""
                 try:
-                    result = self.supabase.table('events').update(update_data).eq('id', event_id).execute()
-                    return result.data[0] if result.data else None
+                    # Prepare update data
+                    db_update = {}
+
+                    # Handle ticket tiers transformation
+                    if 'ticketTiers' in update_data:
+                        db_update['ticket_tiers'] = update_data['ticketTiers']
+
+                    # Handle field name transformations for database
+                    if 'venue' in update_data:
+                        db_update['venue_name'] = update_data['venue']
+                        db_update['full_address'] = update_data['venue']
+                    
+                    # Handle date/time combination
+                    if 'date' in update_data and 'time' in update_data:
+                        # Combine date and time into ISO format
+                        db_update['event_date'] = f"{update_data['date']}T{update_data['time']}:00+00:00"
+                    elif 'start_date' in update_data:
+                        db_update['event_date'] = update_data['start_date']
+
+                    # Handle other fields (using database field names)
+                    # Only include fields that actually exist in the database
+                    allowed_fields = [
+                        'title', 'description', 'category', 'status', 'banner_image_url',
+                        'capacity', 'ticket_price', 'currency'
+                    ]
+                    for field in allowed_fields:
+                        if field in update_data and field not in db_update:
+                            db_update[field] = update_data[field]
+
+                    # Add updated_at timestamp
+                    db_update['updated_at'] = datetime.utcnow().isoformat()
+
+                    # Update in Supabase
+                    result = self.supabase.table('events').update(db_update).eq('id', event_id).execute()
+
+                    if not result.data:
+                        return {
+                            "success": False,
+                            "error": {
+                                "code": "UPDATE_FAILED",
+                                "message": "Failed to update event"
+                            }
+                        }
+
+                    return {
+                        "success": True,
+                        "data": result.data[0]
+                    }
                 except Exception as e:
                     logger.error(f"Error updating event {event_id}: {str(e)}")
-                    return None
+                    return {
+                        "success": False,
+                        "error": {
+                            "code": "UPDATE_ERROR",
+                            "message": str(e)
+                        }
+                    }
+
             
             async def delete_event(self, event_id: str) -> bool:
                 """Delete event"""
@@ -106,47 +158,93 @@ if SUPABASE_CONFIGURED and not USE_MOCK_SERVICE:
                 """Get paginated events feed with filtering"""
                 try:
                     offset = (page - 1) * limit
-                    query = self.supabase.table('events').select('*')
+                    query = self.supabase.table('events').select('*', count='exact')
                     
                     # Apply filters if provided
                     if filters:
                         if filters.get('event_type'):
-                            query = query.eq('event_type', filters['event_type'])
+                            query = query.eq('category', filters['event_type'])
                         if filters.get('lga'):
-                            query = query.eq('lga', filters['lga'])
+                            query = query.ilike('full_address', f'%{filters["lga"]}%')
                         if filters.get('price_min') is not None:
-                            query = query.gte('price', filters['price_min'])
+                            query = query.gte('ticket_price', filters['price_min'])
                         if filters.get('price_max') is not None:
-                            query = query.lte('price', filters['price_max'])
+                            query = query.lte('ticket_price', filters['price_max'])
                     
                     # Execute query with pagination
                     result = query.range(offset, offset + limit - 1).order('created_at', desc=True).execute()
                     
                     events = result.data or []
+                    total_count = result.count if hasattr(result, 'count') else len(events)
+                    
+                    # Transform database fields to frontend format
+                    for event in events:
+                        if 'ticket_tiers' in event and event['ticket_tiers']:
+                            event['ticketTiers'] = event['ticket_tiers']
+                        else:
+                            # Fallback: Generate ticket_tiers from legacy fields
+                            event['ticketTiers'] = [{
+                                'name': 'General Admission',
+                                'price': float(event.get('ticket_price', 0)),
+                                'quantity': int(event.get('capacity', 0)),
+                                'sold': int(event.get('tickets_sold', 0))
+                            }]
+                        if 'venue_name' in event:
+                            event['venue'] = event['venue_name']
+                        if 'event_date' in event:
+                            event['start_date'] = event['event_date']
+                        if 'host_id' in event:
+                            event['organizer_id'] = event['host_id']
                     
                     return {
                         "events": events,
-                        "pagination": {
-                            "page": page,
-                            "limit": limit,
-                            "total": len(events),
-                            "has_more": len(events) == limit
-                        },
-                        "filters_applied": filters or {}
+                        "total": total_count,
+                        "page": page,
+                        "limit": limit,
+                        "has_next": len(events) == limit,
+                        "has_prev": page > 1
                     }
                 except Exception as e:
                     logger.error(f"Error getting events feed: {str(e)}")
                     return {
                         "events": [],
-                        "pagination": {"page": page, "limit": limit, "total": 0, "has_more": False},
-                        "filters_applied": {}
+                        "total": 0,
+                        "page": page,
+                        "limit": limit,
+                        "has_next": False,
+                        "has_prev": False
                     }
             
             async def get_event_by_id(self, event_id: str) -> Optional[dict]:
                 """Get event by ID with full details"""
                 try:
                     result = self.supabase.table('events').select('*').eq('id', event_id).execute()
-                    return result.data[0] if result.data else None
+                    if not result.data:
+                        return None
+                    
+                    event = result.data[0]
+                    
+                    # Transform database fields to frontend format
+                    if 'ticket_tiers' in event and event['ticket_tiers']:
+                        event['ticketTiers'] = event['ticket_tiers']
+                    else:
+                        # Fallback: Generate ticket_tiers from legacy fields
+                        event['ticketTiers'] = [{
+                            'name': 'General Admission',
+                            'price': float(event.get('ticket_price', 0)),
+                            'quantity': int(event.get('capacity', 0)),
+                            'sold': int(event.get('tickets_sold', 0))
+                        }]
+                    
+                    # Transform field names to match frontend expectations
+                    if 'venue_name' in event:
+                        event['venue'] = event['venue_name']
+                    if 'event_date' in event:
+                        event['start_date'] = event['event_date']
+                    if 'host_id' in event:
+                        event['organizer_id'] = event['host_id']
+                    
+                    return event
                 except Exception as e:
                     logger.error(f"Error getting event {event_id}: {str(e)}")
                     return None
@@ -154,13 +252,20 @@ if SUPABASE_CONFIGURED and not USE_MOCK_SERVICE:
             async def create_event(self, event_data: dict, organizer_id: str) -> dict:
                 """Create a new event"""
                 try:
+                    # Transform frontend field names to database field names
+                    if 'ticketTiers' in event_data:
+                        event_data['ticket_tiers'] = event_data.pop('ticketTiers')
+                    
                     # Add organizer ID and timestamps
                     event_data['organizer_id'] = organizer_id
+                    event_data['host_id'] = organizer_id  # Also set host_id for consistency
                     event_data['created_at'] = datetime.utcnow().isoformat()
                     event_data['updated_at'] = datetime.utcnow().isoformat()
-                    event_data.setdefault('current_attendees', 0)
                     event_data.setdefault('status', 'active')
                     event_data.setdefault('is_hidden', False)
+                    
+                    # Remove fields that don't exist in database
+                    event_data.pop('current_attendees', None)
                     
                     result = self.supabase.table('events').insert(event_data).execute()
                     

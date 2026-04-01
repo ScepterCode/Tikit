@@ -12,6 +12,7 @@ from services.wallet_security_service import wallet_security_service
 from services.withdrawal_service import withdrawal_service, WithdrawalMethod
 from services.flutterwave_withdrawal_service import flutterwave_withdrawal_service
 from auth_utils import get_user_from_request, user_database
+from middleware.rate_limiter import rate_limiter
 
 router = APIRouter(tags=["wallet"])
 
@@ -87,18 +88,26 @@ async def get_wallet_balance(request: Request):
     """Get user's wallet balance"""
     try:
         user = await get_user_from_request(request)
-        user_id = user["user_id"]
+        user_id = user.get("id") or user.get("user_id")
 
-        # Get balance from user database
-        user_data = user_database.get(user_id)
-        if not user_data:
+        # Get balance from Supabase database
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            raise HTTPException(status_code=500, detail="Database not available")
+        
+        # Get user's wallet balance from Supabase
+        user_result = supabase.table('users').select('wallet_balance').eq('id', user_id).execute()
+        
+        if not user_result.data:
             return {
                 "success": True,
                 "balance": 0.0,
                 "currency": "NGN"
             }
 
-        balance = user_data.get("wallet_balance", 0.0)
+        balance = float(user_result.data[0].get('wallet_balance', 0))
 
         return {
             "success": True,
@@ -122,13 +131,36 @@ async def fund_wallet(request: Request, fund_data: Dict[str, Any]):
         if amount <= 0:
             raise HTTPException(status_code=400, detail="Invalid amount")
 
-        # This would integrate with payment gateway
-        # For now, return success to indicate endpoint exists
+        # Get user details from database for Flutterwave
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            raise HTTPException(status_code=500, detail="Database not available")
+        
+        user_result = supabase.table('users').select('email, first_name, last_name').eq('id', user_id).execute()
+        
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_data = user_result.data[0]
+        user_email = user_data.get('email', '')
+        user_name = f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip()
+        
+        if not user_name:
+            user_name = user_email.split('@')[0]  # Fallback to email username
+
+        # Generate transaction reference
+        tx_ref = f"FUND_{user_id}_{int(datetime.now().timestamp())}"
+
         return {
             "success": True,
             "message": "Wallet funding initiated",
             "amount": amount,
-            "reference": f"FUND_{user_id}_{int(datetime.now().timestamp())}"
+            "reference": tx_ref,
+            "tx_ref": tx_ref,
+            "user_email": user_email,
+            "user_name": user_name
         }
     except HTTPException:
         raise
@@ -140,14 +172,51 @@ async def get_wallet_transactions(request: Request, limit: int = 20, offset: int
     """Get wallet transaction history"""
     try:
         user = await get_user_from_request(request)
-        user_id = user["user_id"]
+        user_id = user.get("id") or user.get("user_id")
 
-        # This would fetch from database
-        # For now, return empty list to indicate endpoint exists
+        # Get transactions from Supabase
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {
+                "success": True,
+                "transactions": [],
+                "total": 0,
+                "limit": limit,
+                "offset": offset
+            }
+        
+        # Query payments table for user's transactions
+        result = supabase.table('payments')\
+            .select('*')\
+            .eq('user_id', user_id)\
+            .order('created_at', desc=True)\
+            .range(offset, offset + limit - 1)\
+            .execute()
+        
+        transactions = []
+        if result.data:
+            for payment in result.data:
+                # Convert amount from kobo to naira
+                amount = float(payment.get('amount', 0)) / 100
+                
+                transactions.append({
+                    'id': payment.get('id'),
+                    'amount': amount,
+                    'currency': payment.get('currency', 'NGN'),
+                    'status': payment.get('status'),
+                    'method': payment.get('method'),
+                    'provider': payment.get('provider'),
+                    'reference': payment.get('reference'),
+                    'created_at': payment.get('created_at'),
+                    'type': 'payment'
+                })
+        
         return {
             "success": True,
-            "transactions": [],
-            "total": 0,
+            "transactions": transactions,
+            "total": len(transactions),
             "limit": limit,
             "offset": offset
         }
@@ -291,6 +360,21 @@ async def initiate_withdrawal(request: Request, withdrawal_data: WithdrawalReque
         user = await get_user_from_request(request)
         user_id = user.get("id") or user.get("user_id")
         user_email = user.get("email")
+        
+        # Rate limiting check
+        is_allowed, message = rate_limiter.check_rate_limit(user_id, "withdrawal")
+        if not is_allowed:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "RATE_LIMIT_EXCEEDED",
+                        "message": message,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
         
         print(f"🔍 Withdrawal request from: {user_email} (ID: {user_id})")
         print(f"   Amount: ₦{withdrawal_data.amount:,.2f}, Method: {withdrawal_data.method}")

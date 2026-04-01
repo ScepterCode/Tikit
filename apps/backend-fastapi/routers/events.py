@@ -9,12 +9,13 @@ from models.event_schemas import (
 )
 from services.event_service import event_service
 from middleware.auth import get_current_user, require_role, get_current_user_optional
+from middleware.rate_limiter import rate_limiter
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 
-router = APIRouter(prefix="/events", tags=["events"])
+router = APIRouter(tags=["events"])
 
-@router.get("/", response_model=EventFeedResponse)
+@router.get("/")
 async def get_events(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
@@ -38,7 +39,45 @@ async def get_events(
         lga, distance, language, capacity_status, organizer_type, current_user
     )
 
-@router.get("/feed", response_model=EventFeedResponse)
+@router.get("/recommended")
+async def get_recommended_events(
+    limit: int = Query(10, ge=1, le=50),
+    current_user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)
+):
+    """
+    Get recommended events for the user
+    """
+    try:
+        # For now, return the same as feed but with a smaller limit
+        # In the future, this can use ML/AI recommendations
+        user_state = current_user.get('state', 'Lagos') if current_user else 'Lagos'
+        
+        result = await event_service.get_events_feed(
+            user_state=user_state,
+            filters={},
+            page=1,
+            limit=limit
+        )
+        
+        return {
+            "success": True,
+            "data": result
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Failed to get recommended events",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        )
+
+@router.get("/feed")
 async def get_events_feed(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
@@ -91,7 +130,10 @@ async def get_events_feed(
             limit=limit
         )
         
-        return result
+        return {
+            "success": True,
+            "data": result
+        }
         
     except Exception as e:
         raise HTTPException(
@@ -106,10 +148,10 @@ async def get_events_feed(
             }
         )
 
-@router.get("/{event_id}", response_model=EventResponse)
+@router.get("/{event_id}")
 async def get_event_by_id(
     event_id: str,
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user)
+    current_user: Optional[Dict[str, Any]] = Depends(get_current_user_optional)
 ):
     """
     Get event by ID with full details
@@ -131,8 +173,8 @@ async def get_event_by_id(
             )
         
         # Check if event is hidden and user has access
-        if event['is_hidden']:
-            if not current_user or current_user['user_id'] != event['organizer_id']:
+        if event.get('is_hidden'):
+            if not current_user or current_user['user_id'] != event.get('host_id'):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail={
@@ -145,7 +187,10 @@ async def get_event_by_id(
                     }
                 )
         
-        return event
+        return {
+            "success": True,
+            "data": event
+        }
         
     except HTTPException:
         raise
@@ -164,15 +209,33 @@ async def get_event_by_id(
 
 @router.post("/create")
 async def create_event(
-    event_data: EventCreate,
+    event_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(require_role("organizer"))
 ):
     """
     Create a new public event (organizer only)
     """
     try:
+        # Rate limiting check
+        is_allowed, message = rate_limiter.check_rate_limit(
+            current_user['user_id'], 
+            "create_event"
+        )
+        if not is_allowed:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "RATE_LIMIT_EXCEEDED",
+                        "message": message,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+        
         result = await event_service.create_event(
-            event_data.dict(),
+            event_data,
             current_user['user_id']
         )
         
@@ -208,6 +271,81 @@ async def create_event(
                 }
             }
         )
+@router.put("/{event_id}")
+async def update_event(
+    event_id: str,
+    event_data: Dict[str, Any],
+    current_user: Dict[str, Any] = Depends(require_role("organizer"))
+):
+    """
+    Update event details including ticket tiers (organizer only)
+    """
+    try:
+        # Verify organizer owns the event
+        event = await event_service.get_event_by_id(event_id)
+
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "EVENT_NOT_FOUND",
+                        "message": "Event not found",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+
+        if event.get('host_id') != current_user['user_id']:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "ACCESS_DENIED",
+                        "message": "You don't have permission to update this event",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+
+        # Update event
+        result = await event_service.update_event(event_id, event_data)
+
+        if not result['success']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "success": False,
+                    "error": {
+                        **result['error'],
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+
+        return {
+            "success": True,
+            "message": "Event updated successfully",
+            "data": result['data']
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Failed to update event",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        )
+
 
 @router.post("/create-hidden")
 async def create_hidden_event(

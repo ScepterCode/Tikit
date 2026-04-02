@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional, List
 from datetime import datetime
 from middleware.auth import get_current_user
+from middleware.rate_limiter import rate_limiter
 from services.notification_service import notification_service
 import logging
 
@@ -113,6 +114,24 @@ async def send_broadcast(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only admins can send broadcasts"
+            )
+        
+        # Rate limiting check
+        is_allowed, rate_message = rate_limiter.check_rate_limit(
+            current_user["user_id"], 
+            "broadcast_notification"
+        )
+        if not is_allowed:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "RATE_LIMIT_EXCEEDED",
+                        "message": rate_message,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
             )
         
         result = await notification_service.send_broadcast(

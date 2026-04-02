@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SecurePaymentModal } from '../payment/SecurePaymentModal';
+import { PaymentChoiceModal } from '../payment/PaymentChoiceModal';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,7 +29,9 @@ export function PurchaseButton({
 }: PurchaseButtonProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [showPaymentChoice, setShowPaymentChoice] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'wallet'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePurchaseClick = () => {
@@ -43,7 +46,19 @@ export function PurchaseButton({
       return;
     }
 
-    // Open payment modal
+    // Open payment choice modal
+    setShowPaymentChoice(true);
+  };
+
+  const handleUseWallet = () => {
+    setPaymentMethod('wallet');
+    setShowPaymentChoice(false);
+    setShowPaymentModal(true);
+  };
+
+  const handleUseCard = () => {
+    setPaymentMethod('card');
+    setShowPaymentChoice(false);
     setShowPaymentModal(true);
   };
 
@@ -96,6 +111,7 @@ export function PurchaseButton({
   const handleCloseModal = () => {
     if (!isProcessing) {
       setShowPaymentModal(false);
+      setShowPaymentChoice(false);
     }
   };
 
@@ -146,6 +162,20 @@ export function PurchaseButton({
         )}
       </button>
 
+      <PaymentChoiceModal
+        isOpen={showPaymentChoice}
+        onClose={() => setShowPaymentChoice(false)}
+        onUseWallet={handleUseWallet}
+        onUseCard={handleUseCard}
+        totalAmount={totalAmount}
+        eventTitle={eventTitle}
+        ticketDetails={{
+          quantity,
+          tierName,
+          unitPrice
+        }}
+      />
+
       <SecurePaymentModal
         isOpen={showPaymentModal}
         onClose={handleCloseModal}
@@ -159,6 +189,7 @@ export function PurchaseButton({
           unitPrice
         }}
         eventId={eventId}
+        preselectedMethod={paymentMethod}
       />
     </>
   );

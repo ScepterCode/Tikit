@@ -425,6 +425,22 @@ const AddFundsModal: React.FC<{
         return;
       }
 
+      // Validate required fields from backend
+      console.log('🔍 Backend response:', result);
+      console.log('📧 User email:', result.user_email);
+      console.log('👤 User name:', result.user_name);
+      console.log('🔖 Transaction ref:', result.tx_ref);
+
+      if (!result.user_email) {
+        alert('Error: User email not found. Please ensure your profile is complete.');
+        setLoading(false);
+        return;
+      }
+
+      if (!result.user_name) {
+        console.warn('⚠️ User name not found, using email as fallback');
+      }
+
       // Step 2: Open Flutterwave payment modal
       const flutterwaveKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
       
@@ -442,6 +458,14 @@ const AddFundsModal: React.FC<{
       }
 
       console.log('✅ Opening Flutterwave payment modal...');
+      console.log('📦 Flutterwave config:', {
+        public_key: flutterwaveKey?.substring(0, 20) + '...',
+        tx_ref: result.tx_ref,
+        amount: fundAmount,
+        currency: 'NGN',
+        customer_email: result.user_email,
+        customer_name: result.user_name || result.user_email?.split('@')[0] || 'User'
+      });
 
       // Open Flutterwave payment modal
       (window as any).FlutterwaveCheckout({
@@ -452,7 +476,7 @@ const AddFundsModal: React.FC<{
         payment_options: 'card,mobilemoney,ussd,banktransfer',
         customer: {
           email: result.user_email,
-          name: result.user_name,
+          name: result.user_name || result.user_email?.split('@')[0] || 'User',
         },
         customizations: {
           title: 'Add Funds to Wallet',

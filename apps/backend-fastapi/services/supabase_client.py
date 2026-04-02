@@ -22,7 +22,8 @@ def get_supabase_client() -> Client:
         supabase_key = os.getenv("SUPABASE_SERVICE_KEY")
         
         if not supabase_url or not supabase_key:
-            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set")
+            logger.warning("⚠️ SUPABASE_URL and SUPABASE_SERVICE_KEY not set, client will be None")
+            return None
         
         _supabase_client = create_client(supabase_url, supabase_key)
         logger.info("✅ Supabase client initialized")
@@ -43,7 +44,13 @@ class SupabaseService:
     """Enhanced Supabase service with common operations"""
     
     def __init__(self):
-        self.client = get_supabase_client()
+        self.client = None  # Lazy initialization
+    
+    def _get_client(self):
+        """Lazy load client"""
+        if self.client is None:
+            self.client = get_supabase_client()
+        return self.client
     
     async def execute_query(self, query: str, params: dict = None):
         """Execute raw SQL query"""

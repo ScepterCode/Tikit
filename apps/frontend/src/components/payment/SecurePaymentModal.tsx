@@ -15,6 +15,7 @@ interface PaymentModalProps {
     unitPrice: number;
   };
   eventId: string;
+  preselectedMethod?: 'card' | 'wallet';
 }
 
 interface FlutterwaveResponse {
@@ -38,14 +39,22 @@ export function SecurePaymentModal({
   amount,
   eventTitle,
   ticketDetails,
-  eventId
+  eventId,
+  preselectedMethod = 'card'
 }: PaymentModalProps) {
   const { user } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(preselectedMethod);
   const [processing, setProcessing] = useState(false);
   const [userWalletBalance, setUserWalletBalance] = useState(0);
   const [step, setStep] = useState<'method' | 'processing' | 'success' | 'error'>('method');
   const [transactionRef, setTransactionRef] = useState<string>('');
+
+  // Update payment method when preselected method changes
+  useEffect(() => {
+    if (preselectedMethod) {
+      setPaymentMethod(preselectedMethod);
+    }
+  }, [preselectedMethod]);
 
   useEffect(() => {
     if (isOpen) {

@@ -78,6 +78,13 @@ class Config:
     CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
     ALLOWED_HOSTS: list = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     
+    # Platform Fees & Payouts
+    PLATFORM_FEE_PERCENTAGE: float = float(os.getenv("PLATFORM_FEE_PERCENTAGE", "5.0"))
+    PLATFORM_FEE_MINIMUM: float = float(os.getenv("PLATFORM_FEE_MINIMUM", "50.0"))  # ₦50 minimum
+    PLATFORM_FEE_MAXIMUM: float = float(os.getenv("PLATFORM_FEE_MAXIMUM", "5000.0"))  # ₦5000 maximum
+    MINIMUM_PAYOUT_AMOUNT: float = float(os.getenv("MINIMUM_PAYOUT_AMOUNT", "1000.0"))  # ₦1000 minimum withdrawal
+    PAYOUT_PROCESSING_TIME_DAYS: int = int(os.getenv("PAYOUT_PROCESSING_TIME_DAYS", "3"))  # 3 days processing
+    
     # Feature Flags
     ENABLE_WEBSOCKETS: bool = os.getenv("ENABLE_WEBSOCKETS", "true").lower() == "true"
     ENABLE_PUSH_NOTIFICATIONS: bool = os.getenv("ENABLE_PUSH_NOTIFICATIONS", "true").lower() == "true"

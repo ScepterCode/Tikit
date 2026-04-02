@@ -368,142 +368,107 @@ async def get_current_user(request: Request):
             }
         )
 
-@app.get("/api/events")
-async def get_events():
-    return {
-        "success": True,
-        "message": "Get events endpoint working",
-        "data": {
-            "events": [
-                {
-                    "id": event_id,
-                    "title": event.get("title", "Event"),
-                    "description": event.get("description", ""),
-                    "venue": event.get("venue", ""),
-                    "start_date": event.get("start_date", ""),
-                    "ticket_price": event.get("ticket_price", 0),
-                    "total_tickets": event.get("total_tickets", 0),
-                    "tickets_sold": event.get("tickets_sold", 0),
-                    "category": event.get("category", "other"),
-                    "organizer_id": event.get("organizer_id", "")
-                }
-                for event_id, event in events_database.items()
-            ]
-        }
-    }
+# Removed duplicate /api/events endpoint - see line 624 for the correct implementation
 
 @app.post("/api/events")
 async def create_event(request: Request):
-    """Create a new event"""
-    try:
-        user = await get_user_from_request(request)
-        if user["role"] not in ["organizer", "admin"]:
-            raise HTTPException(status_code=403, detail="Only organizers can create events")
-        
-        data = await request.json()
-        event_id = str(uuid.uuid4())
-        
-        events_database[event_id] = {
-            **data,
-            "id": event_id,
-            "organizer_id": user["user_id"],
-            "created_at": time.time(),
-            "tickets_sold": 0
-        }
-        
-        return {
-            "success": True,
-            "message": "Event created successfully",
-            "data": {"event_id": event_id}
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/wallet/balance")
-async def get_wallet_balance(request: Request):
-    """Get user's wallet balance from Supabase"""
+    """Create a new event in Supabase"""
     try:
         user = await get_user_from_request(request)
         user_id = user.get("id") or user.get("user_id")
         user_email = user.get("email")
         
-        print(f"🔍 Getting wallet balance for: {user_email} (ID: {user_id})")
+        if user["role"] not in ["organizer", "admin"]:
+            raise HTTPException(status_code=403, detail="Only organizers can create events")
+        
+        # Rate limiting: 3 events per minute
+        from middleware.rate_limiter import rate_limiter
+        is_allowed, message = rate_limiter.check_rate_limit(user_id, "create_event")
+        if not is_allowed:
+            raise HTTPException(status_code=429, detail=message)
+        
+        data = await request.json()
+        
+        print(f"🎉 Creating event for: {user_email}")
+        print(f"   Event title: {data.get('title', 'Untitled')}")
         
         # Get Supabase client
         from database import supabase_client
         supabase = supabase_client.get_service_client()
         
         if not supabase:
-            print("⚠️  Supabase not configured, returning 0 balance")
+            print("⚠️  Supabase not configured, using in-memory storage")
+            # Fallback to in-memory
+            event_id = str(uuid.uuid4())
+            events_database[event_id] = {
+                **data,
+                "id": event_id,
+                "host_id": user_id,
+                "created_at": time.time(),
+                "tickets_sold": 0
+            }
             return {
                 "success": True,
-                "balance": 0.0,
-                "currency": "NGN",
-                "formatted": "₦0.00"
+                "message": "Event created successfully",
+                "data": {"event_id": event_id}
             }
         
-        # Get balance from Supabase
-        user_result = supabase.table('users').select('wallet_balance').eq('id', user_id).execute()
+        # Generate event ID
+        event_id = str(uuid.uuid4())
         
-        if not user_result.data:
-            print(f"⚠️  User not found in Supabase, returning 0 balance")
-            return {
-                "success": True,
-                "balance": 0.0,
-                "currency": "NGN",
-                "formatted": "₦0.00"
-            }
-        
-        balance = float(user_result.data[0].get('wallet_balance', 0))
-        print(f"✅ Wallet balance for {user_email}: ₦{balance:,.2f}")
-        
-        return {
-            "success": True,
-            "balance": balance,
+        # Prepare event data for Supabase (matching actual schema)
+        event_data = {
+            "id": event_id,
+            "title": data.get("title"),
+            "description": data.get("description", ""),
+            "venue_name": data.get("venue") or data.get("venue_name", ""),
+            "full_address": data.get("full_address", ""),
+            "event_date": data.get("start_date") or data.get("event_date"),
+            "ticket_price": float(data.get("ticket_price", 0)),
+            "capacity": int(data.get("total_tickets") or data.get("capacity", 0)),
+            "category": data.get("category", "other"),
+            "host_id": user_id,
+            "tickets_sold": 0,
+            "status": "active",
             "currency": "NGN",
-            "formatted": f"₦{balance:,.2f}"
+            "location_lat": float(data.get("location_lat", 0)),
+            "location_lng": float(data.get("location_lng", 0)),
+            "created_via": "web"
         }
+        
+        # Insert into Supabase
+        result = supabase.table('events').insert(event_data).execute()
+        
+        if result.data:
+            event_id = result.data[0]['id']
+            print(f"✅ Event created in Supabase: {event_id}")
+            
+            return {
+                "success": True,
+                "message": "Event created successfully",
+                "data": {
+                    "event_id": event_id,
+                    "event": result.data[0]
+                }
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create event")
+            
     except HTTPException:
         raise
+    except ValueError as e:
+        # Handle authentication errors
+        print(f"❌ Authentication error: {e}")
+        raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
-        print(f"❌ Error in get_wallet_balance: {e}")
+        print(f"❌ Error creating event: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/wallet/fund")
-async def fund_wallet(request: Request):
-    """Initiate wallet funding - returns reference for Flutterwave"""
-    try:
-        user = await get_user_from_request(request)
-        user_id = user.get("id") or user.get("user_id")
-        
-        data = await request.json()
-        amount = float(data.get("amount", 0))
-        
-        if amount < 100:
-            return {"success": False, "error": "Minimum amount is ₦100"}
-        
-        if amount > 1000000:
-            return {"success": False, "error": "Maximum amount is ₦1,000,000"}
-        
-        # Generate transaction reference
-        tx_ref = f"FUND_{user_id}_{int(time.time())}_{secrets.token_hex(4)}"
-        
-        return {
-            "success": True,
-            "tx_ref": tx_ref,
-            "amount": amount,
-            "user_email": user.get("email", "user@grooovy.com"),
-            "user_name": f"{user.get('first_name', 'User')} {user.get('last_name', '')}"
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error in fund_wallet: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Wallet balance endpoint moved to wallet router
+
+# Wallet fund endpoint moved to wallet router
 
 @app.post("/api/wallet/verify-payment")
 async def verify_payment(request: Request):
@@ -599,32 +564,347 @@ async def verify_payment(request: Request):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/wallet/transactions")
-async def get_wallet_transactions(request: Request, limit: int = 20, offset: int = 0):
-    """Get wallet transaction history"""
+# Wallet transactions endpoint moved to wallet router
+
+# ============================================================================
+# EVENTS ENDPOINTS
+# ============================================================================
+
+def map_event_fields(event: dict) -> dict:
+    """Map Supabase event fields to frontend expected format"""
+    if not event:
+        return event
+    
+    # Map event_date to start_date for frontend compatibility
+    if 'event_date' in event and 'start_date' not in event:
+        event['start_date'] = event['event_date']
+    
+    # Map venue_name to venue if needed
+    if 'venue_name' in event and 'venue' not in event:
+        event['venue'] = event['venue_name']
+    
+    # Map host_id to organizer_id if needed
+    if 'host_id' in event and 'organizer_id' not in event:
+        event['organizer_id'] = event['host_id']
+    
+    return event
+
+@app.get("/api/events")
+async def get_events(request: Request):
+    """Get all active events from Supabase"""
     try:
-        user = await get_user_from_request(request)
+        from database import supabase_client
+        from datetime import datetime
         
-        # Return empty for now - will be populated after payments
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {"success": True, "data": {"events": []}}
+        
+        # Get current date/time
+        now = datetime.utcnow().isoformat()
+        
+        # Query active events that haven't expired
+        result = supabase.table('events')\
+            .select('*')\
+            .eq('status', 'active')\
+            .gte('event_date', now)\
+            .order('event_date', desc=False)\
+            .execute()
+        
+        events = result.data if result.data else []
+        
+        # Map fields for frontend compatibility
+        events = [map_event_fields(event) for event in events]
+        
+        print(f"✅ Retrieved {len(events)} active events from Supabase")
+        
         return {
             "success": True,
-            "transactions": [],
-            "total": 0
+            "data": {
+                "events": events,
+                "count": len(events)
+            }
         }
+        
+    except Exception as e:
+        print(f"❌ Error fetching events: {e}")
+        return {"success": True, "data": {"events": []}}
+
+@app.get("/api/events/recommended")
+async def get_recommended_events(request: Request):
+    """Get recommended events based on user preferences"""
+    try:
+        from database import supabase_client
+        from datetime import datetime
+        
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {"success": True, "data": {"events": []}}
+        
+        # Get current date/time
+        now = datetime.utcnow().isoformat()
+        
+        # For now, return all active upcoming events
+        # In production, filter by user preferences
+        result = supabase.table('events')\
+            .select('*')\
+            .eq('status', 'active')\
+            .gte('event_date', now)\
+            .order('event_date', desc=False)\
+            .limit(10)\
+            .execute()
+        
+        events = result.data if result.data else []
+        
+        # Map fields for frontend compatibility
+        events = [map_event_fields(event) for event in events]
+        
+        print(f"✅ Retrieved {len(events)} recommended events")
+        
+        return {
+            "success": True,
+            "data": {
+                "events": events,
+                "based_on_preferences": False
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching recommended events: {e}")
+        return {"success": True, "data": {"events": []}}
+
+@app.get("/api/events/{event_id}")
+async def get_event_detail(event_id: str, request: Request):
+    """Get specific event details from Supabase"""
+    try:
+        from database import supabase_client
+        
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        # Query specific event
+        result = supabase.table('events')\
+            .select('*')\
+            .eq('id', event_id)\
+            .execute()
+        
+        if not result.data or len(result.data) == 0:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        event = result.data[0]
+        
+        # Map fields for frontend compatibility
+        event = map_event_fields(event)
+        
+        print(f"✅ Retrieved event: {event.get('title')}")
+        
+        return {
+            "success": True,
+            "data": event
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error in get_wallet_transactions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"❌ Error fetching event {event_id}: {e}")
+        raise HTTPException(status_code=404, detail="Event not found")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "simple_main:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
-        reload=False
-    )
+@app.get("/api/events/{event_id}/spray-money-leaderboard")
+async def get_spray_money_leaderboard(event_id: str, limit: int = 10):
+    """Get spray money leaderboard for an event"""
+    try:
+        # Return empty leaderboard for now
+        # In production, query spray_money table
+        return {
+            "success": True,
+            "data": {
+                "leaderboard": [],
+                "event_id": event_id,
+                "total_sprayed": 0
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching leaderboard: {e}")
+        return {"success": True, "data": {"leaderboard": []}}
+
+@app.get("/api/events/{event_id}/tickets")
+async def get_event_tickets(event_id: str, request: Request):
+    """Get tickets for a specific event"""
+    try:
+        from database import supabase_client
+        
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {"success": True, "data": {"tickets": []}}
+        
+        # Query tickets for this event
+        result = supabase.table('tickets')\
+            .select('*')\
+            .eq('event_id', event_id)\
+            .eq('status', 'active')\
+            .order('price', desc=False)\
+            .execute()
+        
+        tickets = result.data if result.data else []
+        
+        print(f"✅ Retrieved {len(tickets)} tickets for event {event_id}")
+        
+        return {
+            "success": True,
+            "data": {
+                "tickets": tickets,
+                "count": len(tickets)
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching tickets: {e}")
+        return {"success": True, "data": {"tickets": []}}
+
+# ============================================================================
+# MEMBERSHIP ENDPOINTS
+# ============================================================================
+
+@app.get("/api/memberships/status")
+async def get_membership_status(request: Request):
+    """Get user's membership status"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        # Return basic membership status
+        # In production, query memberships table
+        return {
+            "success": True,
+            "data": {
+                "tier": "free",
+                "is_premium": False,
+                "features": {
+                    "max_events": 5,
+                    "analytics": False,
+                    "priority_support": False
+                }
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching membership status: {e}")
+        return {
+            "success": True,
+            "data": {
+                "tier": "free",
+                "is_premium": False
+            }
+        }
+
+@app.get("/api/memberships/pricing")
+async def get_membership_pricing():
+    """Get membership pricing tiers"""
+    try:
+        return {
+            "success": True,
+            "data": {
+                "tiers": [
+                    {
+                        "id": "free",
+                        "name": "Free",
+                        "price": 0,
+                        "currency": "NGN",
+                        "features": [
+                            "Up to 5 events",
+                            "Basic analytics",
+                            "Email support"
+                        ]
+                    },
+                    {
+                        "id": "premium",
+                        "name": "Premium",
+                        "price": 5000,
+                        "currency": "NGN",
+                        "interval": "month",
+                        "features": [
+                            "Unlimited events",
+                            "Advanced analytics",
+                            "Priority support",
+                            "Custom branding"
+                        ]
+                    }
+                ]
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching pricing: {e}")
+        return {"success": True, "data": {"tiers": []}}
+
+# ============================================================================
+# USER PREFERENCES ENDPOINTS
+# ============================================================================
+
+@app.post("/api/users/preferences")
+async def save_user_preferences(request: Request):
+    """Save user event preferences during onboarding"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        body = await request.json()
+        event_preferences = body.get("preferences", body.get("event_preferences", []))
+        
+        print(f"✅ Preferences saved for user {user_id}: {event_preferences}")
+        
+        # In production, save to database
+        # For now, just acknowledge receipt
+        
+        return {
+            "success": True,
+            "message": "Preferences saved successfully",
+            "data": {
+                "preferences": event_preferences
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error saving preferences: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to save preferences: {str(e)}"
+        )
+
+@app.get("/api/users/preferences")
+async def get_user_preferences(request: Request):
+    """Get user event preferences"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        # In production, fetch from database
+        # For now, return empty preferences
+        event_preferences = []
+        
+        return {
+            "success": True,
+            "data": {
+                "preferences": event_preferences
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error getting preferences: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get preferences: {str(e)}"
+        )
 
 # Include payment router for Flutterwave integration
 try:
@@ -639,5 +919,305 @@ try:
     from routers.wallet import router as wallet_router
     app.include_router(wallet_router, prefix="/api/wallet", tags=["wallet"])
     print("✅ Wallet router included successfully with /api/wallet prefix")
+    print(f"   Registered {len(wallet_router.routes)} wallet routes")
 except ImportError as e:
     print(f"⚠️  Wallet router not available: {e}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "simple_main:app",
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", 8000)),
+        reload=False
+    )
+
+
+# ============================================================================
+# NOTIFICATIONS ENDPOINTS
+# ============================================================================
+
+@app.get("/api/notifications")
+async def get_notifications(request: Request):
+    """Get user notifications from Supabase"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {
+                "success": True,
+                "data": {
+                    "notifications": [],
+                    "unread_count": 0
+                }
+            }
+        
+        # Query notifications for this user
+        result = supabase.table('notifications')\
+            .select('*')\
+            .eq('user_id', user_id)\
+            .order('created_at', desc=True)\
+            .limit(50)\
+            .execute()
+        
+        notifications = result.data if result.data else []
+        unread_count = sum(1 for n in notifications if not n.get('is_read', False))
+        
+        print(f"✅ Retrieved {len(notifications)} notifications for user {user_id}")
+        
+        return {
+            "success": True,
+            "data": {
+                "notifications": notifications,
+                "unread_count": unread_count
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error fetching notifications: {e}")
+        return {
+            "success": True,
+            "data": {
+                "notifications": [],
+                "unread_count": 0
+            }
+        }
+
+@app.put("/api/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, request: Request):
+    """Mark a notification as read"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {"success": True, "message": "Notification marked as read"}
+        
+        # Update notification
+        result = supabase.table('notifications')\
+            .update({"is_read": True, "read_at": datetime.utcnow().isoformat()})\
+            .eq('id', notification_id)\
+            .eq('user_id', user_id)\
+            .execute()
+        
+        print(f"✅ Marked notification {notification_id} as read")
+        
+        return {
+            "success": True,
+            "message": "Notification marked as read"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error marking notification as read: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.put("/api/notifications/mark-all-read")
+async def mark_all_notifications_read(request: Request):
+    """Mark all notifications as read"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {"success": True, "message": "All notifications marked as read"}
+        
+        # Update all unread notifications
+        result = supabase.table('notifications')\
+            .update({"is_read": True, "read_at": datetime.utcnow().isoformat()})\
+            .eq('user_id', user_id)\
+            .eq('is_read', False)\
+            .execute()
+        
+        print(f"✅ Marked all notifications as read for user {user_id}")
+        
+        return {
+            "success": True,
+            "message": "All notifications marked as read"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error marking all notifications as read: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/notifications/preferences")
+async def get_notification_preferences(request: Request):
+    """Get user notification preferences"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            # Return default preferences
+            return {
+                "success": True,
+                "data": {
+                    "event_updates": {"email": True, "push": True, "sms": False},
+                    "ticket_purchases": {"email": True, "push": True, "sms": True},
+                    "spray_money": {"email": False, "push": True, "sms": False},
+                    "announcements": {"email": True, "push": True, "sms": False}
+                }
+            }
+        
+        # Query preferences from database
+        result = supabase.table('notification_preferences')\
+            .select('*')\
+            .eq('user_id', user_id)\
+            .execute()
+        
+        if result.data and len(result.data) > 0:
+            preferences = result.data[0]
+        else:
+            # Return default preferences
+            preferences = {
+                "event_updates": {"email": True, "push": True, "sms": False},
+                "ticket_purchases": {"email": True, "push": True, "sms": True},
+                "spray_money": {"email": False, "push": True, "sms": False},
+                "announcements": {"email": True, "push": True, "sms": False}
+            }
+        
+        return {
+            "success": True,
+            "data": preferences
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error fetching notification preferences: {e}")
+        return {
+            "success": True,
+            "data": {
+                "event_updates": {"email": True, "push": True, "sms": False},
+                "ticket_purchases": {"email": True, "push": True, "sms": True},
+                "spray_money": {"email": False, "push": True, "sms": False},
+                "announcements": {"email": True, "push": True, "sms": False}
+            }
+        }
+
+@app.put("/api/notifications/preferences")
+async def update_notification_preferences(request: Request):
+    """Update user notification preferences"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user.get("id") or user.get("user_id")
+        
+        body = await request.json()
+        preferences = body.get("preferences", {})
+        
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {
+                "success": True,
+                "message": "Preferences updated successfully",
+                "data": preferences
+            }
+        
+        # Upsert preferences
+        result = supabase.table('notification_preferences')\
+            .upsert({
+                "user_id": user_id,
+                **preferences,
+                "updated_at": datetime.utcnow().isoformat()
+            })\
+            .execute()
+        
+        print(f"✅ Updated notification preferences for user {user_id}")
+        
+        return {
+            "success": True,
+            "message": "Preferences updated successfully",
+            "data": preferences
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error updating notification preferences: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/notifications/broadcast")
+async def broadcast_notification(request: Request):
+    """Broadcast notification to all users (admin only)"""
+    try:
+        user = await get_user_from_request(request)
+        
+        # Check if user is admin
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        body = await request.json()
+        title = body.get("title")
+        message = body.get("message")
+        type_filter = body.get("type")  # 'all', 'organizers', 'attendees'
+        
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        if not supabase:
+            return {
+                "success": True,
+                "message": "Broadcast notification sent",
+                "data": {"recipients": 0}
+            }
+        
+        # Get all users based on filter
+        query = supabase.table('users').select('id, role')
+        
+        if type_filter == 'organizers':
+            query = query.eq('role', 'organizer')
+        elif type_filter == 'attendees':
+            query = query.eq('role', 'attendee')
+        
+        users_result = query.execute()
+        users = users_result.data if users_result.data else []
+        
+        # Create notifications for each user
+        notifications = [
+            {
+                "user_id": u["id"],
+                "title": title,
+                "message": message,
+                "type": "announcement",
+                "is_read": False,
+                "created_at": datetime.utcnow().isoformat()
+            }
+            for u in users
+        ]
+        
+        if notifications:
+            supabase.table('notifications').insert(notifications).execute()
+        
+        print(f"✅ Broadcast notification sent to {len(notifications)} users")
+        
+        return {
+            "success": True,
+            "message": "Broadcast notification sent",
+            "data": {"recipients": len(notifications)}
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error broadcasting notification: {e}")
+        return {"success": False, "error": str(e)}

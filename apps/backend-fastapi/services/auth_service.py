@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import secrets
 import string
-from database import supabase_client
+from services.supabase_client import get_supabase_client
 from config import config as settings
 import logging
 
@@ -18,9 +18,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class AuthService:
     def __init__(self):
-        self.supabase = supabase_client.get_service_client()
-        if not self.supabase:
-            logger.warning("Supabase not configured, auth service will use mock responses")
+        try:
+            self.supabase = get_supabase_client()
+            logger.info("✅ AuthService initialized with Supabase client")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Supabase client: {e}")
+            self.supabase = None
+            logger.warning("⚠️ AuthService will operate without Supabase")
     
     def hash_password(self, password: str) -> str:
         """Hash a password"""
@@ -50,51 +54,65 @@ class AuthService:
             # First try to verify as Supabase token
             if self.supabase:
                 try:
-                    # For Supabase JWT tokens, we need to decode them with Supabase's JWT secret
-                    # The token contains user info directly
+                    # For Supabase JWT tokens, decode without verification to get user ID
                     import jwt as jose_jwt
                     
-                    # Try to decode without verification first to get the payload structure
+                    # Decode token to get payload
                     unverified_payload = jose_jwt.decode(token, options={"verify_signature": False})
                     
                     if 'sub' in unverified_payload:  # Supabase tokens have 'sub' field
                         user_id = unverified_payload['sub']
+                        logger.info(f"🔐 Verifying Supabase token for user: {user_id}")
                         
                         # Get user data from our database using Supabase user ID
                         try:
                             user_data = self.supabase.table('users').select('*').eq('id', user_id).execute()
-                            if user_data.data:
+                            
+                            if user_data.data and len(user_data.data) > 0:
                                 user = user_data.data[0]
+                                logger.info(f"✅ User found in database: {user_id}, role: {user.get('role')}")
                                 return {
                                     "user_id": user["id"],
                                     "phone_number": user.get("phone_number", ""),
                                     "role": user.get("role", "attendee"),
-                                    "state": user.get("state", "active")
+                                    "state": user.get("state", "active"),
+                                    "email": user.get("email", "")
                                 }
+                            else:
+                                logger.error(f"❌ User not found in database: {user_id}")
+                                logger.error(f"❌ Query result: {user_data}")
+                                # Don't return default - return None to indicate failure
+                                return None
+                                
                         except Exception as db_error:
-                            logger.debug(f"Database lookup failed: {db_error}")
-                            
-                        # If database lookup fails, create basic user info from token
-                        return {
-                            "user_id": user_id,
-                            "phone_number": unverified_payload.get("phone", ""),
-                            "role": "attendee",  # Default role
-                            "state": "active"
-                        }
+                            logger.error(f"❌ Database lookup failed for user {user_id}: {db_error}")
+                            logger.error(f"❌ Supabase client status: {self.supabase is not None}")
+                            # Don't return default - return None to indicate failure
+                            return None
                         
                 except Exception as e:
-                    logger.debug(f"Supabase token verification failed: {e}")
+                    logger.error(f"❌ Supabase token decode failed: {e}")
+            else:
+                logger.warning("⚠️ Supabase client not initialized")
             
             # Fallback to custom JWT verification
             if secret:
+                logger.info("🔐 Attempting custom JWT verification")
                 payload = jwt.decode(token, secret, algorithms=[settings.JWT_ALGORITHM])
+                logger.info(f"✅ Custom JWT verified: {payload.get('user_id')}")
                 return payload
+            else:
+                logger.warning("⚠️ No secret provided for custom JWT verification")
                 
-        except JWTError:
+        except JWTError as e:
+            logger.error(f"❌ JWT decode error: {e}")
             return None
         except Exception as e:
-            logger.error(f"Token verification error: {e}")
+            logger.error(f"❌ Token verification error: {e}")
             return None
+        
+        logger.error("❌ All token verification methods failed")
+        return None
     
     def generate_referral_code(self) -> str:
         """Generate unique referral code"""

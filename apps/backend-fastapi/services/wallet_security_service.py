@@ -119,7 +119,7 @@ class WalletSecurityService:
             "requires_otp": transaction_data.get("amount", 0) > 10000
         }
 
-    def generate_otp(self, user_id: str, purpose: str = "transaction") -> Dict[str, Any]:
+    async def generate_otp(self, user_id: str, purpose: str = "transaction", user_email: str = None) -> Dict[str, Any]:
         """Generate OTP for transaction verification"""
         otp_code = f"{secrets.randbelow(900000) + 100000:06d}"  # 6-digit OTP
         expires_at = time.time() + self.OTP_EXPIRY
@@ -132,11 +132,28 @@ class WalletSecurityService:
             "created_at": time.time()
         }
         
+        # Send OTP via email if email provided
+        email_sent = False
+        if user_email:
+            try:
+                from services.email_service import email_service
+                email_result = await email_service.send_otp_email(
+                    email=user_email,
+                    otp_code=otp_code,
+                    purpose=purpose,
+                    expires_in=self.OTP_EXPIRY
+                )
+                email_sent = email_result.get("success", False)
+            except Exception as e:
+                import logging
+                logging.error(f"Failed to send OTP email: {e}")
+        
         return {
             "success": True,
-            "otp_code": otp_code,  # In production, send via SMS/Email
             "expires_in": self.OTP_EXPIRY,
-            "message": f"OTP sent for {purpose} verification"
+            "message": f"OTP sent to your email for {purpose} verification" if email_sent else f"OTP generated for {purpose} verification",
+            "email_sent": email_sent
+            # ✅ OTP code NOT returned in response for security
         }
 
     def verify_otp(self, user_id: str, otp_code: str) -> Dict[str, Any]:

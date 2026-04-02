@@ -257,13 +257,20 @@ async def generate_otp(request: Request, otp_data: OTPRequest):
         user = await get_user_from_request(request)
         user_id = user["user_id"]
         
-        result = wallet_security_service.generate_otp(user_id, otp_data.purpose)
+        # Get user email from database
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        user_result = supabase.table('users').select('email').eq('id', user_id).execute()
+        user_email = user_result.data[0].get('email') if user_result.data else None
+        
+        result = await wallet_security_service.generate_otp(user_id, otp_data.purpose, user_email)
         
         return {
             "success": True,
             "message": result["message"],
-            "expires_in": result["expires_in"]
-            # Note: In production, OTP would be sent via SMS/Email, not returned
+            "expires_in": result["expires_in"],
+            "email_sent": result.get("email_sent", False)
+            # ✅ OTP code NOT returned for security
         }
         
     except Exception as e:

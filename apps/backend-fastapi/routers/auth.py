@@ -254,3 +254,85 @@ async def verify_otp(otp_verify: OTPVerifyRequest):
         "success": True,
         "message": "OTP functionality will be implemented in next phase"
     }
+
+
+@router.post("/verify-email")
+async def verify_email(token: str):
+    """
+    Verify email address with token
+    """
+    try:
+        result = await auth_service.verify_email(token)
+        
+        if not result['success']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "success": False,
+                    "error": {
+                        **result['error'],
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+        
+        return {
+            "success": True,
+            "message": result['message'],
+            "user": result.get('user')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Failed to verify email",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        )
+
+@router.post("/resend-verification")
+async def resend_verification(email: str):
+    """
+    Resend email verification link
+    """
+    try:
+        result = await auth_service.resend_verification_email(email)
+        
+        if not result['success']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "success": False,
+                    "error": {
+                        **result['error'],
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+        
+        return {
+            "success": True,
+            "message": result['message']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Failed to resend verification email",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        )

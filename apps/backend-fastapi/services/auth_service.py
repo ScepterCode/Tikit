@@ -184,11 +184,23 @@ class AuthService:
             # Generate referral code
             referral_code = self.generate_referral_code()
             
+            # Generate email verification token if email provided
+            verification_token = None
+            verification_expires = None
+            if user_data.get('email'):
+                import secrets
+                from datetime import timedelta
+                verification_token = secrets.token_urlsafe(32)
+                verification_expires = (datetime.utcnow() + timedelta(hours=24)).isoformat()
+            
             # Create user record
             user_record = {
                 'phone_number': phone_number,
                 'password': hashed_password,
-                'phone_verified': True,  # Auto-verify for now
+                'phone_verified': True,  # Auto-verify for now (TODO: Add phone OTP)
+                'email_verified': False if user_data.get('email') else None,
+                'verification_token': verification_token,
+                'verification_expires': verification_expires,
                 'first_name': user_data['first_name'],
                 'last_name': user_data['last_name'],
                 'email': user_data.get('email'),
@@ -217,6 +229,20 @@ class AuthService:
                 }
             
             user = result.data[0]
+            
+            # Send verification email if email provided
+            if user.get('email') and verification_token:
+                try:
+                    from services.email_service import email_service
+                    await email_service.send_verification_email(
+                        email=user['email'],
+                        token=verification_token,
+                        user_name=f"{user['first_name']} {user['last_name']}"
+                    )
+                    logger.info(f"Verification email sent to {user['email']}")
+                except Exception as e:
+                    logger.error(f"Failed to send verification email: {e}")
+                    # Don't fail registration if email fails
             
             # Generate tokens
             token_data = {
@@ -400,3 +426,135 @@ class AuthService:
 
 # Global auth service instance
 auth_service = AuthService()
+
+    async def verify_email(self, token: str) -> Dict[str, Any]:
+        """Verify email with token"""
+        try:
+            # Find user with token
+            result = self.supabase.table('users').select('*').eq('verification_token', token).execute()
+            
+            if not result.data:
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'INVALID_TOKEN',
+                        'message': 'Invalid verification token'
+                    }
+                }
+            
+            user = result.data[0]
+            
+            # Check expiry
+            if user.get('verification_expires'):
+                expires_at = datetime.fromisoformat(user['verification_expires'])
+                if expires_at < datetime.utcnow():
+                    return {
+                        'success': False,
+                        'error': {
+                            'code': 'TOKEN_EXPIRED',
+                            'message': 'Verification token has expired'
+                        }
+                    }
+            
+            # Update user
+            self.supabase.table('users').update({
+                'email_verified': True,
+                'verification_token': None,
+                'verification_expires': None,
+                'updated_at': datetime.utcnow().isoformat()
+            }).eq('id', user['id']).execute()
+            
+            # Send welcome email
+            try:
+                from services.email_service import email_service
+                await email_service.send_welcome_email(
+                    email=user['email'],
+                    user_name=f"{user['first_name']} {user['last_name']}",
+                    role=user['role']
+                )
+            except Exception as e:
+                logger.error(f"Failed to send welcome email: {e}")
+            
+            return {
+                'success': True,
+                'message': 'Email verified successfully',
+                'user': {
+                    'id': user['id'],
+                    'email': user['email'],
+                    'first_name': user['first_name'],
+                    'last_name': user['last_name']
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Email verification error: {e}")
+            return {
+                'success': False,
+                'error': {
+                    'code': 'INTERNAL_ERROR',
+                    'message': 'Failed to verify email'
+                }
+            }
+    
+    async def resend_verification_email(self, email: str) -> Dict[str, Any]:
+        """Resend verification email"""
+        try:
+            # Find user by email
+            result = self.supabase.table('users').select('*').eq('email', email).execute()
+            
+            if not result.data:
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'USER_NOT_FOUND',
+                        'message': 'No account found with this email'
+                    }
+                }
+            
+            user = result.data[0]
+            
+            # Check if already verified
+            if user.get('email_verified'):
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'ALREADY_VERIFIED',
+                        'message': 'Email is already verified'
+                    }
+                }
+            
+            # Generate new token
+            import secrets
+            from datetime import timedelta
+            verification_token = secrets.token_urlsafe(32)
+            verification_expires = (datetime.utcnow() + timedelta(hours=24)).isoformat()
+            
+            # Update user
+            self.supabase.table('users').update({
+                'verification_token': verification_token,
+                'verification_expires': verification_expires,
+                'updated_at': datetime.utcnow().isoformat()
+            }).eq('id', user['id']).execute()
+            
+            # Send email
+            from services.email_service import email_service
+            await email_service.send_verification_email(
+                email=user['email'],
+                token=verification_token,
+                user_name=f"{user['first_name']} {user['last_name']}"
+            )
+            
+            return {
+                'success': True,
+                'message': 'Verification email sent successfully'
+            }
+            
+        except Exception as e:
+            logger.error(f"Resend verification error: {e}")
+            return {
+                'success': False,
+                'error': {
+                    'code': 'INTERNAL_ERROR',
+                    'message': 'Failed to resend verification email'
+                }
+            }

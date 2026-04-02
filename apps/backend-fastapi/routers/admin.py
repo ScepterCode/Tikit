@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import logging
 
 from middleware.auth import get_current_user, require_role
-from services.admin_service import AdminService
+from services.admin_dashboard_service import admin_dashboard_service as AdminService
 from services.supabase_client import supabase_service
 from models.admin_schemas import (
     UserManagement, EventModeration, SystemStats,

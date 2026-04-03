@@ -420,7 +420,10 @@ const AddFundsModal: React.FC<{
       const result = await response.json();
       
       if (!result.success) {
-        alert(`Failed to initiate payment: ${result.error || result.message}`);
+        const errorMsg = typeof result.error === 'object' 
+          ? result.error.error || JSON.stringify(result.error)
+          : result.error || result.message || 'Unknown error';
+        alert(`Failed to initiate payment: ${errorMsg}`);
         setLoading(false);
         return;
       }
@@ -550,9 +553,10 @@ const AddFundsModal: React.FC<{
       // Modal has been triggered, stop loading spinner
       setLoading(false);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error);
-      alert('Failed to initiate payment. Please try again.');
+      const errorMsg = error?.message || error?.toString() || 'Unknown error occurred';
+      alert(`Failed to initiate payment: ${errorMsg}`);
       setLoading(false);
     }
   };

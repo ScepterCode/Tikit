@@ -45,7 +45,7 @@ export function Events() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await authenticatedFetch('http://localhost:8000/api/events');
+      const response = await authenticatedFetch('http://localhost:8000/api/events/');
       const data = await response.json();
       
       if (data.success && data.data.events) {

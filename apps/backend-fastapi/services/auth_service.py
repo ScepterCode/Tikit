@@ -424,9 +424,6 @@ class AuthService:
                 }
             }
 
-# Global auth service instance
-auth_service = AuthService()
-
     async def verify_email(self, token: str) -> Dict[str, Any]:
         """Verify email with token"""
         try:
@@ -438,7 +435,7 @@ auth_service = AuthService()
                     'success': False,
                     'error': {
                         'code': 'INVALID_TOKEN',
-                        'message': 'Invalid verification token'
+                        'message': 'Invalid or expired verification token'
                     }
                 }
             
@@ -452,7 +449,7 @@ auth_service = AuthService()
                         'success': False,
                         'error': {
                             'code': 'TOKEN_EXPIRED',
-                            'message': 'Verification token has expired'
+                            'message': 'Verification token has expired. Please request a new one.'
                         }
                     }
             
@@ -464,26 +461,11 @@ auth_service = AuthService()
                 'updated_at': datetime.utcnow().isoformat()
             }).eq('id', user['id']).execute()
             
-            # Send welcome email
-            try:
-                from services.email_service import email_service
-                await email_service.send_welcome_email(
-                    email=user['email'],
-                    user_name=f"{user['first_name']} {user['last_name']}",
-                    role=user['role']
-                )
-            except Exception as e:
-                logger.error(f"Failed to send welcome email: {e}")
+            logger.info(f"✅ Email verified for user: {user['id']}")
             
             return {
                 'success': True,
-                'message': 'Email verified successfully',
-                'user': {
-                    'id': user['id'],
-                    'email': user['email'],
-                    'first_name': user['first_name'],
-                    'last_name': user['last_name']
-                }
+                'message': 'Email verified successfully'
             }
             
         except Exception as e:
@@ -496,22 +478,22 @@ auth_service = AuthService()
                 }
             }
     
-    async def resend_verification_email(self, email: str) -> Dict[str, Any]:
+    async def resend_verification_email(self, user_id: str) -> Dict[str, Any]:
         """Resend verification email"""
         try:
-            # Find user by email
-            result = self.supabase.table('users').select('*').eq('email', email).execute()
+            # Get user
+            user_result = self.supabase.table('users').select('*').eq('id', user_id).execute()
             
-            if not result.data:
+            if not user_result.data:
                 return {
                     'success': False,
                     'error': {
                         'code': 'USER_NOT_FOUND',
-                        'message': 'No account found with this email'
+                        'message': 'User not found'
                     }
                 }
             
-            user = result.data[0]
+            user = user_result.data[0]
             
             # Check if already verified
             if user.get('email_verified'):
@@ -523,9 +505,17 @@ auth_service = AuthService()
                     }
                 }
             
+            # Check if email exists
+            if not user.get('email'):
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'NO_EMAIL',
+                        'message': 'No email address on file'
+                    }
+                }
+            
             # Generate new token
-            import secrets
-            from datetime import timedelta
             verification_token = secrets.token_urlsafe(32)
             verification_expires = (datetime.utcnow() + timedelta(hours=24)).isoformat()
             
@@ -534,15 +524,24 @@ auth_service = AuthService()
                 'verification_token': verification_token,
                 'verification_expires': verification_expires,
                 'updated_at': datetime.utcnow().isoformat()
-            }).eq('id', user['id']).execute()
+            }).eq('id', user_id).execute()
             
             # Send email
             from services.email_service import email_service
-            await email_service.send_verification_email(
+            email_result = await email_service.send_verification_email(
                 email=user['email'],
                 token=verification_token,
                 user_name=f"{user['first_name']} {user['last_name']}"
             )
+            
+            if not email_result['success']:
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'EMAIL_SEND_FAILED',
+                        'message': 'Failed to send verification email'
+                    }
+                }
             
             return {
                 'success': True,
@@ -558,3 +557,134 @@ auth_service = AuthService()
                     'message': 'Failed to resend verification email'
                 }
             }
+
+    async def request_password_reset(self, email: str) -> Dict[str, Any]:
+        """Request password reset - generates token and sends email"""
+        try:
+            # Find user by email
+            user_result = self.supabase.table('users').select('*').eq('email', email).execute()
+
+            if not user_result.data:
+                # Don't reveal if email exists or not (security best practice)
+                return {
+                    'success': True,
+                    'message': 'If an account exists with this email, a password reset link has been sent'
+                }
+
+            user = user_result.data[0]
+
+            # Generate reset token
+            reset_token = secrets.token_urlsafe(32)
+            reset_expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+
+            # Insert into password_reset_tokens table
+            self.supabase.table('password_reset_tokens').insert({
+                'user_id': user['id'],
+                'token': reset_token,
+                'expires_at': reset_expires,
+                'used': False,
+                'created_at': datetime.utcnow().isoformat()
+            }).execute()
+
+            # Send reset email
+            from services.email_service import email_service
+            email_result = await email_service.send_password_reset(
+                email=user['email'],
+                reset_token=reset_token,
+                user_name=f"{user['first_name']} {user['last_name']}"
+            )
+
+            if not email_result['success']:
+                logger.error(f"Failed to send password reset email: {email_result.get('error')}")
+
+            return {
+                'success': True,
+                'message': 'If an account exists with this email, a password reset link has been sent'
+            }
+
+        except Exception as e:
+            logger.error(f"Password reset request error: {e}")
+            return {
+                'success': False,
+                'error': {
+                    'code': 'INTERNAL_ERROR',
+                    'message': 'Failed to process password reset request'
+                }
+            }
+
+    async def reset_password(self, token: str, new_password: str) -> Dict[str, Any]:
+        """Reset password using token"""
+        try:
+            # Find token in password_reset_tokens table
+            token_result = self.supabase.table('password_reset_tokens').select('*').eq('token', token).eq('used', False).execute()
+
+            if not token_result.data:
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'INVALID_TOKEN',
+                        'message': 'Invalid or expired reset token'
+                    }
+                }
+
+            reset_record = token_result.data[0]
+
+            # Check expiry
+            if reset_record.get('expires_at'):
+                expires_at = datetime.fromisoformat(reset_record['expires_at'])
+                if expires_at < datetime.utcnow():
+                    return {
+                        'success': False,
+                        'error': {
+                            'code': 'TOKEN_EXPIRED',
+                            'message': 'Reset token has expired. Please request a new one.'
+                        }
+                    }
+
+            # Get user
+            user_result = self.supabase.table('users').select('*').eq('id', reset_record['user_id']).execute()
+            if not user_result.data:
+                return {
+                    'success': False,
+                    'error': {
+                        'code': 'USER_NOT_FOUND',
+                        'message': 'User not found'
+                    }
+                }
+
+            user = user_result.data[0]
+
+            # Hash new password
+            hashed_password = self.hash_password(new_password)
+
+            # Update user password
+            self.supabase.table('users').update({
+                'password': hashed_password,
+                'updated_at': datetime.utcnow().isoformat()
+            }).eq('id', user['id']).execute()
+
+            # Mark token as used
+            self.supabase.table('password_reset_tokens').update({
+                'used': True
+            }).eq('id', reset_record['id']).execute()
+
+            logger.info(f"✅ Password reset for user: {user['id']}")
+
+            return {
+                'success': True,
+                'message': 'Password reset successfully'
+            }
+
+        except Exception as e:
+            logger.error(f"Password reset error: {e}")
+            return {
+                'success': False,
+                'error': {
+                    'code': 'INTERNAL_ERROR',
+                    'message': 'Failed to reset password'
+                }
+            }
+
+
+# Global auth service instance
+auth_service = AuthService()

@@ -224,38 +224,6 @@ async def logout_user(current_user: Dict[str, Any] = Depends(get_current_user)):
         "message": "Logout successful"
     }
 
-# OTP endpoints (placeholder for future implementation)
-@router.post("/send-otp", response_model=SuccessResponse)
-async def send_otp(otp_request: OTPRequest):
-    """
-    Send OTP to phone number (placeholder - not implemented yet)
-    """
-    return {
-        "success": True,
-        "message": "OTP functionality will be implemented in next phase"
-    }
-
-@router.post("/verify-otp", response_model=SuccessResponse)
-async def verify_otp(otp_verify: OTPVerifyRequest):
-    """
-    Verify OTP code (placeholder - not implemented yet)
-    """
-    return {
-        "success": True,
-        "message": "OTP functionality will be implemented in next phase"
-    }
-
-@router.post("/verify-otp", response_model=SuccessResponse)
-async def verify_otp(otp_verify: OTPVerifyRequest):
-    """
-    Verify OTP code (placeholder - not implemented yet)
-    """
-    return {
-        "success": True,
-        "message": "OTP functionality will be implemented in next phase"
-    }
-
-
 @router.post("/verify-email")
 async def verify_email(token: str):
     """
@@ -278,8 +246,7 @@ async def verify_email(token: str):
         
         return {
             "success": True,
-            "message": result['message'],
-            "user": result.get('user')
+            "message": result['message']
         }
         
     except HTTPException:
@@ -298,12 +265,13 @@ async def verify_email(token: str):
         )
 
 @router.post("/resend-verification")
-async def resend_verification(email: str):
+async def resend_verification(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
-    Resend email verification link
+    Resend email verification link (requires authentication)
     """
     try:
-        result = await auth_service.resend_verification_email(email)
+        user_id = current_user["user"]["id"]
+        result = await auth_service.resend_verification_email(user_id)
         
         if not result['success']:
             raise HTTPException(
@@ -332,6 +300,86 @@ async def resend_verification(email: str):
                 "error": {
                     "code": "INTERNAL_ERROR",
                     "message": "Failed to resend verification email",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        )
+
+@router.post("/forgot-password")
+async def forgot_password(email: str):
+    """
+    Request password reset - sends email with reset link
+    """
+    try:
+        result = await auth_service.request_password_reset(email)
+        
+        if not result['success']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "success": False,
+                    "error": {
+                        **result['error'],
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+        
+        return {
+            "success": True,
+            "message": result['message']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Failed to process password reset request",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        )
+
+@router.post("/reset-password")
+async def reset_password(token: str, new_password: str):
+    """
+    Reset password using token from email
+    """
+    try:
+        result = await auth_service.reset_password(token, new_password)
+        
+        if not result['success']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "success": False,
+                    "error": {
+                        **result['error'],
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+        
+        return {
+            "success": True,
+            "message": result['message']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Failed to reset password",
                     "timestamp": datetime.utcnow().isoformat()
                 }
             }

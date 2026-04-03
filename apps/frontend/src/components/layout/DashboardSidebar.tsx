@@ -14,7 +14,8 @@ import {
   HiShieldCheck,
   HiBell,
   HiMenu,
-  HiX
+  HiX,
+  HiLockClosed
 } from 'react-icons/hi';
 
 interface SidebarUser {
@@ -43,6 +44,7 @@ export function DashboardSidebar({ user, isCollapsed = false, onToggleCollapse }
           { icon: HiCalendar, label: 'Events', path: '/events' },
           { icon: HiTicket, label: 'My Tickets', path: '/attendee/tickets' },
           { icon: HiCreditCard, label: 'Wallet', path: '/attendee/wallet' },
+          { icon: HiLockClosed, label: 'Secret Events', path: '/attendee/secret-events', badge: 'Premium' },
           { icon: HiUsers, label: 'Referrals', path: '/attendee/referrals' },
           { icon: HiBell, label: 'Notifications', path: '/attendee/notifications' },
           { icon: HiCog, label: 'Profile', path: '/attendee/profile' },
@@ -53,6 +55,7 @@ export function DashboardSidebar({ user, isCollapsed = false, onToggleCollapse }
           { icon: HiHome, label: 'Dashboard', path: '/organizer/dashboard' },
           { icon: HiCalendar, label: 'My Events', path: '/organizer/events' },
           { icon: HiPlus, label: 'Create Event', path: '/organizer/create-event' },
+          { icon: HiLockClosed, label: 'Secret Events', path: '/organizer/secret-events', badge: 'Premium' },
           { icon: HiUserGroup, label: 'Attendees', path: '/organizer/attendees' },
           { icon: HiCreditCard, label: 'Wallet', path: '/organizer/wallet' },
           { icon: HiCash, label: 'Financials', path: '/organizer/financials' },

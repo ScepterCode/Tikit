@@ -5,6 +5,7 @@ Handles premium-only secret events with invite codes
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
+from datetime import datetime
 
 router = APIRouter(prefix="/api/secret-events", tags=["secret-events"])
 
@@ -280,6 +281,232 @@ async def get_secret_events_stats(request: Request):
         return {
             "success": True,
             "data": stats
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# New endpoints for Phase 1
+
+class InviteRequestModel(BaseModel):
+    secret_event_id: str
+    message: Optional[str] = ""
+
+@router.get("/discovery-feed")
+async def get_discovery_feed(
+    request: Request,
+    category: Optional[str] = None,
+    limit: int = 20
+):
+    """
+    Get discoverable secret events (Feature #2: Discovery Feed)
+    Shows teaser information only - no exact locations
+    """
+    try:
+        from services.secret_events_service import secret_events_service
+        
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        result = await secret_events_service.get_discovery_feed(
+            user_id=user_id,
+            category=category,
+            limit=limit
+        )
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "data": result["data"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/request-invite")
+async def request_invite(request: Request, invite_request: InviteRequestModel):
+    """
+    Request invite to a secret event (Feature #2)
+    Organizer can approve/deny the request
+    """
+    try:
+        from services.secret_events_service import secret_events_service
+        
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        result = await secret_events_service.request_invite(
+            secret_event_id=invite_request.secret_event_id,
+            user_id=user_id,
+            message=invite_request.message
+        )
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "message": result["message"],
+            "data": result["data"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/invite-requests/{secret_event_id}")
+async def get_invite_requests(request: Request, secret_event_id: str):
+    """
+    Get all invite requests for an event (organizer only)
+    """
+    try:
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        # Verify user is organizer of this event
+        from database import supabase_client
+        supabase = supabase_client.get_service_client()
+        
+        event = supabase.table('secret_events').select('organizer_id').eq('id', secret_event_id).execute()
+        
+        if not event.data:
+            raise HTTPException(status_code=404, detail="Secret event not found")
+        
+        if event.data[0]['organizer_id'] != user_id:
+            raise HTTPException(status_code=403, detail="Only event organizer can view invite requests")
+        
+        # Get all requests
+        requests_result = supabase.table('secret_event_invite_requests')\
+            .select('*, users(first_name, last_name, email)')\
+            .eq('secret_event_id', secret_event_id)\
+            .order('requested_at', desc=True)\
+            .execute()
+        
+        return {
+            "success": True,
+            "data": {
+                "requests": requests_result.data,
+                "total": len(requests_result.data)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/approve-invite-request/{request_id}")
+async def approve_invite_request(request: Request, request_id: str):
+    """
+    Approve an invite request and generate invite code
+    """
+    try:
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        from database import supabase_client
+        from services.secret_events_service import secret_events_service
+        supabase = supabase_client.get_service_client()
+        
+        # Get request
+        req_result = supabase.table('secret_event_invite_requests')\
+            .select('*, secret_events(organizer_id, event_id)')\
+            .eq('id', request_id)\
+            .execute()
+        
+        if not req_result.data:
+            raise HTTPException(status_code=404, detail="Request not found")
+        
+        req_data = req_result.data[0]
+        
+        # Verify organizer
+        if req_data['secret_events']['organizer_id'] != user_id:
+            raise HTTPException(status_code=403, detail="Only event organizer can approve requests")
+        
+        # Generate invite code
+        invite_code = secret_events_service._generate_invite_code()
+        
+        # Create invite
+        invite_record = {
+            "event_id": req_data['secret_events']['event_id'],
+            "secret_event_id": req_data['secret_event_id'],
+            "code": invite_code,
+            "created_by": user_id,
+            "max_uses": 1,
+            "expires_at": None  # No expiration for approved requests
+        }
+        
+        supabase.table('secret_event_invites').insert(invite_record).execute()
+        
+        # Update request status
+        supabase.table('secret_event_invite_requests')\
+            .update({
+                "status": "approved",
+                "responded_by": user_id,
+                "invite_code": invite_code,
+                "responded_at": datetime.utcnow().isoformat()
+            })\
+            .eq('id', request_id)\
+            .execute()
+        
+        # TODO: Send notification to requester with invite code
+        
+        return {
+            "success": True,
+            "message": "Invite request approved",
+            "data": {
+                "invite_code": invite_code
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/location-hint/{secret_event_id}")
+async def get_location_hint(request: Request, secret_event_id: str):
+    """
+    Get current location hint based on time and user tier
+    Feature #1: Progressive Location Reveal
+    Feature #4: VIP Early Access
+    """
+    try:
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        from services.secret_events_service import secret_events_service
+        from services.membership_service import membership_service
+        from database import supabase_client
+        
+        supabase = supabase_client.get_service_client()
+        
+        # Get secret event
+        event_result = supabase.table('secret_events').select('*').eq('id', secret_event_id).execute()
+        
+        if not event_result.data:
+            raise HTTPException(status_code=404, detail="Secret event not found")
+        
+        event = event_result.data[0]
+        
+        # Get user tier
+        membership = membership_service.get_user_membership(user_id)
+        user_tier = membership["tier"]
+        
+        # Get location hint
+        location_info = secret_events_service.get_location_hint(event, user_tier)
+        
+        return {
+            "success": True,
+            "data": location_info
         }
         
     except HTTPException:

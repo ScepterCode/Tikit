@@ -89,26 +89,28 @@ export function OrganizerScanner() {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/organizer/verify-ticket`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.session?.access_token}`,
-        },
-        body: JSON.stringify({
-          ticket_code: manualCode,
-          event_id: selectedEvent
-        }),
-      });
+      const response = await authenticatedFetch(
+        `${import.meta.env.VITE_API_URL}/api/tickets/validate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ticket_code: manualCode,
+            event_id: selectedEvent !== 'all' ? selectedEvent : undefined
+          }),
+        }
+      );
 
       const data = await response.json();
       
-      if (data.success) {
+      if (data.valid) {
         const newScan: ScanResult = {
           id: Date.now().toString(),
           ticketId: manualCode,
-          attendeeName: data.attendee_name || 'Unknown',
-          eventName: data.event_name || 'Unknown Event',
+          attendeeName: data.attendee?.name || 'Unknown',
+          eventName: data.event?.title || 'Unknown Event',
           status: data.status,
           timestamp: new Date().toISOString(),
           message: data.message
@@ -121,19 +123,61 @@ export function OrganizerScanner() {
         const newStats = { ...stats };
         if (data.status === 'valid') {
           newStats.validToday += 1;
+          
+          // Mark ticket as used
+          if (data.ticket?.id) {
+            await markTicketUsed(data.ticket.id);
+          }
         } else {
           newStats.invalidToday += 1;
         }
         newStats.totalScanned += 1;
         setStats(newStats);
         
-        alert(data.message);
+        // Show success/error message
+        if (data.status === 'valid') {
+          alert(`✅ Valid Ticket!\n\nAttendee: ${data.attendee?.name}\nEvent: ${data.event?.title}\nTicket Type: ${data.ticket?.ticket_type}`);
+        } else {
+          alert(`❌ ${data.message}`);
+        }
       } else {
-        alert(data.error?.message || 'Verification failed');
+        const newScan: ScanResult = {
+          id: Date.now().toString(),
+          ticketId: manualCode,
+          attendeeName: 'Unknown',
+          eventName: 'Unknown Event',
+          status: data.status || 'invalid',
+          timestamp: new Date().toISOString(),
+          message: data.message
+        };
+
+        setScanHistory([newScan, ...scanHistory]);
+        setManualCode('');
+        
+        // Update stats
+        const newStats = { ...stats };
+        newStats.invalidToday += 1;
+        newStats.totalScanned += 1;
+        setStats(newStats);
+        
+        alert(`❌ ${data.message}`);
       }
     } catch (error) {
       console.error('Error verifying ticket:', error);
       alert('Error verifying ticket. Please try again.');
+    }
+  };
+
+  const markTicketUsed = async (ticketId: string) => {
+    try {
+      await authenticatedFetch(
+        `${import.meta.env.VITE_API_URL}/api/tickets/mark-used/${ticketId}`,
+        {
+          method: 'POST',
+        }
+      );
+    } catch (error) {
+      console.error('Error marking ticket as used:', error);
     }
   };
 

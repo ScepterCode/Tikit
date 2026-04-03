@@ -14,7 +14,7 @@ import logging
 from typing import Dict, Any
 
 # Import routers
-from routers import auth, events, tickets, payments, notifications, analytics, wallet, admin_dashboard, membership
+from routers import auth, events, tickets, payments, notifications, analytics, wallet, admin_dashboard, membership, secret_events
 # from routers import admin  # Temporarily disabled - missing admin_schemas.py
 # from routers import realtime  # Temporarily disabled - missing get_current_user_websocket
 from services.supabase_client import get_supabase_client
@@ -181,6 +181,7 @@ app.include_router(notifications.router, prefix="/api/notifications", tags=["Not
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(membership.router, tags=["Membership"])  # Has its own prefix
 app.include_router(admin_dashboard.router, prefix="/api", tags=["Admin Dashboard"])
+app.include_router(secret_events.router, tags=["Secret Events"])  # Has its own prefix
 
 # Import and register users router
 from routers import users

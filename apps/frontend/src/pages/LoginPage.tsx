@@ -187,6 +187,13 @@ export function LoginPage() {
           </button>
         </form>
 
+        {/* Forgot Password Link */}
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Link to="/forgot-password" style={{ color: '#667eea', fontSize: '14px', textDecoration: 'none' }}>
+            Forgot your password?
+          </Link>
+        </div>
+
         {/* Footer */}
         <div style={styles.footer}>
           <p style={styles.footerText}>

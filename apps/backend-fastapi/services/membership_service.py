@@ -9,12 +9,13 @@ from datetime import datetime, timedelta
 from enum import Enum
 
 class MembershipTier(str, Enum):
-    FREE = "free"
-    PREMIUM = "premium"
-    VIP = "vip"
+    REGULAR = "regular"
+    SPECIAL = "special"
+    LEGEND = "legend"
 
 class MembershipStatus(str, Enum):
     ACTIVE = "active"
+    TRIAL = "trial"
     EXPIRED = "expired"
     CANCELLED = "cancelled"
     PENDING = "pending"
@@ -22,53 +23,59 @@ class MembershipStatus(str, Enum):
 # In-memory membership database
 memberships_database: Dict[str, Dict[str, Any]] = {}
 
+# Track users who have used trials
+trial_history: Dict[str, List[str]] = {}  # user_id -> [tier1, tier2]
+
 # Premium features by tier
 TIER_FEATURES = {
-    MembershipTier.FREE: [
-        "basic_events",
-        "public_events",
-        "standard_support"
+    MembershipTier.REGULAR: [
+        "create_public_events",
+        "basic_analytics",
+        "standard_support",
+        "attendee_features"
     ],
-    MembershipTier.PREMIUM: [
-        "basic_events",
-        "public_events",
+    MembershipTier.SPECIAL: [
+        "create_public_events",
+        "basic_analytics",
+        "standard_support",
+        "attendee_features",
         "secret_events",
-        "anonymous_tickets",
-        "anonymous_chat",
-        "premium_messages",
-        "priority_support",
-        "advanced_analytics",
-        "custom_branding"
-    ],
-    MembershipTier.VIP: [
-        "basic_events",
-        "public_events",
-        "secret_events",
-        "anonymous_tickets",
-        "anonymous_chat",
-        "premium_messages",
-        "priority_support",
-        "advanced_analytics",
+        "priority_listing",
         "custom_branding",
-        "early_location_reveal",
-        "exclusive_events",
-        "custom_invite_codes",
-        "white_label_events",
-        "vip_early_access"
+        "advanced_analytics",
+        "email_marketing_500",
+        "remove_branding"
+    ],
+    MembershipTier.LEGEND: [
+        "create_public_events",
+        "basic_analytics",
+        "standard_support",
+        "attendee_features",
+        "secret_events",
+        "priority_listing",
+        "custom_branding",
+        "advanced_analytics",
+        "email_marketing_500",
+        "remove_branding",
+        "ai_assistant",
+        "marketing_automation",
+        "sms_marketing",
+        "unlimited_email",
+        "ai_analytics",
+        "priority_support_24_7",
+        "white_label",
+        "api_access",
+        "custom_domain"
     ]
 }
 
-# Pricing (in Naira)
+# Pricing (in USD)
 TIER_PRICING = {
-    MembershipTier.PREMIUM: {
-        "monthly": 2500,
-        "yearly": 25000,  # 2 months free
-        "lifetime": 50000
+    MembershipTier.SPECIAL: {
+        "monthly": 10
     },
-    MembershipTier.VIP: {
-        "monthly": 5000,
-        "yearly": 50000,  # 2 months free
-        "lifetime": 100000
+    MembershipTier.LEGEND: {
+        "monthly": 30
     }
 }
 
@@ -94,14 +101,15 @@ class MembershipService:
         return membership
     
     def _create_free_membership(self, user_id: str) -> Dict[str, Any]:
-        """Create default free membership for new users"""
+        """Create default regular membership for new users"""
         membership = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
-            "tier": MembershipTier.FREE,
+            "tier": MembershipTier.REGULAR,
             "status": MembershipStatus.ACTIVE,
-            "features": TIER_FEATURES[MembershipTier.FREE],
-            "expires_at": None,  # Free never expires
+            "features": TIER_FEATURES[MembershipTier.REGULAR],
+            "expires_at": None,  # Regular never expires
+            "trial_used": False,
             "created_at": time.time(),
             "updated_at": time.time(),
             "payment_history": []
@@ -109,6 +117,127 @@ class MembershipService:
         
         memberships_database[user_id] = membership
         return membership
+    
+    def start_trial(self, user_id: str, tier: str) -> Dict[str, Any]:
+        """Start 7-day free trial for Special or Legend tier"""
+        try:
+            # Validate tier
+            if tier not in ["special", "legend"]:
+                return {
+                    "success": False,
+                    "error": "Invalid tier. Must be 'special' or 'legend'"
+                }
+            
+            # Get current membership
+            membership = self.get_user_membership(user_id)
+            
+            # Check if user already used trial for this tier
+            user_trials = trial_history.get(user_id, [])
+            if tier in user_trials:
+                return {
+                    "success": False,
+                    "error": f"You have already used your free trial for {tier.title()} tier"
+                }
+            
+            # Check if user is already on this tier or higher
+            tier_order = {"regular": 0, "special": 1, "legend": 2}
+            current_tier_level = tier_order.get(membership["tier"], 0)
+            new_tier_level = tier_order.get(tier, 0)
+            
+            if current_tier_level >= new_tier_level:
+                return {
+                    "success": False,
+                    "error": "You are already on this tier or higher"
+                }
+            
+            # Calculate trial expiration (7 days from now)
+            trial_expires_at = time.time() + (7 * 24 * 60 * 60)
+            
+            # Update membership
+            membership.update({
+                "tier": tier,
+                "status": MembershipStatus.TRIAL,
+                "features": TIER_FEATURES[MembershipTier.SPECIAL if tier == "special" else MembershipTier.LEGEND],
+                "expires_at": trial_expires_at,
+                "trial_used": True,
+                "updated_at": time.time()
+            })
+            
+            # Track trial usage
+            if user_id not in trial_history:
+                trial_history[user_id] = []
+            trial_history[user_id].append(tier)
+            
+            memberships_database[user_id] = membership
+            
+            return {
+                "success": True,
+                "message": f"7-day free trial started for {tier.title()} tier",
+                "membership": membership,
+                "trial_ends_at": trial_expires_at
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Failed to start trial: {str(e)}"
+            }
+    
+    def process_payment(self, user_id: str, tier: str, payment_reference: str) -> Dict[str, Any]:
+        """Process membership payment and activate subscription"""
+        try:
+            # Validate tier
+            if tier not in ["special", "legend"]:
+                return {
+                    "success": False,
+                    "error": "Invalid tier"
+                }
+            
+            # Get current membership
+            membership = self.get_user_membership(user_id)
+            
+            # Calculate new expiration (30 days from now or from current expiration)
+            current_time = time.time()
+            if membership.get("expires_at") and membership["expires_at"] > current_time:
+                # Extend from current expiration
+                new_expires_at = membership["expires_at"] + (30 * 24 * 60 * 60)
+            else:
+                # Start from now
+                new_expires_at = current_time + (30 * 24 * 60 * 60)
+            
+            # Update membership
+            membership.update({
+                "tier": tier,
+                "status": MembershipStatus.ACTIVE,
+                "features": TIER_FEATURES[MembershipTier.SPECIAL if tier == "special" else MembershipTier.LEGEND],
+                "expires_at": new_expires_at,
+                "updated_at": current_time
+            })
+            
+            # Add payment record
+            payment_record = {
+                "id": str(uuid.uuid4()),
+                "amount": TIER_PRICING[MembershipTier.SPECIAL if tier == "special" else MembershipTier.LEGEND]["monthly"],
+                "tier": tier,
+                "duration": "monthly",
+                "payment_reference": payment_reference,
+                "created_at": current_time
+            }
+            membership["payment_history"].append(payment_record)
+            
+            memberships_database[user_id] = membership
+            
+            return {
+                "success": True,
+                "message": f"Payment processed successfully. {tier.title()} membership activated",
+                "membership": membership
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Payment processing failed: {str(e)}"
+            }
     
     def upgrade_membership(
         self, 
@@ -119,20 +248,14 @@ class MembershipService:
     ) -> Dict[str, Any]:
         """Upgrade user to premium tier"""
         try:
-            if tier == MembershipTier.FREE:
+            if tier == MembershipTier.REGULAR:
                 return {
                     "success": False,
-                    "error": "Cannot upgrade to free tier"
+                    "error": "Cannot upgrade to regular tier"
                 }
             
-            # Calculate expiration
-            expires_at = None
-            if duration == "monthly":
-                expires_at = time.time() + (30 * 24 * 60 * 60)  # 30 days
-            elif duration == "yearly":
-                expires_at = time.time() + (365 * 24 * 60 * 60)  # 365 days
-            elif duration == "lifetime":
-                expires_at = None  # Never expires
+            # Calculate expiration (monthly only for now)
+            expires_at = time.time() + (30 * 24 * 60 * 60)  # 30 days
             
             # Get or create membership
             membership = self.get_user_membership(user_id)
@@ -149,7 +272,7 @@ class MembershipService:
             # Add payment record
             payment_record = {
                 "id": str(uuid.uuid4()),
-                "amount": TIER_PRICING[tier][duration],
+                "amount": TIER_PRICING[tier]["monthly"],
                 "tier": tier,
                 "duration": duration,
                 "payment_reference": payment_reference,
@@ -185,21 +308,21 @@ class MembershipService:
         return TIER_FEATURES.get(tier, [])
     
     def cancel_membership(self, user_id: str) -> Dict[str, Any]:
-        """Cancel premium membership (downgrade to free)"""
+        """Cancel premium membership (downgrade to regular)"""
         try:
             membership = self.get_user_membership(user_id)
             
-            if membership["tier"] == MembershipTier.FREE:
+            if membership["tier"] == MembershipTier.REGULAR:
                 return {
                     "success": False,
-                    "error": "User is already on free tier"
+                    "error": "User is already on regular tier"
                 }
             
-            # Downgrade to free
+            # Downgrade to regular
             membership.update({
-                "tier": MembershipTier.FREE,
+                "tier": MembershipTier.REGULAR,
                 "status": MembershipStatus.CANCELLED,
-                "features": TIER_FEATURES[MembershipTier.FREE],
+                "features": TIER_FEATURES[MembershipTier.REGULAR],
                 "expires_at": None,
                 "updated_at": time.time()
             })
@@ -222,33 +345,58 @@ class MembershipService:
         """Get membership statistics (admin only)"""
         stats = {
             "total_users": len(memberships_database),
-            "free_users": 0,
-            "premium_users": 0,
-            "vip_users": 0,
+            "regular_users": 0,
+            "special_users": 0,
+            "legend_users": 0,
             "active_subscriptions": 0,
+            "trial_subscriptions": 0,
             "expired_subscriptions": 0,
-            "total_revenue": 0
+            "total_revenue": 0,
+            "mrr": 0,  # Monthly Recurring Revenue
+            "recent_upgrades": []
         }
+        
+        active_monthly_revenue = 0
+        recent_payments = []
         
         for membership in memberships_database.values():
             tier = membership["tier"]
             status = membership["status"]
             
-            if tier == MembershipTier.FREE:
-                stats["free_users"] += 1
-            elif tier == MembershipTier.PREMIUM:
-                stats["premium_users"] += 1
-            elif tier == MembershipTier.VIP:
-                stats["vip_users"] += 1
+            if tier == MembershipTier.REGULAR:
+                stats["regular_users"] += 1
+            elif tier == MembershipTier.SPECIAL:
+                stats["special_users"] += 1
+            elif tier == MembershipTier.LEGEND:
+                stats["legend_users"] += 1
             
-            if status == MembershipStatus.ACTIVE and tier != MembershipTier.FREE:
+            if status == MembershipStatus.ACTIVE and tier != MembershipTier.REGULAR:
                 stats["active_subscriptions"] += 1
+                # Add to MRR
+                if tier == MembershipTier.SPECIAL:
+                    active_monthly_revenue += 10
+                elif tier == MembershipTier.LEGEND:
+                    active_monthly_revenue += 30
+            elif status == MembershipStatus.TRIAL:
+                stats["trial_subscriptions"] += 1
             elif status == MembershipStatus.EXPIRED:
                 stats["expired_subscriptions"] += 1
             
-            # Calculate revenue
+            # Calculate total revenue
             for payment in membership.get("payment_history", []):
                 stats["total_revenue"] += payment["amount"]
+                recent_payments.append({
+                    "user_id": membership["user_id"],
+                    "tier": payment["tier"],
+                    "amount": payment["amount"],
+                    "created_at": payment["created_at"]
+                })
+        
+        stats["mrr"] = active_monthly_revenue
+        
+        # Get 10 most recent upgrades
+        recent_payments.sort(key=lambda x: x["created_at"], reverse=True)
+        stats["recent_upgrades"] = recent_payments[:10]
         
         return stats
 

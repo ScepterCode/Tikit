@@ -8,10 +8,11 @@ import { authenticatedFetch } from '../utils/auth';
 export interface Membership {
   id: string;
   user_id: string;
-  tier: 'free' | 'premium' | 'vip';
-  status: 'active' | 'expired' | 'cancelled' | 'pending';
+  tier: 'regular' | 'special' | 'legend';
+  status: 'active' | 'trial' | 'expired' | 'cancelled' | 'pending';
   features: string[];
   expires_at: number | null;
+  trial_used: boolean;
   created_at: number;
   updated_at: number;
   payment_history: PaymentRecord[];
@@ -27,15 +28,11 @@ export interface PaymentRecord {
 }
 
 export interface PricingInfo {
-  premium: {
+  special: {
     monthly: number;
-    yearly: number;
-    lifetime: number;
   };
-  vip: {
+  legend: {
     monthly: number;
-    yearly: number;
-    lifetime: number;
   };
 }
 
@@ -81,10 +78,71 @@ export function useMembership() {
     }
   }, []);
 
+  // Start 7-day free trial
+  const startTrial = useCallback(async (tier: 'special' | 'legend') => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await authenticatedFetch('http://localhost:8000/api/memberships/start-trial', {
+        method: 'POST',
+        body: JSON.stringify({ tier })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMembership(data.data.membership);
+        return { success: true, message: data.message, trial_ends_at: data.data.trial_ends_at };
+      } else {
+        setError(data.error || 'Failed to start trial');
+        return { success: false, error: data.error };
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to start trial';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Process payment after trial
+  const processPayment = useCallback(async (tier: 'special' | 'legend', paymentReference: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await authenticatedFetch('http://localhost:8000/api/memberships/process-payment', {
+        method: 'POST',
+        body: JSON.stringify({
+          tier,
+          payment_reference: paymentReference
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMembership(data.data.membership);
+        return { success: true, message: data.message };
+      } else {
+        setError(data.error || 'Payment processing failed');
+        return { success: false, error: data.error };
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Payment processing failed';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Upgrade membership
   const upgradeMembership = useCallback(async (
-    tier: 'premium' | 'vip',
-    duration: 'monthly' | 'yearly' | 'lifetime',
+    tier: 'special' | 'legend',
+    duration: 'monthly' = 'monthly',
     paymentReference?: string
   ) => {
     try {
@@ -163,8 +221,10 @@ export function useMembership() {
   }, []);
 
   // Helper functions
-  const isPremium = membership?.tier !== 'free';
-  const isVip = membership?.tier === 'vip';
+  const isPremium = membership?.tier !== 'regular';
+  const isSpecial = membership?.tier === 'special';
+  const isLegend = membership?.tier === 'legend';
+  const isTrial = membership?.status === 'trial';
   const isExpired = membership?.status === 'expired';
   const daysRemaining = membership?.expires_at 
     ? Math.max(0, Math.floor((membership.expires_at * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
@@ -182,10 +242,14 @@ export function useMembership() {
     loading,
     error,
     isPremium,
-    isVip,
+    isSpecial,
+    isLegend,
+    isTrial,
     isExpired,
     daysRemaining,
     fetchMembership,
+    startTrial,
+    processPayment,
     upgradeMembership,
     cancelMembership,
     checkFeatureAccess

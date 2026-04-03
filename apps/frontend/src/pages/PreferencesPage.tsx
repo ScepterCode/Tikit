@@ -3,11 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/SupabaseAuthContext';
 import { supabase } from '../lib/supabase';
 import { EventPreferencesSelector, EventType } from '../components/onboarding/EventPreferencesSelector';
+import { Mail } from 'lucide-react';
 
 export function PreferencesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [showEmailBanner, setShowEmailBanner] = useState(false);
+
+  useEffect(() => {
+    // Show email verification banner if user has email but not verified
+    if (user?.email && !user?.email_verified) {
+      setShowEmailBanner(true);
+    }
+  }, [user]);
 
   const handlePreferencesSelect = async (preferences: EventType[]) => {
     setSaving(true);
@@ -58,6 +67,27 @@ export function PreferencesPage() {
 
   return (
     <div>
+      {/* Email Verification Banner */}
+      {showEmailBanner && (
+        <div style={styles.emailBanner}>
+          <div style={styles.emailBannerContent}>
+            <Mail style={styles.emailIcon} />
+            <div style={styles.emailBannerText}>
+              <strong>Verify your email</strong>
+              <p style={styles.emailBannerSubtext}>
+                We've sent a verification link to {user?.email}. Please check your inbox.
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowEmailBanner(false)}
+              style={styles.emailBannerClose}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      
       {saving && (
         <div style={styles.savingOverlay}>
           <div style={styles.savingMessage}>Saving preferences...</div>
@@ -69,6 +99,46 @@ export function PreferencesPage() {
 }
 
 const styles = {
+  emailBanner: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#dbeafe',
+    borderBottom: '2px solid #3b82f6',
+    padding: '16px',
+    zIndex: 1000,
+  },
+  emailBannerContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  emailIcon: {
+    width: '24px',
+    height: '24px',
+    color: '#3b82f6',
+    flexShrink: 0,
+  },
+  emailBannerText: {
+    flex: 1,
+    color: '#1e40af',
+  },
+  emailBannerSubtext: {
+    margin: '4px 0 0 0',
+    fontSize: '14px',
+    color: '#3b82f6',
+  },
+  emailBannerClose: {
+    background: 'none',
+    border: 'none',
+    fontSize: '20px',
+    color: '#3b82f6',
+    cursor: 'pointer',
+    padding: '4px 8px',
+  },
   savingOverlay: {
     position: 'fixed' as const,
     top: 0,

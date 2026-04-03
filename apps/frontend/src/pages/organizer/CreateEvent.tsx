@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authenticatedFetch } from '../../utils/auth';
+import { useMembership } from '../../hooks/useMembership';
 
 export function CreateEvent() {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { membership } = useMembership();
+  
+  // Get event type from URL or default to public
+  const [eventType, setEventType] = useState<'public' | 'secret'>(
+    searchParams.get('type') === 'secret' ? 'secret' : 'public'
+  );
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -14,6 +23,16 @@ export function CreateEvent() {
     venue: '',
     category: 'conference',
     enableLivestream: false,
+    // Secret event specific fields
+    secretVenue: '',
+    publicVenue: 'Lagos Island',
+    locationRevealHours: 2,
+    premiumTierRequired: 'premium',
+    anonymousPurchasesAllowed: true,
+    attendeeListHidden: true,
+    discoverable: true,
+    teaserDescription: '',
+    vibe: 'Exclusive',
   });
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -37,6 +56,15 @@ export function CreateEvent() {
       return;
     }
     
+    // Check premium membership for secret events
+    if (eventType === 'secret') {
+      const userTier = membership?.tier || 'free';
+      if (userTier === 'free') {
+        alert('Premium membership required to create secret events');
+        return;
+      }
+    }
+    
     // Validate ticket tiers
     const validTiers = ticketTiers.filter(tier => tier.name && tier.price && tier.quantity);
     if (validTiers.length === 0) {
@@ -45,44 +73,94 @@ export function CreateEvent() {
     }
     
     try {
-      // Prepare event data with ticket tiers
-      const eventData = {
-        ...formData,
-        ticketTiers: validTiers.map(tier => ({
-          name: tier.name,
-          price: parseFloat(tier.price),
-          quantity: parseInt(tier.quantity),
-          sold: 0
-        })),
-        images: imagePreviews, // Base64 encoded images
-      };
-      
-      console.log('🔍 Creating event with data:', eventData);
-      
-      // Call API to create event
-      const response = await authenticatedFetch('http://localhost:8000/api/events', {
-        method: 'POST',
-        body: JSON.stringify(eventData)
-      });
-      
-      console.log('🔍 Response status:', response.status);
-      console.log('🔍 Response ok:', response.ok);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Error:', errorText);
-        alert(`Failed to create event: ${response.status} ${response.statusText}`);
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('🔍 Response data:', data);
-      
-      if (data.success) {
-        alert('Event created successfully!');
-        navigate('/organizer/events');
+      if (eventType === 'secret') {
+        // Create secret event
+        const secretEventData = {
+          title: formData.title,
+          description: formData.description,
+          venue: formData.secretVenue || formData.venue,
+          public_venue: formData.publicVenue,
+          start_date: `${formData.date}T${formData.time}:00Z`,
+          category: formData.category,
+          premium_tier_required: formData.premiumTierRequired,
+          location_reveal_hours: formData.locationRevealHours,
+          max_attendees: validTiers.reduce((sum, tier) => sum + parseInt(tier.quantity), 0),
+          anonymous_purchases_allowed: formData.anonymousPurchasesAllowed,
+          attendee_list_hidden: formData.attendeeListHidden,
+          discoverable: formData.discoverable,
+          teaser_description: formData.teaserDescription || formData.description,
+          vibe: formData.vibe,
+          price: parseFloat(validTiers[0].price),
+          ticket_tiers: validTiers.map(tier => ({
+            name: tier.name,
+            price: parseFloat(tier.price),
+            quantity: parseInt(tier.quantity),
+            sold: 0
+          }))
+        };
+        
+        console.log('🔍 Creating secret event with data:', secretEventData);
+        
+        const response = await authenticatedFetch('http://localhost:8000/api/secret-events/create', {
+          method: 'POST',
+          body: JSON.stringify(secretEventData)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ API Error:', errorText);
+          alert(`Failed to create secret event: ${response.status} ${response.statusText}`);
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('🔍 Response data:', data);
+        
+        if (data.success) {
+          alert(`Secret event created successfully! Master invite code: ${data.data.master_invite_code}`);
+          navigate('/organizer/secret-events');
+        } else {
+          alert(`Failed to create secret event: ${data.error || 'Unknown error'}`);
+        }
       } else {
-        alert(`Failed to create event: ${data.error?.message || 'Unknown error'}`);
+        // Create public event (existing logic)
+        const eventData = {
+          ...formData,
+          ticketTiers: validTiers.map(tier => ({
+            name: tier.name,
+            price: parseFloat(tier.price),
+            quantity: parseInt(tier.quantity),
+            sold: 0
+          })),
+          images: imagePreviews,
+        };
+        
+        console.log('🔍 Creating public event with data:', eventData);
+        
+        const response = await authenticatedFetch('http://localhost:8000/api/events', {
+          method: 'POST',
+          body: JSON.stringify(eventData)
+        });
+        
+        console.log('🔍 Response status:', response.status);
+        console.log('🔍 Response ok:', response.ok);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ API Error:', errorText);
+          alert(`Failed to create event: ${response.status} ${response.statusText}`);
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('🔍 Response data:', data);
+        
+        if (data.success) {
+          alert('Event created successfully!');
+          navigate('/organizer/events');
+        } else {
+          alert(`Failed to create event: ${data.error?.message || 'Unknown error'}`);
+        }
       }
     } catch (error) {
       console.error('❌ Error creating event:', error);
@@ -203,6 +281,92 @@ export function CreateEvent() {
                 Set up a new event and start selling tickets
               </p>
             </div>
+          </div>
+
+          {/* Event Type Selector */}
+          <div style={{
+            ...styles.formContainer,
+            marginBottom: '24px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            borderRadius: '12px',
+            padding: '24px'
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>
+              Event Type
+            </h3>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <label style={{
+                flex: '1',
+                minWidth: '200px',
+                padding: '20px',
+                background: eventType === 'public' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                border: eventType === 'public' ? '2px solid white' : '2px solid transparent',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}>
+                <input
+                  type="radio"
+                  name="eventType"
+                  value="public"
+                  checked={eventType === 'public'}
+                  onChange={(e) => setEventType(e.target.value as 'public' | 'secret')}
+                  style={{ marginRight: '12px' }}
+                />
+                <span style={{ fontSize: '16px', fontWeight: '600' }}>🌍 Public Event</span>
+                <p style={{ margin: '8px 0 0 28px', fontSize: '14px', opacity: 0.9 }}>
+                  Standard event visible to everyone. Location shown immediately.
+                </p>
+              </label>
+              
+              <label style={{
+                flex: '1',
+                minWidth: '200px',
+                padding: '20px',
+                background: eventType === 'secret' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                border: eventType === 'secret' ? '2px solid white' : '2px solid transparent',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}>
+                <input
+                  type="radio"
+                  name="eventType"
+                  value="secret"
+                  checked={eventType === 'secret'}
+                  onChange={(e) => setEventType(e.target.value as 'public' | 'secret')}
+                  style={{ marginRight: '12px' }}
+                />
+                <span style={{ fontSize: '16px', fontWeight: '600' }}>🔒 Secret Event</span>
+                <span style={{
+                  marginLeft: '8px',
+                  padding: '2px 8px',
+                  background: 'rgba(255, 215, 0, 0.3)',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}>Premium</span>
+                <p style={{ margin: '8px 0 0 28px', fontSize: '14px', opacity: 0.9 }}>
+                  Exclusive event with progressive location reveal. Invite-only access.
+                </p>
+              </label>
+            </div>
+            
+            {eventType === 'secret' && membership?.tier === 'free' && (
+              <div style={{
+                marginTop: '16px',
+                padding: '12px',
+                background: 'rgba(255, 215, 0, 0.2)',
+                borderRadius: '8px',
+                fontSize: '14px'
+              }}>
+                ⚠️ Premium membership required to create secret events. 
+                <a href="/membership" style={{ color: 'white', textDecoration: 'underline', marginLeft: '8px' }}>
+                  Upgrade Now
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Event Form */}
@@ -352,17 +516,145 @@ export function CreateEvent() {
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Venue *</label>
+                <label style={styles.label}>
+                  {eventType === 'secret' ? 'Secret Venue (Full Address) *' : 'Venue *'}
+                </label>
                 <input
                   type="text"
-                  name="venue"
-                  value={formData.venue}
+                  name={eventType === 'secret' ? 'secretVenue' : 'venue'}
+                  value={eventType === 'secret' ? formData.secretVenue : formData.venue}
                   onChange={handleChange}
                   style={styles.input}
-                  placeholder="Enter venue address"
+                  placeholder={eventType === 'secret' ? 'Full secret address (revealed progressively)' : 'Enter venue address'}
                   required
                 />
+                {eventType === 'secret' && (
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    This address will be revealed progressively to attendees
+                  </p>
+                )}
               </div>
+
+              {/* Secret Event Specific Fields */}
+              {eventType === 'secret' && (
+                <>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Public Venue (Vague Location) *</label>
+                    <input
+                      type="text"
+                      name="publicVenue"
+                      value={formData.publicVenue}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="e.g., Lagos Island, Victoria Island"
+                      required
+                    />
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                      Vague location shown initially (e.g., city or area)
+                    </p>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Location Reveal Time</label>
+                    <select
+                      name="locationRevealHours"
+                      value={formData.locationRevealHours}
+                      onChange={handleChange}
+                      style={styles.select}
+                    >
+                      <option value="1">1 hour before event</option>
+                      <option value="2">2 hours before event</option>
+                      <option value="3">3 hours before event</option>
+                      <option value="6">6 hours before event</option>
+                      <option value="12">12 hours before event</option>
+                      <option value="24">24 hours before event</option>
+                    </select>
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                      When to reveal full address (VIP members get 1 hour early access)
+                    </p>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Required Membership Tier</label>
+                    <select
+                      name="premiumTierRequired"
+                      value={formData.premiumTierRequired}
+                      onChange={handleChange}
+                      style={styles.select}
+                    >
+                      <option value="premium">Premium</option>
+                      <option value="vip">VIP Only</option>
+                    </select>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Teaser Description *</label>
+                    <textarea
+                      name="teaserDescription"
+                      value={formData.teaserDescription}
+                      onChange={handleChange}
+                      style={styles.textarea}
+                      placeholder="Brief teaser shown in discovery feed (without revealing too much)..."
+                      rows={3}
+                      required
+                    />
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                      Shown in discovery feed - keep it mysterious!
+                    </p>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Event Vibe</label>
+                    <input
+                      type="text"
+                      name="vibe"
+                      value={formData.vibe}
+                      onChange={handleChange}
+                      style={styles.input}
+                      placeholder="e.g., Exclusive, Intimate, Underground"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="checkbox"
+                        name="discoverable"
+                        checked={formData.discoverable}
+                        onChange={(e) => setFormData(prev => ({ ...prev, discoverable: e.target.checked }))}
+                      />
+                      Show in Discovery Feed
+                    </label>
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                      Allow users to discover and request invites to this event
+                    </p>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="checkbox"
+                        name="anonymousPurchasesAllowed"
+                        checked={formData.anonymousPurchasesAllowed}
+                        onChange={(e) => setFormData(prev => ({ ...prev, anonymousPurchasesAllowed: e.target.checked }))}
+                      />
+                      Allow Anonymous Ticket Purchases
+                    </label>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="checkbox"
+                        name="attendeeListHidden"
+                        checked={formData.attendeeListHidden}
+                        onChange={(e) => setFormData(prev => ({ ...prev, attendeeListHidden: e.target.checked }))}
+                      />
+                      Hide Attendee List
+                    </label>
+                  </div>
+                </>
+              )}
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Description *</label>

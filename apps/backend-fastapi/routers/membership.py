@@ -5,6 +5,7 @@ Handles premium membership endpoints
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+import time
 from services.membership_service import membership_service, MembershipTier, MembershipStatus
 
 router = APIRouter(prefix="/api/memberships", tags=["memberships"])
@@ -14,6 +15,13 @@ class UpgradeRequest(BaseModel):
     tier: MembershipTier
     duration: str = "monthly"  # monthly, yearly, lifetime
     payment_reference: Optional[str] = None
+
+class StartTrialRequest(BaseModel):
+    tier: str  # "special" or "legend"
+
+class ProcessPaymentRequest(BaseModel):
+    tier: str  # "special" or "legend"
+    payment_reference: str
 
 class MembershipResponse(BaseModel):
     success: bool
@@ -33,18 +41,81 @@ async def get_membership_status(request: Request):
         
         membership = membership_service.get_user_membership(user_id)
         
+        # Calculate days remaining
+        days_remaining = None
+        if membership.get("expires_at"):
+            days_remaining = max(0, int((membership["expires_at"] - time.time()) / 86400))
+        
         return {
             "success": True,
             "data": {
                 "membership": membership,
                 "features": membership["features"],
-                "is_premium": membership["tier"] != MembershipTier.FREE,
+                "is_premium": membership["tier"] != MembershipTier.REGULAR,
                 "expires_at": membership.get("expires_at"),
-                "days_remaining": None if not membership.get("expires_at") 
-                    else max(0, int((membership["expires_at"] - membership_service.time.time()) / 86400))
+                "days_remaining": days_remaining,
+                "is_trial": membership.get("status") == MembershipStatus.TRIAL
             }
         }
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/start-trial")
+async def start_trial(request: Request, trial_data: StartTrialRequest):
+    """Start 7-day free trial for Special or Legend tier"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        result = membership_service.start_trial(user_id, trial_data.tier)
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "message": result["message"],
+            "data": {
+                "membership": result["membership"],
+                "trial_ends_at": result["trial_ends_at"]
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/process-payment")
+async def process_payment(request: Request, payment_data: ProcessPaymentRequest):
+    """Process membership payment after trial or for renewal"""
+    try:
+        user = await get_user_from_request(request)
+        user_id = user["user_id"]
+        
+        # TODO: Verify payment with Flutterwave using payment_reference
+        # For now, we'll trust the payment_reference
+        
+        result = membership_service.process_payment(
+            user_id=user_id,
+            tier=payment_data.tier,
+            payment_reference=payment_data.payment_reference
+        )
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "message": result["message"],
+            "data": {
+                "membership": result["membership"]
+            }
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -56,10 +127,10 @@ async def upgrade_membership(request: Request, upgrade_data: UpgradeRequest):
         user_id = user["user_id"]
         
         # Validate tier and duration
-        if upgrade_data.tier not in [MembershipTier.PREMIUM, MembershipTier.VIP]:
+        if upgrade_data.tier not in [MembershipTier.SPECIAL, MembershipTier.LEGEND]:
             raise HTTPException(status_code=400, detail="Invalid tier")
         
-        if upgrade_data.duration not in ["monthly", "yearly", "lifetime"]:
+        if upgrade_data.duration not in ["monthly"]:
             raise HTTPException(status_code=400, detail="Invalid duration")
         
         result = membership_service.upgrade_membership(
@@ -96,8 +167,9 @@ async def get_pricing():
             "data": {
                 "pricing": pricing,
                 "features": {
-                    "premium": membership_service.get_tier_features(MembershipTier.PREMIUM),
-                    "vip": membership_service.get_tier_features(MembershipTier.VIP)
+                    "regular": membership_service.get_tier_features(MembershipTier.REGULAR),
+                    "special": membership_service.get_tier_features(MembershipTier.SPECIAL),
+                    "legend": membership_service.get_tier_features(MembershipTier.LEGEND)
                 }
             }
         }
@@ -140,13 +212,21 @@ async def check_feature_access(request: Request, feature: str):
         has_access = membership_service.check_feature_access(user_id, feature)
         membership = membership_service.get_user_membership(user_id)
         
+        # Determine required tier for feature
+        required_tier = "regular"
+        if feature in membership_service.get_tier_features(MembershipTier.LEGEND):
+            if feature not in membership_service.get_tier_features(MembershipTier.SPECIAL):
+                required_tier = "legend"
+            else:
+                required_tier = "special"
+        
         return {
             "success": True,
             "data": {
                 "feature": feature,
                 "has_access": has_access,
                 "current_tier": membership["tier"],
-                "required_tier": "premium" if feature in membership_service.get_tier_features(MembershipTier.PREMIUM) else "vip"
+                "required_tier": required_tier
             }
         }
         

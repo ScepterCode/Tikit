@@ -13,6 +13,7 @@ import { MyTickets } from './pages/attendee/MyTickets';
 import { Wallet } from './pages/attendee/Wallet';
 import { Referrals } from './pages/attendee/Referrals';
 import { Profile } from './pages/attendee/Profile';
+import AttendeeSecretEvents from './pages/attendee/SecretEvents';
 import { Events } from './pages/Events';
 import { EventDetail } from './pages/EventDetail';
 import { Checkout } from './pages/Checkout';
@@ -26,6 +27,7 @@ import { OrganizerScanner } from './pages/organizer/OrganizerScanner';
 import { OrganizerSettings } from './pages/organizer/OrganizerSettings';
 import { OrganizerAnalytics } from './pages/organizer/OrganizerAnalytics';
 import OrganizerWallet from './pages/organizer/OrganizerWallet';
+import OrganizerSecretEvents from './pages/organizer/SecretEvents';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminAnnouncements } from './pages/admin/AdminAnnouncements';
@@ -39,6 +41,9 @@ import { PWAUpdatePrompt } from './components/common/PWAUpdatePrompt';
 import { ApiStatusIndicator } from './components/common/ApiStatusIndicator';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { NotificationsPage } from './pages/NotificationsPage';
+import VerifyEmail from './pages/VerifyEmail';
+import ResetPassword from './pages/ResetPassword';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -49,6 +54,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
           <Route path="/debug/auth" element={<AuthDebug />} />
           
           {/* Preferences - After registration */}
@@ -115,6 +125,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['attendee']}>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendee/secret-events"
+            element={
+              <ProtectedRoute allowedRoles={['attendee']}>
+                <AttendeeSecretEvents />
               </ProtectedRoute>
             }
           />
@@ -217,6 +235,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['organizer']}>
                 <OrganizerSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/secret-events"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <OrganizerSecretEvents />
               </ProtectedRoute>
             }
           />

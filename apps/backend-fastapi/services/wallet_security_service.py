@@ -119,8 +119,8 @@ class WalletSecurityService:
             "requires_otp": transaction_data.get("amount", 0) > 10000
         }
 
-    async def generate_otp(self, user_id: str, purpose: str = "transaction", user_email: str = None) -> Dict[str, Any]:
-        """Generate OTP for transaction verification"""
+    async def generate_otp(self, user_id: str, purpose: str = "transaction") -> Dict[str, Any]:
+        """Generate OTP for transaction verification and send via email"""
         otp_code = f"{secrets.randbelow(900000) + 100000:06d}"  # 6-digit OTP
         expires_at = time.time() + self.OTP_EXPIRY
         
@@ -132,10 +132,19 @@ class WalletSecurityService:
             "created_at": time.time()
         }
         
-        # Send OTP via email if email provided
+        # Get user email from database and send OTP
         email_sent = False
-        if user_email:
-            try:
+        try:
+            from services.supabase_client import get_supabase_client
+            supabase = get_supabase_client()
+            
+            # Get user email
+            user_result = supabase.table('users').select('email, first_name, last_name').eq('id', user_id).execute()
+            
+            if user_result.data and user_result.data[0].get('email'):
+                user_email = user_result.data[0]['email']
+                
+                # Send OTP via email
                 from services.email_service import email_service
                 email_result = await email_service.send_otp_email(
                     email=user_email,
@@ -144,16 +153,24 @@ class WalletSecurityService:
                     expires_in=self.OTP_EXPIRY
                 )
                 email_sent = email_result.get("success", False)
-            except Exception as e:
+                
+                if not email_sent:
+                    import logging
+                    logging.error(f"Failed to send OTP email to {user_email}")
+            else:
                 import logging
-                logging.error(f"Failed to send OTP email: {e}")
+                logging.warning(f"No email found for user {user_id}")
+                
+        except Exception as e:
+            import logging
+            logging.error(f"Failed to send OTP email: {e}")
         
         return {
             "success": True,
             "expires_in": self.OTP_EXPIRY,
-            "message": f"OTP sent to your email for {purpose} verification" if email_sent else f"OTP generated for {purpose} verification",
+            "message": f"OTP sent to your registered email for {purpose} verification" if email_sent else f"OTP generated for {purpose} verification. Please check your email.",
             "email_sent": email_sent
-            # ✅ OTP code NOT returned in response for security
+            # ✅ SECURITY FIX: OTP code NOT returned in response
         }
 
     def verify_otp(self, user_id: str, otp_code: str) -> Dict[str, Any]:

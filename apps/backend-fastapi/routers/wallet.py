@@ -140,15 +140,27 @@ async def fund_wallet(request: Request, fund_data: Dict[str, Any]):
         
         user_result = supabase.table('users').select('email, first_name, last_name').eq('id', user_id).execute()
         
-        if not user_result.data:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        user_data = user_result.data[0]
-        user_email = user_data.get('email', '')
-        user_name = f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip()
-        
-        if not user_name:
-            user_name = user_email.split('@')[0]  # Fallback to email username
+        if not user_result.data or len(user_result.data) == 0:
+            # User not found in database, use data from JWT token
+            print(f"⚠️ User {user_id} not found in database, using JWT data")
+            user_email = user.get('email', '')
+            user_name = f"{user.get('first_name', '')} {user.get('last_name', '')}".strip()
+            
+            if not user_email:
+                raise HTTPException(
+                    status_code=400, 
+                    detail={"error": "User email not found. Please complete your profile."}
+                )
+            
+            if not user_name:
+                user_name = user_email.split('@')[0]  # Fallback to email username
+        else:
+            user_data = user_result.data[0]
+            user_email = user_data.get('email', '')
+            user_name = f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip()
+            
+            if not user_name:
+                user_name = user_email.split('@')[0]  # Fallback to email username
 
         # Generate transaction reference
         tx_ref = f"FUND_{user_id}_{int(datetime.now().timestamp())}"
@@ -165,7 +177,8 @@ async def fund_wallet(request: Request, fund_data: Dict[str, Any]):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"❌ Error in fund_wallet: {e}")
+        raise HTTPException(status_code=500, detail={"error": str(e)})
 
 @router.get("/transactions")
 async def get_wallet_transactions(request: Request, limit: int = 20, offset: int = 0):

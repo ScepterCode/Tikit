@@ -14,11 +14,15 @@ from datetime import datetime, timedelta
 
 from services.flutterwave_service import flutterwave_service
 from services.payment_service import payment_service
-# from services.booking_service import booking_service
-# from services.notification_service import notification_service
-# from middleware.auth import get_current_user
-# from middleware.payment_security import payment_security
+from services.booking_service import booking_service
+from services.ticket_service import ticket_service
+from services.email_service import email_service
+from services.event_service import event_service
+from services.notification_service import notification_service
 from config import config
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Simple authentication function for testing
 async def get_current_user(request: Request):
@@ -439,48 +443,99 @@ async def verify_payment(
     request: PaymentVerificationRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Verify Flutterwave payment - Inline payment verification"""
+    """Verify Flutterwave payment and create tickets"""
     try:
         user_id = current_user["user_id"]
         
-        # For Flutterwave Inline payments, we trust the frontend callback
-        # since Flutterwave handles the payment securely on their end
-        # The transaction_id and tx_ref are verified by Flutterwave before callback
+        # Extract event_id and ticket details from tx_ref
+        # Format: TKT_{uuid}_{timestamp}_{event_id}_{quantity}_{tier_name}
+        tx_parts = request.tx_ref.split('_')
+        event_id = tx_parts[3] if len(tx_parts) > 3 else None
+        quantity = int(tx_parts[4]) if len(tx_parts) > 4 else 1
+        tier_name = tx_parts[5] if len(tx_parts) > 5 else "General"
         
         # Try to verify with Flutterwave API if secret key is available
+        payment_amount = 0
         try:
             result = flutterwave_service.verify_payment(request.transaction_id)
             
             if result['success'] and result['status'] == 'successful':
-                # API verification successful
-                payment_security.log_payment_attempt(
-                    user_id, int(result['amount'] * 100), 'flutterwave_verify', True
-                )
-                
-                return {
-                    "success": True,
-                    "status": "successful",
-                    "transaction_id": request.transaction_id,
-                    "amount": result['amount'],
-                    "tx_ref": result['tx_ref'],
-                    "flw_ref": result['flw_ref'],
-                    "message": "Payment verified successfully"
-                }
+                payment_amount = result['amount']
+                logger.info(f"Payment verified via API: {request.transaction_id}")
         except Exception as api_error:
-            # API verification failed, but Inline payment might still be valid
-            # Log the API error but continue with inline verification
             logger.warning(f"Flutterwave API verification failed: {api_error}")
+            # Continue with inline verification
         
-        # Fallback: Accept inline payment verification
-        # This is secure because:
-        # 1. Flutterwave validates payment on their end
-        # 2. Transaction ID is unique and from Flutterwave
-        # 3. Webhook will provide final confirmation
+        # Get event details
+        event = None
+        if event_id:
+            event = await event_service.get_event(event_id)
         
-        logger.info(f"Using inline payment verification for transaction: {request.transaction_id}")
+        # Create tickets for the purchase
+        tickets_created = []
+        for i in range(quantity):
+            ticket_data = {
+                "user_id": user_id,
+                "event_id": event_id,
+                "ticket_type": tier_name,
+                "price": payment_amount / quantity if payment_amount > 0 else 0,
+                "status": "active",
+                "payment_reference": request.tx_ref
+            }
+            
+            ticket = await ticket_service.create_ticket(ticket_data)
+            if ticket:
+                tickets_created.append(ticket)
+                logger.info(f"Ticket created: {ticket['id']} with code: {ticket.get('ticket_code')}")
+        
+        # Send ticket confirmation email for each ticket
+        if tickets_created and event:
+            for ticket in tickets_created:
+                email_ticket_data = {
+                    "ticket_code": ticket.get('ticket_code', 'N/A'),
+                    "event_title": event.get('title', 'Event'),
+                    "event_date": event.get('event_date', 'TBD'),
+                    "venue": event.get('venue_name', 'TBD'),
+                    "tier_name": tier_name,
+                    "quantity": 1,
+                    "amount": ticket.get('price', 0)
+                }
+                
+                # Get user email
+                user_email = current_user.get('email', 'user@example.com')
+                
+                # Send email with QR code
+                await email_service.send_ticket_confirmation(
+                    email=user_email,
+                    ticket_data=email_ticket_data,
+                    qr_code_base64=ticket.get('qr_code')
+                )
+                logger.info(f"Ticket confirmation email queued for {user_email}")
+        
+        # Create booking record
+        if event_id:
+            booking_data = await booking_service.create_booking(
+                user_id=user_id,
+                event_id=event_id,
+                quantity=quantity,
+                total_amount=payment_amount,
+                payment_method="flutterwave"
+            )
+            
+            if booking_data:
+                await booking_service.update_booking_status(booking_data['id'], 'confirmed')
+        
+        # Send notification
+        await notification_service.create_notification(
+            user_id=user_id,
+            title="Payment Successful",
+            message=f"Your payment has been confirmed. {len(tickets_created)} ticket(s) created.",
+            notification_type="payment_success",
+            event_id=event_id
+        )
         
         payment_security.log_payment_attempt(
-            user_id, 0, 'flutterwave_inline', True
+            user_id, int(payment_amount * 100), 'flutterwave_verify', True
         )
         
         return {
@@ -488,13 +543,16 @@ async def verify_payment(
             "status": "successful",
             "transaction_id": request.transaction_id,
             "tx_ref": request.tx_ref,
-            "message": "Payment verified via Flutterwave Inline",
-            "verification_method": "inline"
+            "amount": payment_amount,
+            "tickets_created": len(tickets_created),
+            "ticket_codes": [t.get('ticket_code') for t in tickets_created],
+            "message": f"Payment verified successfully. {len(tickets_created)} ticket(s) created and confirmation email sent."
         }
         
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error verifying payment: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail={

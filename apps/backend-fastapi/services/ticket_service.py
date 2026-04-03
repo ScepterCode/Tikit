@@ -10,6 +10,7 @@ import qrcode
 import io
 import base64
 import logging
+from services.ticket_code_generator import ticket_code_generator
 
 logger = logging.getLogger(__name__)
 
@@ -17,42 +18,50 @@ class TicketService:
     def __init__(self):
         self.supabase: Client = create_client(config.SUPABASE_URL, config.SUPABASE_ANON_KEY)
     
-    def generate_qr_code(self, ticket_id: str) -> str:
-        """Generate QR code for ticket"""
+    def generate_qr_code(self, ticket_code: str) -> str:
+        """Generate QR code for ticket using ticket code (not ticket ID)"""
         try:
             qr = qrcode.QRCode(version=1, box_size=10, border=5)
-            qr.add_data(f"TIKIT-{ticket_id}")
+            # QR code contains the ticket code (XXXX-1234567)
+            qr.add_data(ticket_code)
             qr.make(fit=True)
             
             img = qr.make_image(fill_color="black", back_color="white")
             buffer = io.BytesIO()
             img.save(buffer, format='PNG')
             img_str = base64.b64encode(buffer.getvalue()).decode()
-            return f"data:image/png;base64,{img_str}"
+            return img_str  # Return base64 string without data URI prefix
         except Exception as e:
             logger.error(f"Error generating QR code: {str(e)}")
             return ""
     
     async def create_ticket(self, ticket_data: dict) -> Optional[dict]:
-        """Create a new ticket in the database"""
+        """Create a new ticket in the database with unique ticket code"""
         try:
+            # Generate unique ticket code
+            ticket_code = await ticket_code_generator.generate_unique_code(self.supabase)
+            
+            if not ticket_code:
+                logger.error("Failed to generate unique ticket code")
+                return None
+            
+            # Add ticket code to data
+            ticket_data['ticket_code'] = ticket_code
+            
             # Set default values
             ticket_data.setdefault('status', 'active')
             ticket_data.setdefault('ticket_type', 'regular')
+            
+            # Generate QR code from ticket code
+            qr_code_base64 = self.generate_qr_code(ticket_code)
+            if qr_code_base64:
+                ticket_data['qr_code'] = qr_code_base64
             
             result = self.supabase.table('tickets').insert(ticket_data).execute()
             
             if result.data:
                 ticket = result.data[0]
-                # Generate QR code
-                qr_code = self.generate_qr_code(ticket['id'])
-                
-                # Update ticket with QR code
-                if qr_code:
-                    await self.update_ticket(ticket['id'], {'qr_code': qr_code})
-                    ticket['qr_code'] = qr_code
-                
-                logger.info(f"Ticket created successfully: {ticket['id']}")
+                logger.info(f"Ticket created: {ticket['id']} with code: {ticket_code}")
                 return ticket
             else:
                 logger.error("Failed to create ticket")

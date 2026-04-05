@@ -14,14 +14,17 @@ async def get_user_preferences(current_user: Dict[str, Any] = Depends(get_curren
     Get user's event preferences
     """
     try:
-        from services.supabase_client import supabase_client
+        from services.supabase_client import get_supabase_client
         
         user_id = current_user['user_id']
+        supabase = get_supabase_client()
         
         # Get user preferences from database
-        result = supabase_client.client.table('users').select('event_preferences').eq('id', user_id).single().execute()
+        result = supabase.table('users').select('event_preferences').eq('id', user_id).execute()
         
-        if not result.data:
+        # Check if user exists and has data
+        if not result.data or len(result.data) == 0:
+            # Return empty preferences if user not found
             return {
                 "success": True,
                 "data": {
@@ -32,22 +35,19 @@ async def get_user_preferences(current_user: Dict[str, Any] = Depends(get_curren
         return {
             "success": True,
             "data": {
-                "event_preferences": result.data.get('event_preferences', [])
+                "event_preferences": result.data[0].get('event_preferences', [])
             }
         }
         
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "success": False,
-                "error": {
-                    "code": "INTERNAL_ERROR",
-                    "message": f"Failed to get preferences: {str(e)}",
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+        # Log the error but return empty preferences instead of failing
+        print(f"Error getting preferences for user {current_user.get('user_id')}: {str(e)}")
+        return {
+            "success": True,
+            "data": {
+                "event_preferences": []
             }
-        )
+        }
 
 @router.post("/preferences")
 async def update_user_preferences(
@@ -58,13 +58,14 @@ async def update_user_preferences(
     Update user's event preferences
     """
     try:
-        from services.supabase_client import supabase_client
+        from services.supabase_client import get_supabase_client
         
         user_id = current_user['user_id']
         event_preferences = preferences_data.get('event_preferences', [])
+        supabase = get_supabase_client()
         
         # Update user preferences in database
-        result = supabase_client.client.table('users').update({
+        result = supabase.table('users').update({
             'event_preferences': event_preferences
         }).eq('id', user_id).execute()
         

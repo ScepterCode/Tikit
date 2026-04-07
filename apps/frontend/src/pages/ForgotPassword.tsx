@@ -41,23 +41,23 @@ const ForgotPassword: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div style={styles.container}>
+        <div style={styles.successCard}>
+          <div style={styles.iconContainer}>
+            <svg style={styles.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
-          <p className="text-gray-600 mb-6">
-            If an account exists with <span className="font-semibold">{email}</span>, you will receive a password reset link shortly.
+          <h2 style={styles.successTitle}>Check Your Email</h2>
+          <p style={styles.successText}>
+            If an account exists with <span style={styles.emailHighlight}>{email}</span>, you will receive a password reset link shortly.
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p style={styles.hintText}>
             The link will expire in 1 hour. Check your spam folder if you don't see it.
           </p>
           <button
             onClick={() => navigate('/auth/login')}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all"
+            style={styles.submitButton}
           >
             Back to Login
           </button>
@@ -67,22 +67,23 @@ const ForgotPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Forgot Password?</h1>
-          <p className="text-gray-600">Enter your email to receive a password reset link</p>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <div style={styles.header}>
+          <h1 style={styles.logo}>🎵 Grooovy</h1>
+          <h2 style={styles.title}>Forgot Password?</h2>
+          <p style={styles.subtitle}>Enter your email to receive a password reset link</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 text-sm">{error}</p>
+          <div style={styles.error}>
+            <p style={styles.errorText}>{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.field}>
+            <label htmlFor="email" style={styles.label}>
               Email Address
             </label>
             <input
@@ -90,7 +91,7 @@ const ForgotPassword: React.FC = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              style={styles.input}
               placeholder="your@email.com"
               required
               disabled={loading}
@@ -100,16 +101,19 @@ const ForgotPassword: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              ...styles.submitButton,
+              ...(loading ? styles.submitButtonDisabled : {})
+            }}
           >
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div style={styles.footer}>
           <button
             onClick={() => navigate('/auth/login')}
-            className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+            style={styles.backButton}
           >
             Back to Login
           </button>
@@ -117,6 +121,160 @@ const ForgotPassword: React.FC = () => {
       </div>
     </div>
   );
+};
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    padding: '20px',
+  },
+  card: {
+    width: '100%',
+    maxWidth: '450px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+    padding: '40px',
+  },
+  successCard: {
+    width: '100%',
+    maxWidth: '450px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+    padding: '40px',
+    textAlign: 'center' as const,
+  },
+  header: {
+    textAlign: 'center' as const,
+    marginBottom: '32px',
+  },
+  logo: {
+    fontSize: '36px',
+    fontWeight: 'bold',
+    marginBottom: '12px',
+    color: '#667eea',
+  },
+  title: {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: '8px',
+    margin: 0,
+  },
+  subtitle: {
+    fontSize: '16px',
+    color: '#6b7280',
+    margin: 0,
+  },
+  iconContainer: {
+    width: '64px',
+    height: '64px',
+    backgroundColor: '#dbeafe',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 16px',
+  },
+  icon: {
+    width: '32px',
+    height: '32px',
+    color: '#2563eb',
+  },
+  successTitle: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: '16px',
+  },
+  successText: {
+    fontSize: '16px',
+    color: '#6b7280',
+    marginBottom: '24px',
+    lineHeight: '1.5',
+  },
+  emailHighlight: {
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  hintText: {
+    fontSize: '14px',
+    color: '#9ca3af',
+    marginBottom: '24px',
+  },
+  error: {
+    padding: '16px 20px',
+    backgroundColor: '#fef2f2',
+    borderRadius: '12px',
+    marginBottom: '24px',
+    border: '1px solid #fecaca',
+  },
+  errorText: {
+    fontSize: '14px',
+    color: '#991b1b',
+    margin: 0,
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '20px',
+  },
+  field: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+  },
+  label: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+  },
+  input: {
+    padding: '12px 16px',
+    fontSize: '16px',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    outline: 'none',
+    transition: 'border-color 0.2s ease',
+    fontFamily: 'inherit',
+  },
+  submitButton: {
+    padding: '16px',
+    fontSize: '16px',
+    fontWeight: '600',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease',
+    marginTop: '8px',
+    width: '100%',
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
+  },
+  footer: {
+    marginTop: '24px',
+    textAlign: 'center' as const,
+    paddingTop: '24px',
+    borderTop: '1px solid #e5e7eb',
+  },
+  backButton: {
+    color: '#667eea',
+    fontSize: '14px',
+    fontWeight: '500',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    textDecoration: 'none',
+  },
 };
 
 export default ForgotPassword;

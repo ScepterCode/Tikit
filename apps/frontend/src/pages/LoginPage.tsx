@@ -188,8 +188,8 @@ export function LoginPage() {
         </form>
 
         {/* Forgot Password Link */}
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <Link to="/forgot-password" style={{ color: '#667eea', fontSize: '14px', textDecoration: 'none' }}>
+        <div style={styles.forgotPasswordContainer}>
+          <Link to="/forgot-password" style={styles.forgotPasswordLink}>
             Forgot your password?
           </Link>
         </div>
@@ -368,6 +368,23 @@ const styles = {
     cursor: 'pointer',
     transition: 'transform 0.2s ease',
     marginTop: '8px',
+  },
+  forgotPasswordContainer: {
+    textAlign: 'center' as const,
+    marginTop: '16px',
+    paddingTop: '16px',
+    borderTop: '1px solid #f3f4f6',
+  },
+  forgotPasswordLink: {
+    color: '#667eea',
+    fontSize: '14px',
+    textDecoration: 'none',
+    fontWeight: '500',
+    transition: 'color 0.2s ease',
+    display: 'inline-block',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    backgroundColor: '#f9fafb',
   },
   footer: {
     marginTop: '32px',

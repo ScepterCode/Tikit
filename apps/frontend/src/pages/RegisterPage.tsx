@@ -104,9 +104,9 @@ export function RegisterPage() {
       console.log('- SignUp result:', result);
 
       if (result.success) {
-        console.log('✅ Registration successful, navigating to preferences');
-        // Registration successful - navigate to preferences page
-        navigate('/preferences');
+        console.log('✅ Registration successful, navigating to dashboard');
+        // Registration successful - navigate to dashboard
+        navigate('/dashboard');
       } else {
         throw new Error(result.error || 'Registration failed');
       }

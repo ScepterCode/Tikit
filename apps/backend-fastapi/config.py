@@ -4,8 +4,18 @@ Loads all environment variables from .env file
 NO HARDCODED CREDENTIALS - PRODUCTION READY
 """
 import os
+import sys
 from typing import Optional
 from dotenv import load_dotenv
+
+# Ensure stdout/stderr can render UTF-8 log markers (emoji) on consoles that
+# default to a legacy code page (e.g. Windows cp1252), which would otherwise
+# raise UnicodeEncodeError on the first emoji print at import time.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
 
 # Load environment variables from .env file
 load_dotenv()

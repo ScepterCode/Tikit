@@ -12,12 +12,21 @@ coverage
 .DS_Store
 pnpm-lock.yaml
 
+# Python artifacts (backend-fastapi)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
 # Supabase credentials and sensitive files
 apps/frontend/.env.local
-apps/backend/.env
-apps/backend/.env.local
-apps/backend/.env.production
-apps/backend/.env.supabase
+apps/frontend/.env.production
+apps/backend-fastapi/.env
+apps/backend-fastapi/.env.local
+apps/backend-fastapi/.env.production
+apps/backend-fastapi/.env.supabase
 
 # Temporary debug files
 test-*.js

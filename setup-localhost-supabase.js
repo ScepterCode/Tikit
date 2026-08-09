@@ -41,10 +41,10 @@ console.log('   - Click "RUN" - should execute successfully\n');
 
 console.log('4. 🔧 UPDATE ENVIRONMENT FILES:');
 console.log('   - Update apps/frontend/.env with your Supabase URL and anon key');
-console.log('   - Update apps/backend/.env with your Supabase credentials\n');
+console.log('   - Update apps/backend-fastapi/.env with your Supabase credentials\n');
 
 console.log('5. 🚀 TEST LOCALLY:');
-console.log('   - cd apps/backend && npm run dev');
+console.log('   - cd apps/backend-fastapi && uvicorn main:app --reload --port 8000');
 console.log('   - cd apps/frontend && npm run dev');
 console.log('   - Visit http://localhost:5173');
 console.log('   - Try to register - should work with Supabase!\n');
@@ -75,7 +75,7 @@ console.log('Your app will be 100% cloud-native from localhost to production.\n'
 console.log('📊 CURRENT SETUP STATUS:');
 
 const frontendEnv = 'apps/frontend/.env';
-const backendEnv = 'apps/backend/.env';
+const backendEnv = 'apps/backend-fastapi/.env';
 
 if (fs.existsSync(frontendEnv)) {
   const content = fs.readFileSync(frontendEnv, 'utf8');

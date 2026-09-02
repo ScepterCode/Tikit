@@ -9,37 +9,51 @@ import logging
 from services.ticket_service import ticket_service
 from services.event_service import event_service
 from services.supabase_client import get_supabase_client
+from auth_utils import get_user_from_request
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Simple authentication function
-async def get_current_user(request: Request):
-    """Extract user from token"""
+
+async def get_current_user(request: Request) -> Dict[str, Any]:
+    """Authenticate the request via the shared Supabase JWT validator.
+
+    Mock tokens are only honoured when ENABLE_MOCK_TOKENS is set in a
+    development environment (enforced inside auth_utils).
+    """
     try:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Not authenticated")
-        
-        token = auth_header.split(" ")[1]
-        
-        # For testing, extract user ID from mock token
-        if token.startswith("mock_access_token_"):
-            user_id = token.replace("mock_access_token_", "")
-            return {"user_id": user_id, "token": token}
-        
-        # For real tokens, decode JWT
-        # TODO: Implement proper JWT validation
-        
-        raise HTTPException(status_code=401, detail="Invalid token")
-        
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        return await get_user_from_request(request)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 class TicketValidationRequest(BaseModel):
     ticket_code: str
     event_id: Optional[str] = None
+
+
+async def _assert_event_organizer(event_id: Optional[str], current_user: Dict[str, Any]) -> dict:
+    """Raise 403 unless current_user owns (organizes) the given event.
+
+    Admins are always allowed. Returns the event record on success.
+    """
+    if not event_id:
+        raise HTTPException(status_code=400, detail="event_id is required")
+
+    event = await event_service.get_event(event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    if current_user.get("role") == "admin":
+        return event
+
+    organizer_id = event.get("organizer_id") or event.get("host_id")
+    if not organizer_id or organizer_id != current_user.get("user_id"):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the event organizer can perform this action",
+        )
+    return event
 
 @router.get("/my-tickets")
 async def get_my_tickets(current_user: dict = Depends(get_current_user)):
@@ -138,7 +152,10 @@ async def validate_ticket(
             }
         
         ticket = result.data[0]
-        
+
+        # Only the organizer of the ticket's event (or an admin) may validate it
+        await _assert_event_organizer(ticket['event_id'], current_user)
+
         # Check if ticket is for the specified event (if provided)
         if request.event_id and ticket['event_id'] != request.event_id:
             return {
@@ -217,9 +234,10 @@ async def mark_ticket_used(
         ticket = await ticket_service.get_ticket(ticket_id)
         if not ticket:
             raise HTTPException(status_code=404, detail="Ticket not found")
-        
-        # TODO: Verify current user is organizer of the event
-        
+
+        # Only the organizer of the ticket's event (or an admin) may mark it used
+        await _assert_event_organizer(ticket['event_id'], current_user)
+
         # Mark ticket as used
         success = await ticket_service.use_ticket(ticket_id)
         

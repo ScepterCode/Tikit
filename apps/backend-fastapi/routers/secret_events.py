@@ -6,6 +6,9 @@ from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/secret-events", tags=["secret-events"])
 
@@ -457,8 +460,21 @@ async def approve_invite_request(request: Request, request_id: str):
             .eq('id', request_id)\
             .execute()
         
-        # TODO: Send notification to requester with invite code
-        
+        # Notify the requester that they were approved, with their invite code
+        try:
+            from services.notification_service import notification_service
+            requester_id = req_data.get('user_id')
+            if requester_id:
+                await notification_service.create_notification(
+                    user_id=requester_id,
+                    title="Invite request approved 🎉",
+                    message=f"Your request to join the event was approved. Your invite code is {invite_code}.",
+                    notification_type="secret_event_invite_approved",
+                    event_id=req_data['secret_events'].get('event_id'),
+                )
+        except Exception as notif_error:
+            logger.warning(f"Failed to notify requester of invite approval: {notif_error}")
+
         return {
             "success": True,
             "message": "Invite request approved",

@@ -31,6 +31,47 @@ class MembershipResponse(BaseModel):
 
 # Import shared authentication utility
 from auth_utils import get_user_from_request
+from services.flutterwave_service import flutterwave_service
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def _verify_membership_payment(payment_reference: Optional[str], tier: str) -> dict:
+    """Verify a paid-tier activation against Flutterwave.
+
+    Raises HTTPException unless Flutterwave confirms ``payment_reference`` as a
+    successful NGN transaction. Returns the verified transaction dict.
+
+    NOTE: tier pricing is currently stored in USD (see membership_service.
+    TIER_PRICING) while Flutterwave charges NGN, so the *amount* is not yet
+    reconciled here - only that a real successful payment exists. Wire an
+    NGN price table + amount check when the paid flow is finalised.
+    """
+    if not payment_reference:
+        raise HTTPException(
+            status_code=402,
+            detail="A verified payment reference is required to activate a paid membership.",
+        )
+
+    if not flutterwave_service.secret_key:
+        logger.error("membership payment: Flutterwave secret key not configured")
+        raise HTTPException(status_code=503, detail="Payment verification is unavailable. Please try again later.")
+
+    # payment_reference may be Flutterwave's numeric transaction id or our tx_ref
+    result = flutterwave_service.verify_payment(payment_reference)
+    if not result.get("success"):
+        result = flutterwave_service.verify_transaction_by_reference(payment_reference)
+
+    if not result.get("success") or result.get("status") != "successful":
+        logger.warning(f"membership payment: verification failed for {payment_reference}: {result}")
+        raise HTTPException(status_code=402, detail="Payment could not be verified as successful.")
+
+    if result.get("currency") and result["currency"] != "NGN":
+        raise HTTPException(status_code=400, detail=f"Unsupported payment currency: {result.get('currency')}")
+
+    logger.info(f"membership payment verified: {payment_reference} tier={tier} amount=₦{result.get('amount')}")
+    return result
 
 @router.get("/status")
 async def get_membership_status(request: Request):
@@ -93,10 +134,10 @@ async def process_payment(request: Request, payment_data: ProcessPaymentRequest)
     try:
         user = await get_user_from_request(request)
         user_id = user["user_id"]
-        
-        # TODO: Verify payment with Flutterwave using payment_reference
-        # For now, we'll trust the payment_reference
-        
+
+        # Payment MUST be verified with Flutterwave before the tier is activated
+        _verify_membership_payment(payment_data.payment_reference, payment_data.tier)
+
         result = membership_service.process_payment(
             user_id=user_id,
             tier=payment_data.tier,
@@ -132,7 +173,10 @@ async def upgrade_membership(request: Request, upgrade_data: UpgradeRequest):
         
         if upgrade_data.duration not in ["monthly"]:
             raise HTTPException(status_code=400, detail="Invalid duration")
-        
+
+        # Payment MUST be verified with Flutterwave before the tier is activated
+        _verify_membership_payment(upgrade_data.payment_reference, str(upgrade_data.tier))
+
         result = membership_service.upgrade_membership(
             user_id=user_id,
             tier=upgrade_data.tier,

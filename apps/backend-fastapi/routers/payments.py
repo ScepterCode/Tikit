@@ -19,39 +19,38 @@ from services.ticket_service import ticket_service
 from services.email_service import email_service
 from services.event_service import event_service
 from services.notification_service import notification_service
+from services.organizer_payment_service import organizer_payment_service
+from services.supabase_client import get_supabase_client
+from auth_utils import get_user_from_request
 from config import config
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Simple authentication function for testing
+
 async def get_current_user(request: Request):
-    """Simple authentication for testing - extract user from token"""
+    """Authenticate the request via the shared Supabase JWT validator.
+
+    Mock tokens are only honoured when ENABLE_MOCK_TOKENS is set in a
+    development environment (enforced inside auth_utils).
+    """
     try:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Not authenticated")
-        
-        token = auth_header.split(" ")[1]
-        
-        # For testing, extract user ID from mock token
-        if token.startswith("mock_access_token_"):
-            user_id = token.replace("mock_access_token_", "")
-            return {"user_id": user_id, "token": token}
-        
-        raise HTTPException(status_code=401, detail="Invalid token")
-        
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        return await get_user_from_request(request)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 # Simple payment security validation
 class PaymentSecurity:
+    # Amounts are in kobo (1 naira = 100 kobo)
+    MIN_AMOUNT_KOBO = 10_000            # ₦100
+    MAX_AMOUNT_KOBO = 100_000_000       # ₦1,000,000
+
     def validate_payment_request(self, payment_data, user_id):
-        """Simple payment validation"""
+        """Basic sanity checks on a payment amount."""
         amount = payment_data.get('amount', 0)
-        if amount < 10000:  # Minimum ₦100
+        if amount < self.MIN_AMOUNT_KOBO:
             raise HTTPException(status_code=400, detail="Amount too low")
-        if amount > 1000000:  # Maximum ₦10,000
+        if amount > self.MAX_AMOUNT_KOBO:
             raise HTTPException(status_code=400, detail="Amount too high")
         return True
     
@@ -66,6 +65,53 @@ class PaymentSecurity:
 payment_security = PaymentSecurity()
 
 router = APIRouter()
+
+
+def _expected_ticket_total(event: Optional[dict], tier_name: str, quantity: int) -> Optional[float]:
+    """Best-effort expected total (NGN) for ``quantity`` tickets of ``tier_name``.
+
+    Returns None when the event's tier pricing cannot be determined, in which
+    case the caller should not block on the amount (but must still require a
+    successful Flutterwave verification).
+    """
+    if not event:
+        return None
+
+    tiers = event.get('ticket_tiers') or event.get('tiers') or event.get('ticketTiers')
+    if isinstance(tiers, str):
+        try:
+            import json as _json
+            tiers = _json.loads(tiers)
+        except Exception:
+            tiers = None
+
+    if isinstance(tiers, list) and tiers:
+        for tier in tiers:
+            if not isinstance(tier, dict):
+                continue
+            name = str(tier.get('name') or tier.get('tier_name') or '').strip().lower()
+            if name == str(tier_name).strip().lower():
+                try:
+                    return float(tier.get('price') or tier.get('amount') or 0) * quantity
+                except (TypeError, ValueError):
+                    return None
+        # tier not matched but list exists -> use the cheapest as a floor
+        try:
+            prices = [float(t.get('price') or t.get('amount') or 0) for t in tiers if isinstance(t, dict)]
+            prices = [p for p in prices if p > 0]
+            if prices:
+                return min(prices) * quantity
+        except (TypeError, ValueError):
+            return None
+
+    # Flat-priced event
+    for key in ('ticket_price', 'price', 'amount'):
+        if event.get(key):
+            try:
+                return float(event[key]) * quantity
+            except (TypeError, ValueError):
+                return None
+    return None
 
 class FlutterwavePaymentRequest(BaseModel):
     amount: int  # Amount in kobo
@@ -214,14 +260,30 @@ async def process_wallet_payment(
         )
         
         # Create booking
+        quantity = int(request.ticket_details.get("quantity", 1) or 1)
         booking_data = await booking_service.create_booking(
             user_id=user_id,
             event_id=request.event_id,
-            quantity=request.ticket_details.get("quantity", 1),
+            quantity=quantity,
             total_amount=required_amount,
             payment_method="wallet"
         )
-        
+
+        # Credit the organizer's wallet for this sale (idempotent on payment_reference).
+        if request.event_id:
+            try:
+                credit_result = await organizer_payment_service.credit_organizer_for_ticket_sale(
+                    event_id=request.event_id,
+                    ticket_price=(required_amount / quantity) if quantity else required_amount,
+                    payment_reference=request.reference,
+                    attendee_id=user_id,
+                    quantity=quantity,
+                )
+                if not credit_result.get("success") and not credit_result.get("duplicate"):
+                    logger.error(f"Organizer credit failed for {request.reference}: {credit_result.get('error')}")
+            except Exception as credit_error:
+                logger.error(f"Organizer credit raised for {request.reference}: {credit_error}", exc_info=True)
+
         # Send notification
         await notification_service.create_notification(
             user_id=user_id,
@@ -443,34 +505,101 @@ async def verify_payment(
     request: PaymentVerificationRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Verify Flutterwave payment and create tickets"""
+    """Verify a Flutterwave payment with Flutterwave and, only if it genuinely
+    succeeded, issue the tickets and credit the organizer.
+
+    Security: tickets are NEVER issued unless Flutterwave confirms the
+    transaction as ``successful``. The call is idempotent on ``tx_ref``.
+    """
     try:
         user_id = current_user["user_id"]
-        
+
         # Extract event_id and ticket details from tx_ref
         # Format: TKT_{uuid}_{timestamp}_{event_id}_{quantity}_{tier_name}
         tx_parts = request.tx_ref.split('_')
         event_id = tx_parts[3] if len(tx_parts) > 3 else None
-        quantity = int(tx_parts[4]) if len(tx_parts) > 4 else 1
+        quantity = int(tx_parts[4]) if len(tx_parts) > 4 and tx_parts[4].isdigit() else 1
         tier_name = tx_parts[5] if len(tx_parts) > 5 else "General"
-        
-        # Try to verify with Flutterwave API if secret key is available
-        payment_amount = 0
-        try:
-            result = flutterwave_service.verify_payment(request.transaction_id)
-            
-            if result['success'] and result['status'] == 'successful':
-                payment_amount = result['amount']
-                logger.info(f"Payment verified via API: {request.transaction_id}")
-        except Exception as api_error:
-            logger.warning(f"Flutterwave API verification failed: {api_error}")
-            # Continue with inline verification
-        
+        quantity = max(1, min(quantity, 50))
+
+        supabase = get_supabase_client()
+
+        # --- Idempotency: if this tx_ref already produced tickets, return them ---
+        if supabase:
+            existing = supabase.table('tickets')\
+                .select('*')\
+                .eq('payment_reference', request.tx_ref)\
+                .execute()
+            if existing.data:
+                logger.info(f"verify_payment: tx_ref {request.tx_ref} already processed ({len(existing.data)} tickets)")
+                return {
+                    "success": True,
+                    "status": "successful",
+                    "transaction_id": request.transaction_id,
+                    "tx_ref": request.tx_ref,
+                    "amount": sum(float(t.get('price', 0) or 0) for t in existing.data),
+                    "tickets_created": len(existing.data),
+                    "ticket_codes": [t.get('ticket_code') for t in existing.data],
+                    "message": "Payment already verified; existing tickets returned.",
+                    "idempotent": True,
+                }
+
+        # --- Mandatory verification with Flutterwave ---
+        if not flutterwave_service.secret_key:
+            logger.error("verify_payment: Flutterwave secret key not configured - cannot verify payment")
+            raise HTTPException(
+                status_code=503,
+                detail={"success": False, "error": {"code": "PAYMENT_VERIFICATION_UNAVAILABLE",
+                        "message": "Payment verification is not available. Please contact support."}},
+            )
+
+        result = flutterwave_service.verify_payment(request.transaction_id)
+
+        if not result.get('success') or result.get('status') != 'successful':
+            logger.warning(f"verify_payment: Flutterwave rejected {request.transaction_id}: {result}")
+            payment_security.log_payment_attempt(user_id, 0, 'flutterwave_verify', False)
+            raise HTTPException(
+                status_code=402,
+                detail={"success": False, "error": {"code": "PAYMENT_NOT_SUCCESSFUL",
+                        "message": "Payment could not be verified as successful."}},
+            )
+
+        # The verified transaction must be the one the client claims
+        if result.get('tx_ref') and result['tx_ref'] != request.tx_ref:
+            logger.warning(f"verify_payment: tx_ref mismatch - claimed {request.tx_ref}, actual {result.get('tx_ref')}")
+            raise HTTPException(
+                status_code=400,
+                detail={"success": False, "error": {"code": "TX_REF_MISMATCH",
+                        "message": "Transaction reference does not match."}},
+            )
+
+        if result.get('currency') and result['currency'] != 'NGN':
+            raise HTTPException(
+                status_code=400,
+                detail={"success": False, "error": {"code": "UNSUPPORTED_CURRENCY",
+                        "message": f"Unsupported payment currency: {result.get('currency')}"}},
+            )
+
+        payment_amount = float(result.get('amount') or 0)
+        logger.info(f"Payment verified via Flutterwave: {request.transaction_id} amount=₦{payment_amount:,.2f}")
+
         # Get event details
         event = None
         if event_id:
             event = await event_service.get_event(event_id)
-        
+
+        # --- Enforce the amount paid covers the expected ticket price ---
+        expected_total = _expected_ticket_total(event, tier_name, quantity)
+        if expected_total is not None and payment_amount + 1e-6 < expected_total * 0.99:
+            logger.warning(
+                f"verify_payment: underpayment - paid ₦{payment_amount:,.2f}, expected ₦{expected_total:,.2f}"
+            )
+            raise HTTPException(
+                status_code=402,
+                detail={"success": False, "error": {"code": "UNDERPAYMENT",
+                        "message": "Amount paid does not cover the ticket price."}},
+            )
+
         # Create tickets for the purchase
         tickets_created = []
         for i in range(quantity):
@@ -524,7 +653,23 @@ async def verify_payment(
             
             if booking_data:
                 await booking_service.update_booking_status(booking_data['id'], 'confirmed')
-        
+
+        # Credit the organizer's wallet for this sale (idempotent on payment_reference).
+        # Failure here must not fail the buyer's purchase - it is reconciled separately.
+        if event_id and tickets_created:
+            try:
+                credit_result = await organizer_payment_service.credit_organizer_for_ticket_sale(
+                    event_id=event_id,
+                    ticket_price=(payment_amount / quantity) if quantity else payment_amount,
+                    payment_reference=request.tx_ref,
+                    attendee_id=user_id,
+                    quantity=len(tickets_created),
+                )
+                if not credit_result.get("success") and not credit_result.get("duplicate"):
+                    logger.error(f"Organizer credit failed for {request.tx_ref}: {credit_result.get('error')}")
+            except Exception as credit_error:
+                logger.error(f"Organizer credit raised for {request.tx_ref}: {credit_error}", exc_info=True)
+
         # Send notification
         await notification_service.create_notification(
             user_id=user_id,
@@ -533,7 +678,7 @@ async def verify_payment(
             notification_type="payment_success",
             event_id=event_id
         )
-        
+
         payment_security.log_payment_attempt(
             user_id, int(payment_amount * 100), 'flutterwave_verify', True
         )

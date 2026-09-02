@@ -156,22 +156,53 @@ class FlutterwavePaymentService:
                 'error': str(e)
             }
     
+    def verify_transaction_by_reference(self, tx_ref: str) -> Dict[str, Any]:
+        """Verify a payment by our own tx_ref (not Flutterwave's numeric id)."""
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.secret_key}',
+                'Content-Type': 'application/json',
+            }
+            response = requests.get(
+                f"{self.base_url}/transactions/verify_by_reference",
+                params={'tx_ref': tx_ref},
+                headers=headers,
+                timeout=30,
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    t = data['data']
+                    return {
+                        'success': True,
+                        'status': t.get('status'),
+                        'amount': t.get('amount'),
+                        'currency': t.get('currency'),
+                        'tx_ref': t.get('tx_ref'),
+                        'flw_ref': t.get('flw_ref'),
+                    }
+            logger.error(f"Payment verification by reference failed: {response.text}")
+            return {'success': False, 'error': 'Payment verification failed'}
+        except Exception as e:
+            logger.error(f"Payment verification by reference error: {str(e)}")
+            return {'success': False, 'error': str(e)}
+
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
-        """Verify Flutterwave webhook signature"""
+        """Verify a Flutterwave webhook request.
+
+        Flutterwave does not HMAC the body: it sends the exact secret hash you
+        configured in the dashboard in the ``verif-hash`` header. We compare that
+        value (constant-time) to ``FLUTTERWAVE_SECRET_HASH``.
+        """
         try:
             secret_hash = os.getenv('FLUTTERWAVE_SECRET_HASH')
             if not secret_hash:
-                logger.error("Flutterwave secret hash not configured")
+                logger.error("Flutterwave secret hash not configured - rejecting webhook")
                 return False
-            
-            expected_signature = hmac.new(
-                secret_hash.encode('utf-8'),
-                payload,
-                hashlib.sha256
-            ).hexdigest()
-            
-            return hmac.compare_digest(signature, expected_signature)
-            
+            if not signature:
+                return False
+            return hmac.compare_digest(str(signature), str(secret_hash))
+
         except Exception as e:
             logger.error(f"Webhook signature verification error: {str(e)}")
             return False

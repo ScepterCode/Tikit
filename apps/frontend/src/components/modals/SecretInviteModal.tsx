@@ -31,7 +31,7 @@ export function SecretInviteModal({ onClose, onSuccess }: SecretInviteModalProps
     setLoading(true);
     
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/secret-events/validate-invite', {
+      const response = await authenticatedFetch('/api/secret-events/validate-invite', {
         method: 'POST',
         body: JSON.stringify({ invite_code: inviteCode })
       });

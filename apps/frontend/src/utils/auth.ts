@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
+import { apiUrl } from '../config/api';
 
 /**
  * Get the current Supabase JWT access token
@@ -77,8 +78,9 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 /**
- * Make an authenticated API request
- * @param url The API endpoint URL
+ * Make an authenticated API request.
+ * @param url An API path (e.g. `/api/events`) or an absolute URL. Paths are
+ *            resolved against the configured API base URL.
  * @param options Fetch options
  * @returns The fetch response
  */
@@ -86,7 +88,8 @@ export async function authenticatedFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  console.log('🔐 authenticatedFetch called for:', url);
+  const resolvedUrl = apiUrl(url);
+  console.log('🔐 authenticatedFetch called for:', resolvedUrl);
   
   // Retry logic for token retrieval
   let token = null;
@@ -120,7 +123,7 @@ export async function authenticatedFetch(
     'Authorization': headers.get('Authorization')?.substring(0, 30) + '...'
   });
 
-  const response = await fetch(url, {
+  const response = await fetch(resolvedUrl, {
     ...options,
     headers,
   });

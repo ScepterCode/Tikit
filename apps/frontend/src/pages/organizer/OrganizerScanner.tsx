@@ -34,7 +34,7 @@ export function OrganizerScanner() {
 
   const fetchEvents = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/events');
+      const response = await authenticatedFetch('/api/events');
       const data = await response.json();
       if (data.success) {
         setEvents(data.data.events || []);

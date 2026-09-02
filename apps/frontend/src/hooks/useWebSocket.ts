@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { WS_BASE_URL } from '../config/api';
 
 interface WebSocketMessage {
   type: string;
@@ -43,7 +44,8 @@ export const useWebSocket = (userId: string, options: UseWebSocketOptions = {}) 
 
     setConnectionStatus('connecting');
     
-    const wsUrl = `ws://localhost:8000/ws/${userId}?token=${encodeURIComponent(token)}`;
+    // NOTE: the backend websocket routers are not mounted yet (see fix plan 2.4).
+    const wsUrl = `${WS_BASE_URL}/ws/${userId}?token=${encodeURIComponent(token)}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

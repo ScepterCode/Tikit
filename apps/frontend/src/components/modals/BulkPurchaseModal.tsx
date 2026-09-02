@@ -38,7 +38,7 @@ export function BulkPurchaseModal({ event, onClose, onSuccess }: BulkPurchaseMod
     setLoading(true);
     
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/tickets/bulk-purchase', {
+      const response = await authenticatedFetch('/api/tickets/bulk-purchase', {
         method: 'POST',
         body: JSON.stringify({
           event_id: event.id,

@@ -101,7 +101,7 @@ export function CreateEvent() {
         
         console.log('🔍 Creating secret event with data:', secretEventData);
         
-        const response = await authenticatedFetch('http://localhost:8000/api/secret-events/create', {
+        const response = await authenticatedFetch('/api/secret-events/create', {
           method: 'POST',
           body: JSON.stringify(secretEventData)
         });
@@ -137,7 +137,7 @@ export function CreateEvent() {
         
         console.log('🔍 Creating public event with data:', eventData);
         
-        const response = await authenticatedFetch('http://localhost:8000/api/events', {
+        const response = await authenticatedFetch('/api/events', {
           method: 'POST',
           body: JSON.stringify(eventData)
         });

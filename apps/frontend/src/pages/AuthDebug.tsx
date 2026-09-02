@@ -44,7 +44,7 @@ export function AuthDebug() {
     // Test authenticatedFetch
     try {
       console.log('🔍 Testing authenticatedFetch...');
-      const response = await authenticatedFetch('http://localhost:8000/health');
+      const response = await authenticatedFetch('/health');
       const data = await response.text();
       info.authenticatedFetch = {
         success: response.ok,
@@ -77,7 +77,7 @@ export function AuthDebug() {
         ]
       };
 
-      const response = await authenticatedFetch('http://localhost:8000/api/events', {
+      const response = await authenticatedFetch('/api/events', {
         method: 'POST',
         body: JSON.stringify(eventData)
       });

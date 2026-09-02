@@ -4,6 +4,7 @@ WebSocket connection to FastAPI backend with fallback to Supabase realtime
 */
 
 import { supabase } from '../lib/supabase';
+import { WS_BASE_URL } from '../config/api';
 
 interface WebSocketMessage {
   type: string;
@@ -372,8 +373,7 @@ class RealtimeService {
    * Build WebSocket URL
    */
   private buildWebSocketUrl(): string {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-    const wsUrl = baseUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+    const wsUrl = WS_BASE_URL;
     
     let url = `${wsUrl}/api/realtime/ws/${this.connectionId}`;
     

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authenticatedFetch } from '../../utils/auth';
+import { apiUrl } from '../../config/api';
 
 interface SplitPaymentLinksProps {
   purchaseData: any;
@@ -21,7 +22,7 @@ export function SplitPaymentLinks({ purchaseData, onClose }: SplitPaymentLinksPr
   const fetchStatus = async () => {
     try {
       const response = await authenticatedFetch(
-        `http://localhost:8000/api/tickets/bulk-purchase/${bulk_purchase.id}/status`
+        apiUrl(`/api/tickets/bulk-purchase/${bulk_purchase.id}/status`)
       );
       
       const data = await response.json();

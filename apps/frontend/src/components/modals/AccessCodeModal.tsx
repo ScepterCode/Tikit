@@ -23,7 +23,7 @@ export function AccessCodeModal({ onClose, onSuccess }: AccessCodeModalProps) {
     setLoading(true);
     
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/events/validate-access-code', {
+      const response = await authenticatedFetch('/api/events/validate-access-code', {
         method: 'POST',
         body: JSON.stringify({ access_code: accessCode })
       });

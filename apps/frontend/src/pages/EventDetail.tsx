@@ -8,6 +8,7 @@ import { EventChangeNotification } from '../components/notifications/EventChange
 import { VideoPlayer } from '../components/livestream/VideoPlayer';
 import SecretEventChatModal from '../components/modals/SecretEventChatModal';
 import { PurchaseButton } from '../components/tickets/PurchaseButton';
+import { apiUrl } from '../config/api';
 
 interface TicketTier {
   name: string;
@@ -53,7 +54,7 @@ export function EventDetail() {
 
   const fetchEvent = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/events/${eventId}`);
+      const response = await fetch(apiUrl(`/api/events/${eventId}`));
       const data = await response.json();
       
       if (data.success) {

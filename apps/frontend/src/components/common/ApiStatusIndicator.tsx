@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { supabase } from '../../lib/supabase';
 import { useRealtimeConnection } from '../../hooks/useRealtimeConnection';
+import { apiUrl } from '../../config/api';
 
 interface ApiStatus {
   fastapi: 'connected' | 'disconnected' | 'checking';
@@ -274,7 +275,7 @@ export function ApiStatusIndicator() {
               Refresh
             </button>
             <button 
-              onClick={() => window.open('http://localhost:8000/docs', '_blank')}
+              onClick={() => window.open(apiUrl('/docs'), '_blank')}
               style={styles.actionButton}
             >
               API Docs

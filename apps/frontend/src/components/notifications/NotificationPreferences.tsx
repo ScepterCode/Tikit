@@ -77,7 +77,7 @@ export function NotificationPreferences({ isOpen, onClose }: NotificationPrefere
   const fetchPreferences = async () => {
     try {
       setLoading(true);
-      const response = await authenticatedFetch('http://localhost:8000/api/notifications/preferences');
+      const response = await authenticatedFetch('/api/notifications/preferences');
       if (response.success && response.data) {
         setPreferences(response.data);
       }
@@ -90,7 +90,7 @@ export function NotificationPreferences({ isOpen, onClose }: NotificationPrefere
 
   const updatePreference = async (type: string, channel: 'email' | 'push' | 'sms', enabled: boolean) => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/notifications/preferences', {
+      const response = await authenticatedFetch('/api/notifications/preferences', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

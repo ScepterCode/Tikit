@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/SupabaseAuthContext';
 import { supabase } from '../lib/supabase';
 import { EventPreferencesSelector, EventType } from '../components/onboarding/EventPreferencesSelector';
 import { Mail } from 'lucide-react';
+import { apiUrl } from '../config/api';
 
 export function PreferencesPage() {
   const { user } = useAuth();
@@ -32,7 +33,7 @@ export function PreferencesPage() {
         return;
       }
       
-      const response = await fetch('http://localhost:8000/api/users/preferences', {
+      const response = await fetch(apiUrl('/api/users/preferences'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

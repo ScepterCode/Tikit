@@ -54,7 +54,7 @@ export function TicketTierManager({ event, onUpdate }: TicketTierManagerProps) {
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/events/${event.id}`, {
+      const response = await authenticatedFetch(`/api/events/${event.id}`, {
         method: 'PUT',
         body: JSON.stringify({ ticketTiers: validTiers })
       });

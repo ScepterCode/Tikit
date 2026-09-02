@@ -54,7 +54,7 @@ export function CreateSecretEventModal({ onClose, onSuccess }: CreateSecretEvent
     setLoading(true);
 
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/secret-events/create', {
+      const response = await authenticatedFetch('/api/secret-events/create', {
         method: 'POST',
         body: JSON.stringify(formData)
       });

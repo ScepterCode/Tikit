@@ -74,8 +74,8 @@ const UnifiedWalletDashboard: React.FC = () => {
       
       // Use simple endpoints that exist in simple_main.py
       const [balanceResponse, transactionsResponse] = await Promise.all([
-        authenticatedFetch('http://localhost:8000/api/wallet/balance'),
-        authenticatedFetch('http://localhost:8000/api/wallet/transactions?limit=10')
+        authenticatedFetch('/api/wallet/balance'),
+        authenticatedFetch('/api/wallet/transactions?limit=10')
       ]);
 
       // Process balance data
@@ -407,7 +407,7 @@ const AddFundsModal: React.FC<{
     setLoading(true);
     try {
       // Step 1: Get transaction reference from backend
-      const response = await authenticatedFetch('http://localhost:8000/api/wallet/fund', {
+      const response = await authenticatedFetch('/api/wallet/fund', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -511,7 +511,7 @@ const AddFundsModal: React.FC<{
             
             // Step 3: Verify payment on backend
             try {
-              const verifyResponse = await authenticatedFetch('http://localhost:8000/api/wallet/verify-payment', {
+              const verifyResponse = await authenticatedFetch('/api/wallet/verify-payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -673,7 +673,7 @@ const WithdrawModal: React.FC<{
 
   const fetchBanks = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/wallet/banks');
+      const response = await authenticatedFetch('/api/wallet/banks');
       const result = await response.json();
       if (result.success && result.data.banks && result.data.banks.length > 0) {
         setBanks(result.data.banks);
@@ -718,7 +718,7 @@ const WithdrawModal: React.FC<{
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/wallet/withdraw-flutterwave', {
+      const response = await authenticatedFetch('/api/wallet/withdraw-flutterwave', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -980,7 +980,7 @@ const SendMoneyModal: React.FC<{
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/wallet/unified/transfer', {
+      const response = await authenticatedFetch('/api/wallet/unified/transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

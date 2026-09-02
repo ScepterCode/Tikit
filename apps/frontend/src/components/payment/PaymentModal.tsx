@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PaymentMethodSelector, PaymentMethod } from '../tickets/PaymentMethodSelector';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
+import { apiUrl } from '../../config/api';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -127,7 +128,7 @@ export function PaymentModal({
   };
 
   const handleWalletPayment = async (reference: string) => {
-    const response = await fetch('http://localhost:8000/api/payments/wallet', {
+    const response = await fetch(apiUrl('/api/payments/wallet'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -185,7 +186,7 @@ export function PaymentModal({
   };
 
   const handleBankTransfer = async (reference: string) => {
-    const response = await fetch('http://localhost:8000/api/payments/bank-transfer', {
+    const response = await fetch(apiUrl('/api/payments/bank-transfer'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -220,7 +221,7 @@ export function PaymentModal({
   };
 
   const handleUSSDPayment = async (reference: string) => {
-    const response = await fetch('http://localhost:8000/api/payments/ussd', {
+    const response = await fetch(apiUrl('/api/payments/ussd'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -254,7 +255,7 @@ export function PaymentModal({
   };
 
   const handleAirtimePayment = async (reference: string) => {
-    const response = await fetch('http://localhost:8000/api/payments/airtime', {
+    const response = await fetch(apiUrl('/api/payments/airtime'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -285,7 +286,7 @@ export function PaymentModal({
 
   const verifyPayment = async (reference: string, method: string) => {
     try {
-      const response = await fetch('http://localhost:8000/api/payments/verify', {
+      const response = await fetch(apiUrl('/api/payments/verify'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

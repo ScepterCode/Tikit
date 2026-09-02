@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/auth';
+import { apiUrl } from '../config/api';
 
 export function PaymentSharePage() {
   const { purchaseId, shareId } = useParams();
@@ -18,7 +19,7 @@ export function PaymentSharePage() {
   const fetchPurchaseData = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/tickets/bulk-purchase/${purchaseId}`
+        apiUrl(`/api/tickets/bulk-purchase/${purchaseId}`)
       );
       
       const data = await response.json();
@@ -52,7 +53,7 @@ export function PaymentSharePage() {
     
     try {
       const response = await authenticatedFetch(
-        `http://localhost:8000/api/tickets/bulk-purchase/${purchaseId}/pay-share`,
+        apiUrl(`/api/tickets/bulk-purchase/${purchaseId}/pay-share`),
         {
           method: 'POST',
           body: JSON.stringify({

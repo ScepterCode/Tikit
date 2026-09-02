@@ -37,7 +37,7 @@ const MultiWalletDashboard: React.FC = () => {
       setLoading(true);
       
       // Fetch real wallet data from unified wallet service
-      const response = await authenticatedFetch('http://localhost:8000/api/wallet/unified/balance');
+      const response = await authenticatedFetch('/api/wallet/unified/balance');
       const data = await response.json();
       
       if (data.success) {
@@ -54,7 +54,7 @@ const MultiWalletDashboard: React.FC = () => {
         };
         
         // Try to fetch additional wallet types if available
-        const multiWalletResponse = await authenticatedFetch('http://localhost:8000/api/wallet/multi-wallets');
+        const multiWalletResponse = await authenticatedFetch('/api/wallet/multi-wallets');
         const multiData = await multiWalletResponse.json();
         
         if (multiData.success && multiData.data.wallets) {
@@ -98,7 +98,7 @@ const MultiWalletDashboard: React.FC = () => {
 
   const handleTransfer = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/wallet/unified/transfer', {
+      const response = await authenticatedFetch('/api/wallet/unified/transfer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

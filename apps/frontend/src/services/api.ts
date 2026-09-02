@@ -4,9 +4,9 @@ Centralized API client for FastAPI backend integration
 */
 
 import { supabase } from '../lib/supabase';
+import { API_BASE_URL } from '../config/api';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const API_VERSION = '/api';
 
 interface ApiResponse<T = any> {

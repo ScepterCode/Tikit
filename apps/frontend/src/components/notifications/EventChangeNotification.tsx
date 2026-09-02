@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { authenticatedFetch } from '../../utils/auth';
+import { apiUrl } from '../../config/api';
 
 interface Notification {
   id: string;
@@ -29,7 +30,7 @@ export function EventChangeNotification() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/notifications');
+      const response = await authenticatedFetch('/api/notifications');
       const data = await response.json();
       
       if (data.success) {
@@ -45,7 +46,7 @@ export function EventChangeNotification() {
   const markAsRead = async (notificationId: string) => {
     try {
       const response = await authenticatedFetch(
-        `http://localhost:8000/api/notifications/${notificationId}/read`,
+        apiUrl(`/api/notifications/${notificationId}/read`),
         { method: 'PUT' }
       );
       
@@ -63,7 +64,7 @@ export function EventChangeNotification() {
   const markAllAsRead = async () => {
     try {
       const response = await authenticatedFetch(
-        'http://localhost:8000/api/notifications/mark-all-read',
+        apiUrl('/api/notifications/mark-all-read'),
         { method: 'PUT' }
       );
       

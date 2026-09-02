@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check:urls": "node scripts/check-api-urls.mjs",
+    "prebuild": "node scripts/check-api-urls.mjs",
     "build": "vite build",
     "build:check": "tsc && vite build",
     "preview": "vite preview",

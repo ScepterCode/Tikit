@@ -48,7 +48,7 @@ export function useMembership() {
       setLoading(true);
       setError(null);
 
-      const response = await authenticatedFetch('http://localhost:8000/api/memberships/status');
+      const response = await authenticatedFetch('/api/memberships/status');
       const data = await response.json();
 
       if (data.success) {
@@ -67,7 +67,7 @@ export function useMembership() {
   // Fetch pricing information
   const fetchPricing = useCallback(async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/memberships/pricing');
+      const response = await authenticatedFetch('/api/memberships/pricing');
       const data = await response.json();
 
       if (data.success) {
@@ -84,7 +84,7 @@ export function useMembership() {
       setLoading(true);
       setError(null);
 
-      const response = await authenticatedFetch('http://localhost:8000/api/memberships/start-trial', {
+      const response = await authenticatedFetch('/api/memberships/start-trial', {
         method: 'POST',
         body: JSON.stringify({ tier })
       });
@@ -113,7 +113,7 @@ export function useMembership() {
       setLoading(true);
       setError(null);
 
-      const response = await authenticatedFetch('http://localhost:8000/api/memberships/process-payment', {
+      const response = await authenticatedFetch('/api/memberships/process-payment', {
         method: 'POST',
         body: JSON.stringify({
           tier,
@@ -149,7 +149,7 @@ export function useMembership() {
       setLoading(true);
       setError(null);
 
-      const response = await authenticatedFetch('http://localhost:8000/api/memberships/upgrade', {
+      const response = await authenticatedFetch('/api/memberships/upgrade', {
         method: 'POST',
         body: JSON.stringify({
           tier,
@@ -182,7 +182,7 @@ export function useMembership() {
       setLoading(true);
       setError(null);
 
-      const response = await authenticatedFetch('http://localhost:8000/api/memberships/cancel', {
+      const response = await authenticatedFetch('/api/memberships/cancel', {
         method: 'POST'
       });
 
@@ -207,7 +207,7 @@ export function useMembership() {
   // Check feature access
   const checkFeatureAccess = useCallback(async (feature: string) => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/memberships/check-feature/${feature}`);
+      const response = await authenticatedFetch(`/api/memberships/check-feature/${feature}`);
       const data = await response.json();
 
       if (data.success) {

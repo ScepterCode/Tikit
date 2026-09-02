@@ -34,7 +34,7 @@ export function OrganizerEvents() {
 
   const fetchEvents = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/events');
+      const response = await authenticatedFetch('/api/events');
       const data = await response.json();
       
       if (data.success) {
@@ -53,7 +53,7 @@ export function OrganizerEvents() {
 
   const handleUpdateEvent = async (eventId: string, updates: any) => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/events/${eventId}`, {
+      const response = await authenticatedFetch(`/api/events/${eventId}`, {
         method: 'PUT',
         body: JSON.stringify(updates)
       });
@@ -78,7 +78,7 @@ export function OrganizerEvents() {
     }
 
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/events/${eventId}`, {
+      const response = await authenticatedFetch(`/api/events/${eventId}`, {
         method: 'DELETE'
       });
       

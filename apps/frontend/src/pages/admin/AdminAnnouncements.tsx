@@ -34,7 +34,7 @@ export function AdminAnnouncements() {
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const response = await authenticatedFetch('http://localhost:8000/api/admin/announcements');
+      const response = await authenticatedFetch('/api/admin/announcements');
       if (response.success && response.data) {
         setAnnouncements(response.data);
       }
@@ -79,7 +79,7 @@ export function AdminAnnouncements() {
 
     try {
       setLoading(true);
-      const response = await authenticatedFetch('http://localhost:8000/api/notifications/broadcast', {
+      const response = await authenticatedFetch('/api/notifications/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

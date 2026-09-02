@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authenticatedFetch } from '../../utils/auth';
+import { apiUrl } from '../../config/api';
 
 interface LivestreamControlsProps {
   event: {
@@ -19,7 +20,7 @@ export function LivestreamControls({ event, onStatusChange }: LivestreamControls
     setLoading(true);
     try {
       const response = await authenticatedFetch(
-        `http://localhost:8000/api/events/${event.id}/livestream/start`,
+        apiUrl(`/api/events/${event.id}/livestream/start`),
         { method: 'POST' }
       );
       
@@ -48,7 +49,7 @@ export function LivestreamControls({ event, onStatusChange }: LivestreamControls
     setLoading(true);
     try {
       const response = await authenticatedFetch(
-        `http://localhost:8000/api/events/${event.id}/livestream/stop`,
+        apiUrl(`/api/events/${event.id}/livestream/stop`),
         { method: 'POST' }
       );
       

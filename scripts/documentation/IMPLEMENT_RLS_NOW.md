@@ -39,7 +39,7 @@ We're implementing Row Level Security (RLS) in 2 phases:
    - Click "New Query"
 
 3. **Run First Script**
-   - Open file: `Tikit/setup_proper_users_table.sql`
+   - Open file: `Grooovy/setup_proper_users_table.sql`
    - Copy ALL the SQL (entire file)
    - Paste into SQL Editor
    - Click "Run" button
@@ -66,7 +66,7 @@ We're implementing Row Level Security (RLS) in 2 phases:
    - Click "New Query" again
 
 2. **Run Second Script**
-   - Open file: `Tikit/PHASE1_CRITICAL_SECURITY_RLS.sql`
+   - Open file: `Grooovy/PHASE1_CRITICAL_SECURITY_RLS.sql`
    - Copy ALL the SQL (entire file)
    - Paste into SQL Editor
    - Click "Run" button
@@ -334,8 +334,8 @@ But first, let's secure the critical tables! 🔒
 ## 🎯 READY?
 
 **Copy the SQL from these files and run them in Supabase SQL Editor:**
-1. `Tikit/setup_proper_users_table.sql`
-2. `Tikit/PHASE1_CRITICAL_SECURITY_RLS.sql`
+1. `Grooovy/setup_proper_users_table.sql`
+2. `Grooovy/PHASE1_CRITICAL_SECURITY_RLS.sql`
 
 Then test that:
 - You can only see your own user data

@@ -25,7 +25,7 @@ INFO: 127.0.0.1:50577 - "POST /api/wallet/unified/withdraw HTTP/1.1" 404 Not Fou
 ## ✅ Fix Applied
 
 ### File Changed:
-`Tikit/apps/frontend/src/components/wallet/UnifiedWalletDashboard.tsx`
+`Grooovy/apps/frontend/src/components/wallet/UnifiedWalletDashboard.tsx`
 
 ### Change Made:
 ```typescript

@@ -1,6 +1,6 @@
-# Tikit Deployment Guide
+# Grooovy Deployment Guide
 
-This guide provides step-by-step instructions for deploying the Tikit platform to production.
+This guide provides step-by-step instructions for deploying the Grooovy platform to production.
 
 ## Prerequisites
 
@@ -51,14 +51,14 @@ In Vercel dashboard, add the following environment variables:
 
 **Production:**
 ```
-VITE_API_URL=https://api.tikit.ng
+VITE_API_URL=https://api.grooovy.com
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 **Preview (Staging):**
 ```
-VITE_API_URL=https://api-staging.tikit.ng
+VITE_API_URL=https://api-staging.grooovy.com
 VITE_SUPABASE_URL=https://your-staging-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-staging-anon-key
 ```
@@ -79,7 +79,7 @@ vercel --prod
 
 1. Go to Vercel project settings
 2. Navigate to "Domains"
-3. Add custom domain: `tikit.ng`
+3. Add custom domain: `grooovy.com`
 4. Update DNS records:
    ```
    Type: CNAME
@@ -117,7 +117,7 @@ In Railway dashboard, add the following environment variables:
 
 ```bash
 # Database
-DATABASE_URL=postgresql://user:password@host:5432/tikit
+DATABASE_URL=postgresql://user:password@host:5432/grooovy
 
 # Redis
 REDIS_URL=redis://host:6379
@@ -153,7 +153,7 @@ SENTRY_DSN=https://xxx@sentry.io/xxx
 NODE_ENV=production
 
 # CORS
-CORS_ORIGIN=https://tikit.ng
+CORS_ORIGIN=https://grooovy.com
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=60000
@@ -205,7 +205,7 @@ railway up
 
 1. Go to Railway project settings
 2. Navigate to "Domains"
-3. Add custom domain: `api.tikit.ng`
+3. Add custom domain: `api.grooovy.com`
 4. Update DNS records:
    ```
    Type: CNAME
@@ -266,7 +266,7 @@ maxmemory 256mb
 
 1. **Add Site to Cloudflare:**
    - Go to Cloudflare dashboard
-   - Add `tikit.ng` domain
+   - Add `grooovy.com` domain
    - Update nameservers at domain registrar
 
 2. **Configure DNS:**
@@ -290,14 +290,14 @@ maxmemory 256mb
 
 4. **Configure Page Rules:**
    ```
-   Rule 1: tikit.ng/assets/*
+   Rule 1: grooovy.com/assets/*
    - Cache Level: Cache Everything
    - Edge Cache TTL: 1 month
 
-   Rule 2: tikit.ng/api/*
+   Rule 2: grooovy.com/api/*
    - Cache Level: Bypass
 
-   Rule 3: tikit.ng/*
+   Rule 3: grooovy.com/*
    - Cache Level: Standard
    - Browser Cache TTL: 4 hours
    ```
@@ -316,7 +316,7 @@ maxmemory 256mb
 
 1. **Create Sentry Project:**
    - Go to Sentry dashboard
-   - Create new project: "tikit"
+   - Create new project: "grooovy"
    - Select platform: Node.js and React
 
 2. **Configure Frontend:**
@@ -355,7 +355,7 @@ maxmemory 256mb
    // apps/backend/src/index.ts
    import tracer from 'dd-trace';
    tracer.init({
-     service: 'tikit-backend',
+     service: 'grooovy-backend',
      env: 'production',
    });
    ```
@@ -365,7 +365,7 @@ maxmemory 256mb
 ### Verification Steps
 
 1. **Frontend Checks:**
-   - [ ] Site loads at https://tikit.ng
+   - [ ] Site loads at https://grooovy.com
    - [ ] PWA manifest loads correctly
    - [ ] Service worker registers successfully
    - [ ] "Add to Home Screen" works on mobile
@@ -373,7 +373,7 @@ maxmemory 256mb
    - [ ] All assets load from CDN
 
 2. **Backend Checks:**
-   - [ ] Health endpoint responds: https://api.tikit.ng/health
+   - [ ] Health endpoint responds: https://api.grooovy.com/health
    - [ ] API endpoints work correctly
    - [ ] Database connection is stable
    - [ ] Redis connection is stable
@@ -409,20 +409,20 @@ Run the following smoke tests after deployment:
 
 ```bash
 # Frontend
-curl -f https://tikit.ng
-curl -f https://tikit.ng/manifest.json
+curl -f https://grooovy.com
+curl -f https://grooovy.com/manifest.json
 
 # Backend
-curl -f https://api.tikit.ng/health
-curl -f https://api.tikit.ng/api/events
+curl -f https://api.grooovy.com/health
+curl -f https://api.grooovy.com/api/events
 
 # Test user registration
-curl -X POST https://api.tikit.ng/api/auth/register \
+curl -X POST https://api.grooovy.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"phoneNumber": "+2348012345678"}'
 
 # Test event listing
-curl https://api.tikit.ng/api/events?page=1&limit=20
+curl https://api.grooovy.com/api/events?page=1&limit=20
 ```
 
 ## Rollback Procedures

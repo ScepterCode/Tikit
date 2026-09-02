@@ -241,7 +241,7 @@ You'll run them the same way as Step 1 (copy/paste in SQL Editor).
 **Action**: Run the comprehensive test suite
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 ```
 
@@ -340,7 +340,7 @@ The comprehensive test suite (`test_supabase_storage_comprehensive.py`) tests:
 
 ```bash
 # Run full test suite
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 
 # Expected output after fix:
@@ -491,7 +491,7 @@ After completing all steps, you should have:
 
 ```bash
 # Run test suite
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 
 # Check if servers are running

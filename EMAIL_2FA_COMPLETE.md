@@ -83,7 +83,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 ENABLE_EMAIL_NOTIFICATIONS=true
 ```
 
@@ -98,7 +98,7 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USERNAME=apikey
 SMTP_PASSWORD=your-sendgrid-api-key
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 ENABLE_EMAIL_NOTIFICATIONS=true
 ```
 
@@ -126,7 +126,7 @@ ENABLE_EMAIL_NOTIFICATIONS=true
 ### Step 3: Test Email Service (10 minutes)
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_email_service.py
 ```
 

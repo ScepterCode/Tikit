@@ -1,14 +1,14 @@
 # 🔥 RADICAL APPROACH: Supabase-Only Localhost Setup
 
 ## 🎯 Goal
-Completely eliminate SQLite and run the entire Tikit app on Supabase locally, then deploy to production.
+Completely eliminate SQLite and run the entire Grooovy app on Supabase locally, then deploy to production.
 
 ## 🚀 Step 1: Create Real Supabase Project (3 minutes)
 
 1. **Go to [supabase.com](https://supabase.com)**
 2. **Create account/login**
 3. **New Project:**
-   - Name: `tikit-localhost-test`
+   - Name: `grooovy-localhost-test`
    - Password: Generate strong password
    - Region: `West Europe (Frankfurt)`
    - Plan: **Free**
@@ -201,7 +201,7 @@ VITE_SUPABASE_URL=https://[project-id].supabase.co
 VITE_SUPABASE_ANON_KEY=[anon-key]
 
 # App Configuration
-VITE_APP_NAME=Tikit
+VITE_APP_NAME=Grooovy
 VITE_APP_VERSION=1.0.0
 VITE_APP_ENVIRONMENT=development
 ```

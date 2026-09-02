@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the monitoring and error tracking strategy for the Tikit platform to ensure system reliability and quick issue resolution.
+This document outlines the monitoring and error tracking strategy for the Grooovy platform to ensure system reliability and quick issue resolution.
 
 ## Error Tracking with Sentry
 
@@ -172,7 +172,7 @@ npm install dd-trace
 import tracer from 'dd-trace';
 
 tracer.init({
-  service: 'tikit-backend',
+  service: 'grooovy-backend',
   env: process.env.NODE_ENV,
   version: process.env.APP_VERSION,
   logInjection: true,
@@ -184,7 +184,7 @@ tracer.init({
 ```bash
 DD_API_KEY=your-api-key
 DD_SITE=datadoghq.com
-DD_SERVICE=tikit-backend
+DD_SERVICE=grooovy-backend
 DD_ENV=production
 DD_VERSION=1.0.0
 ```
@@ -268,20 +268,20 @@ metrics.histogram('payment.amount', payment.amount, {
 ```yaml
 # UptimeRobot configuration
 monitors:
-  - name: Tikit API Health
-    url: https://api.tikit.app/health
+  - name: Grooovy API Health
+    url: https://api.grooovy.com/health
     type: HTTP
     interval: 300 # 5 minutes
     expected_status: 200
     
-  - name: Tikit API Ready
-    url: https://api.tikit.app/ready
+  - name: Grooovy API Ready
+    url: https://api.grooovy.com/ready
     type: HTTP
     interval: 300
     expected_status: 200
     
-  - name: Tikit Frontend
-    url: https://tikit.app
+  - name: Grooovy Frontend
+    url: https://grooovy.com
     type: HTTP
     interval: 300
     expected_status: 200
@@ -404,14 +404,14 @@ alerts:
 
 ### Incident Communication
 
-**Status Page:** https://status.tikit.app
+**Status Page:** https://status.grooovy.com
 - Automatically updated via API
 - Subscribe for updates
 - Historical uptime data
 
 **Communication Channels:**
-- Twitter: @TikitStatus
-- Email: status@tikit.app
+- Twitter: @GrooovyStatus
+- Email: status@grooovy.com
 - In-app banner
 
 ### Post-Mortem Template

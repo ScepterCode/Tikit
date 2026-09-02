@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the caching strategy for the Tikit platform to achieve sub-500ms query response times and handle 10,000+ concurrent users.
+This document outlines the caching strategy for the Grooovy platform to achieve sub-500ms query response times and handle 10,000+ concurrent users.
 
 ## Cache Architecture
 

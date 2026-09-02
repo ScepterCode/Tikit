@@ -38,7 +38,7 @@ Your database currently has **ZERO security** - anyone can access anyone's data.
 
 ## 📁 FILES YOU NEED
 
-All files are in the `Tikit/` directory:
+All files are in the `Grooovy/` directory:
 
 1. **setup_proper_users_table.sql** - Adds role column, enables RLS on users
 2. **PHASE1_CRITICAL_SECURITY_RLS.sql** - Enables RLS on 5 more tables

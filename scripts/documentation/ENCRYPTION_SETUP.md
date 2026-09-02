@@ -1,10 +1,10 @@
 # Encryption Setup Guide
 
-This guide explains how to set up and manage encryption keys for the Tikit backend application.
+This guide explains how to set up and manage encryption keys for the Grooovy backend application.
 
 ## Overview
 
-Tikit uses AES-256-GCM encryption to protect sensitive data including:
+Grooovy uses AES-256-GCM encryption to protect sensitive data including:
 - Payment information (card numbers, CVV, account numbers)
 - Personally Identifiable Information (PII) such as email, phone numbers, names
 - Other sensitive user data

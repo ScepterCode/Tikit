@@ -68,7 +68,7 @@ Successfully implemented the complete membership system with 3 tiers (Regular, S
 - 🎨 Custom event branding
 - 📊 Advanced analytics dashboard
 - 📧 Email marketing (500/month)
-- 🚫 Remove Tikit branding
+- 🚫 Remove Grooovy branding
 
 ### Legend ($30/month)
 - Everything in Special
@@ -155,11 +155,11 @@ The system tracks:
 ### 1. Start Both Servers
 ```bash
 # Terminal 1 - Backend
-cd Tikit/apps/backend-fastapi
+cd Grooovy/apps/backend-fastapi
 python main.py
 
 # Terminal 2 - Frontend
-cd Tikit/apps/frontend
+cd Grooovy/apps/frontend
 npm run dev
 ```
 

@@ -1,4 +1,4 @@
-# 🚀 How to Access Tikit Features - Step by Step Guide
+# 🚀 How to Access Grooovy Features - Step by Step Guide
 
 ## 🌐 Server Status
 - ✅ Backend: http://localhost:4000 (Running)

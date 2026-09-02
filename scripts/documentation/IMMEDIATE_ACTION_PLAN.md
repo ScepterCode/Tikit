@@ -1,7 +1,7 @@
-# 🚨 IMMEDIATE ACTION PLAN - Get Tikit Online NOW
+# 🚨 IMMEDIATE ACTION PLAN - Get Grooovy Online NOW
 
 ## 🎯 Current Status
-- ✅ **App is deployed** and accessible at https://tikit-ik4l.vercel.app
+- ✅ **App is deployed** and accessible at https://grooovy-ik4l.vercel.app
 - ✅ **Code changes are live** on GitHub and Vercel
 - ❌ **Supabase not configured** - showing setup screen or localhost errors
 - ❌ **Environment variables missing** in Vercel
@@ -14,7 +14,7 @@
 2. **Click "Start your project"**
 3. **Sign up/Login with GitHub**
 4. **Create New Project:**
-   - Name: `tikit-production`
+   - Name: `grooovy-production`
    - Password: Generate strong password
    - Region: `West Europe (Frankfurt)`
    - Plan: **Free** (perfect for production)
@@ -37,7 +37,7 @@ Once project is ready:
 ### ⚙️ **Action 4: Configure Vercel (2 minutes)**
 
 1. **Open [vercel.com/dashboard](https://vercel.com/dashboard)**
-2. **Find your Tikit project**
+2. **Find your Grooovy project**
 3. **Go to Settings → Environment Variables**
 4. **Add these TWO variables:**
 
@@ -58,7 +58,7 @@ VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIs[your-anon-key]
 
 After completing actions above:
 
-1. **Visit https://tikit-ik4l.vercel.app**
+1. **Visit https://grooovy-ik4l.vercel.app**
 2. **Should NOT see setup screen anymore**
 3. **Try to register new account**
 4. **Should work without localhost errors**

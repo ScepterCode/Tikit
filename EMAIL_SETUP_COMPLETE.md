@@ -2,7 +2,7 @@
 
 ## 📋 Summary
 
-Your Tikit app now has a complete email system using Supabase's built-in email service. All code is ready - you just need to deploy the Edge Function and set up the cron job.
+Your Grooovy app now has a complete email system using Supabase's built-in email service. All code is ready - you just need to deploy the Edge Function and set up the cron job.
 
 ---
 
@@ -222,7 +222,7 @@ LIMIT 10;
 # apps/backend-fastapi/.env
 ENABLE_EMAIL_NOTIFICATIONS=true
 FRONTEND_URL=http://localhost:3000
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 
 # Supabase (already set)
 SUPABASE_URL=your-url

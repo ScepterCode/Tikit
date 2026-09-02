@@ -7,7 +7,7 @@ Fixed CORS (Cross-Origin Resource Sharing) error preventing your Netlify fronten
 Your FastAPI backend was configured to only allow requests from:
 - `http://localhost:3000` (local development)
 - `http://localhost:5173` (Vite dev server)
-- `https://tikit.vercel.app` (old Vercel deployment)
+- `https://grooovy.vercel.app` (old Vercel deployment)
 
 But **NOT** from your new Netlify domain: `https://grooovy.netlify.app`
 
@@ -27,7 +27,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173", 
-        "https://tikit.vercel.app",
+        "https://grooovy.vercel.app",
         "https://grooovy.netlify.app",  # ✅ Added your Netlify domain
         os.getenv("FRONTEND_URL", "")
     ],

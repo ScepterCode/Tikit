@@ -91,7 +91,7 @@ pnpm add -D -w eslint@latest @typescript-eslint/eslint-plugin@latest @typescript
 pnpm add -D -w @eslint/js eslint-config-prettier@latest
 
 # Regenerate Prisma client after Prisma update
-pnpm --filter @tikit/backend prisma:generate
+pnpm --filter @grooovy/backend prisma:generate
 ```
 
 ## Why Current Setup Still Works

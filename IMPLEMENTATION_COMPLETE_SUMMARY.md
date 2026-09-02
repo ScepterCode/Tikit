@@ -141,7 +141,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 ENABLE_EMAIL_NOTIFICATIONS=true
 ```
 
@@ -379,7 +379,7 @@ ENABLE_EMAIL_NOTIFICATIONS=true
 
 ## 🙏 Conclusion
 
-Today's work has significantly improved Tikit's readiness for production:
+Today's work has significantly improved Grooovy's readiness for production:
 
 1. ✅ **Email service** - Complete and ready to deploy
 2. ✅ **Security** - Critical issues identified and fixed

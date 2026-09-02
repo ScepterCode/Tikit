@@ -9,7 +9,7 @@
 **Layout**:
 ```
 ┌─────────────────────────────────────────────────────┐
-│  [Logo] Tikit                    [Login] [Sign Up]  │
+│  [Logo] Grooovy                    [Login] [Sign Up]  │
 ├─────────────────────────────────────────────────────┤
 │                                                      │
 │         🎫 Nigeria's #1 Event Platform              │
@@ -24,7 +24,7 @@
 │  │Event │  │Event │  │Event │  │Event │           │
 │  └──────┘  └──────┘  └──────┘  └──────┘           │
 ├─────────────────────────────────────────────────────┤
-│  Why Choose Tikit?                                  │
+│  Why Choose Grooovy?                                  │
 │  ✓ Offline Access  ✓ USSD Support  ✓ Group Buy    │
 ├─────────────────────────────────────────────────────┤
 │  Footer: About | Contact | Help | Terms            │
@@ -47,7 +47,7 @@
 **User Type Selection First**:
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  Welcome to Tikit                    │
+│                  Welcome to Grooovy                    │
 │                                                      │
 │              I want to...                           │
 │                                                      │

@@ -57,7 +57,7 @@
 1. **Create Supabase Project:**
    ```
    - Go to supabase.com
-   - New project: tikit-test
+   - New project: grooovy-test
    - Region: West Europe (Frankfurt)
    - Plan: Free
    ```
@@ -112,7 +112,7 @@ Once you add real Supabase credentials:
 
 ## 🚀 **The Revolutionary Result**
 
-Your Tikit app becomes:
+Your Grooovy app becomes:
 - **100% cloud-native** from localhost to production
 - **Zero SQLite dependencies** - PostgreSQL from day 1
 - **Real-time enabled** - live updates out of the box

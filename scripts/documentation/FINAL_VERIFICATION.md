@@ -102,7 +102,7 @@ Both servers should already be running:
 
 ### 2. **Create Test Data**
 ```bash
-python Tikit/create_test_data.py
+python Grooovy/create_test_data.py
 ```
 
 This will:
@@ -113,7 +113,7 @@ This will:
 
 ### 3. **Run Full Flow Test**
 ```bash
-python Tikit/test_full_flow.py
+python Grooovy/test_full_flow.py
 ```
 
 This will:
@@ -246,12 +246,12 @@ This will:
 - ✅ `apps/frontend/src/pages/organizer/OrganizerDashboard.tsx` - Updated with NotificationCenter
 
 ### Test Scripts
-- ✅ `Tikit/create_test_data.py` - Create test data
-- ✅ `Tikit/test_full_flow.py` - Test full flow
+- ✅ `Grooovy/create_test_data.py` - Create test data
+- ✅ `Grooovy/test_full_flow.py` - Test full flow
 
 ### Documentation
-- ✅ `Tikit/BROADCAST_AND_NOTIFICATIONS_COMPLETE.md` - Complete implementation guide
-- ✅ `Tikit/FINAL_VERIFICATION.md` - This file
+- ✅ `Grooovy/BROADCAST_AND_NOTIFICATIONS_COMPLETE.md` - Complete implementation guide
+- ✅ `Grooovy/FINAL_VERIFICATION.md` - This file
 
 ---
 

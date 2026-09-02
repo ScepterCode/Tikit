@@ -251,11 +251,11 @@ Implemented 5 comprehensive fixes:
 ### Start Development:
 ```bash
 # Terminal 1: Backend
-cd Tikit/apps/backend-fastapi
+cd Grooovy/apps/backend-fastapi
 uvicorn simple_main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal 2: Frontend
-cd Tikit/apps/frontend
+cd Grooovy/apps/frontend
 pnpm dev
 ```
 

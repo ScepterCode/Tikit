@@ -20,7 +20,7 @@ This script:
 ### Run It:
 
 1. Open Supabase SQL Editor
-2. Copy `Tikit/fix_users_table_only.sql`
+2. Copy `Grooovy/fix_users_table_only.sql`
 3. Paste and Run
 4. Should see 3 policies created
 
@@ -42,7 +42,7 @@ After fixing users table, run this to see actual column names:
 ### File: `check_actual_schema.sql`
 
 1. Open Supabase SQL Editor
-2. Copy `Tikit/check_actual_schema.sql`
+2. Copy `Grooovy/check_actual_schema.sql`
 3. Paste and Run
 4. Share the output with me
 

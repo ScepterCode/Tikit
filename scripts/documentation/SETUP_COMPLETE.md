@@ -1,4 +1,4 @@
-# Tikit Project Setup Complete ✓
+# Grooovy Project Setup Complete ✓
 
 ## What Was Implemented
 
@@ -52,7 +52,7 @@ Task 1 "Project setup and infrastructure" has been successfully completed with a
 ## Project Structure
 
 ```
-tikit-monorepo/
+grooovy-monorepo/
 ├── apps/
 │   ├── frontend/                 # React PWA
 │   │   ├── src/
@@ -87,7 +87,7 @@ tikit-monorepo/
 │       ├── package.json
 │       └── .env.example
 │
-├── .kiro/specs/tikit-webapp/     # Spec documents
+├── .kiro/specs/grooovy-webapp/     # Spec documents
 ├── package.json                  # Root package
 ├── pnpm-workspace.yaml
 ├── .eslintrc.json
@@ -103,7 +103,7 @@ tikit-monorepo/
 
 2. **Install PostgreSQL 15**:
    - Download from https://www.postgresql.org/download/
-   - Create database: `createdb tikit`
+   - Create database: `createdb grooovy`
    - Update `apps/backend/.env` with connection string
 
 3. **Install Redis 7**:
@@ -132,7 +132,7 @@ tikit-monorepo/
 
 6. **Run Database Migrations**:
    ```bash
-   pnpm --filter @tikit/backend prisma:migrate
+   pnpm --filter @grooovy/backend prisma:migrate
    ```
 
 ### Running the Application
@@ -145,8 +145,8 @@ pnpm install
 pnpm dev
 
 # Or run individually:
-pnpm --filter @tikit/frontend dev   # http://localhost:3000
-pnpm --filter @tikit/backend dev    # http://localhost:4000
+pnpm --filter @grooovy/frontend dev   # http://localhost:3000
+pnpm --filter @grooovy/backend dev    # http://localhost:4000
 ```
 
 ### Verify Setup
@@ -169,8 +169,8 @@ curl http://localhost:4000/health
 ```bash
 # Development
 pnpm dev                    # Run all apps
-pnpm --filter @tikit/frontend dev
-pnpm --filter @tikit/backend dev
+pnpm --filter @grooovy/frontend dev
+pnpm --filter @grooovy/backend dev
 
 # Build
 pnpm build                  # Build all apps
@@ -181,13 +181,13 @@ pnpm format                 # Format code
 pnpm format:check           # Check formatting
 
 # Database
-pnpm --filter @tikit/backend prisma:generate  # Generate Prisma Client
-pnpm --filter @tikit/backend prisma:migrate   # Run migrations
-pnpm --filter @tikit/backend prisma:studio    # Open Prisma Studio
+pnpm --filter @grooovy/backend prisma:generate  # Generate Prisma Client
+pnpm --filter @grooovy/backend prisma:migrate   # Run migrations
+pnpm --filter @grooovy/backend prisma:studio    # Open Prisma Studio
 
 # TypeScript
-pnpm --filter @tikit/frontend exec tsc --noEmit
-pnpm --filter @tikit/backend exec tsc --noEmit
+pnpm --filter @grooovy/frontend exec tsc --noEmit
+pnpm --filter @grooovy/backend exec tsc --noEmit
 ```
 
 ## What's Ready

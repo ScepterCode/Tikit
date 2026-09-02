@@ -35,7 +35,7 @@ supabase link --project-ref YOUR_PROJECT_REF
 
 ```bash
 # Navigate to your project
-cd Tikit
+cd Grooovy
 
 # Deploy the send-emails function
 supabase functions deploy send-emails
@@ -100,7 +100,7 @@ SELECT cron.schedule(
 Run the test script:
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_supabase_email.py
 ```
 
@@ -197,7 +197,7 @@ Ensure these are set in `apps/backend-fastapi/.env`:
 ```env
 ENABLE_EMAIL_NOTIFICATIONS=true
 FRONTEND_URL=http://localhost:3000
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 ```
 
 ## 🆘 Troubleshooting

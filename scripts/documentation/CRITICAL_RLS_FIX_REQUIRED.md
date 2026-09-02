@@ -40,7 +40,7 @@ When a user tries to query the users table, the policy checks their role by quer
 ### Quick Fix Steps:
 
 1. **Open Supabase Dashboard** → SQL Editor
-2. **Open file**: `Tikit/fix_rls_infinite_recursion.sql`
+2. **Open file**: `Grooovy/fix_rls_infinite_recursion.sql`
 3. **Copy all content** (Ctrl+A, Ctrl+C)
 4. **Paste in SQL Editor** (Ctrl+V)
 5. **Click Run** (or Ctrl+Enter)
@@ -87,24 +87,24 @@ When a user tries to query the users table, the policy checks their role by quer
 ## 📁 Files to Use
 
 ### 1. Fix Script (RUN THIS):
-- **File**: `Tikit/fix_rls_infinite_recursion.sql`
+- **File**: `Grooovy/fix_rls_infinite_recursion.sql`
 - **Purpose**: Fixes the recursion issue
 - **Time**: 5 minutes
 - **Action**: Copy and run in Supabase SQL Editor
 
 ### 2. Diagnosis Script (Optional):
-- **File**: `Tikit/diagnose_rls_recursion.sql`
+- **File**: `Grooovy/diagnose_rls_recursion.sql`
 - **Purpose**: Shows current policies causing issues
 - **Use**: If you want to see the problem before fixing
 
 ### 3. Test Script (Run After Fix):
-- **File**: `Tikit/test_supabase_storage_comprehensive.py`
+- **File**: `Grooovy/test_supabase_storage_comprehensive.py`
 - **Purpose**: Verifies all storage systems work
 - **Command**: `python test_supabase_storage_comprehensive.py`
 - **Expected**: 18/18 tests pass
 
 ### 4. Documentation:
-- **File**: `Tikit/RLS_RECURSION_FIX_GUIDE.md`
+- **File**: `Grooovy/RLS_RECURSION_FIX_GUIDE.md`
 - **Purpose**: Detailed explanation of issue and fix
 - **Use**: For understanding the problem
 
@@ -175,7 +175,7 @@ If you encounter any issues:
 
 **Run this command to see the issue:**
 ```bash
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 ```
 

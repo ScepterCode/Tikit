@@ -27,21 +27,21 @@ User Request → Cloudflare CDN → Vercel (Origin) → Application
 Create the following page rules in order:
 
 **Rule 1: Cache Static Assets**
-- URL: `*tikit.app/assets/*`
+- URL: `*grooovy.com/assets/*`
 - Settings:
   - Cache Level: Cache Everything
   - Edge Cache TTL: 1 month
   - Browser Cache TTL: 1 year
 
 **Rule 2: Cache Images**
-- URL: `*tikit.app/*.{jpg,jpeg,png,webp,svg,ico}`
+- URL: `*grooovy.com/*.{jpg,jpeg,png,webp,svg,ico}`
 - Settings:
   - Cache Level: Cache Everything
   - Edge Cache TTL: 1 week
   - Browser Cache TTL: 1 week
 
 **Rule 3: Bypass Cache for API**
-- URL: `*tikit.app/api/*`
+- URL: `*grooovy.com/api/*`
 - Settings:
   - Cache Level: Bypass
 
@@ -100,7 +100,7 @@ For automatic image optimization:
 
 ```javascript
 // Use Cloudflare Image Resizing
-const imageUrl = `https://tikit.app/cdn-cgi/image/width=800,quality=85,format=auto/${originalImageUrl}`;
+const imageUrl = `https://grooovy.com/cdn-cgi/image/width=800,quality=85,format=auto/${originalImageUrl}`;
 ```
 
 Options:
@@ -214,7 +214,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache" 
 curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache" \
   -H "Authorization: Bearer {api_token}" \
   -H "Content-Type: application/json" \
-  --data '{"files":["https://tikit.app/assets/main.js"]}'
+  --data '{"files":["https://grooovy.com/assets/main.js"]}'
 ```
 
 ## Performance Targets
@@ -247,7 +247,7 @@ Check cache headers:
 
 ```javascript
 // In browser console
-fetch('https://tikit.app/assets/main.js')
+fetch('https://grooovy.com/assets/main.js')
   .then(r => {
     console.log('Cache-Control:', r.headers.get('cache-control'));
     console.log('CF-Cache-Status:', r.headers.get('cf-cache-status'));

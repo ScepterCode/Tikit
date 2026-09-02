@@ -1,11 +1,11 @@
-# Tikit - Event Ticketing Platform
+# Grooovy - Event Ticketing Platform
 
 A progressive web application for event ticketing in Nigeria, featuring offline-first capabilities, USSD integration, and multilingual support.
 
 ## Project Structure
 
 ```
-tikit-monorepo/
+grooovy-monorepo/
 ├── apps/
 │   ├── frontend/          # React PWA with Vite
 │   └── backend/           # Node.js/Express API
@@ -41,10 +41,10 @@ Or run individually:
 
 ```bash
 # Frontend only (http://localhost:3000)
-pnpm --filter @tikit/frontend dev
+pnpm --filter @grooovy/frontend dev
 
 # Backend only (http://localhost:4000)
-pnpm --filter @tikit/backend dev
+pnpm --filter @grooovy/backend dev
 ```
 
 ### Build

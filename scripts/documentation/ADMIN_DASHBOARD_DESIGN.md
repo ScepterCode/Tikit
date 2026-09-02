@@ -7,7 +7,7 @@
 ### Main Navigation (Top Bar)
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ [Logo] Tikit Admin    [🔍 Search]    [🔔] [👤 Admin] [⚙️]  │
+│ [Logo] Grooovy Admin    [🔍 Search]    [🔔] [👤 Admin] [⚙️]  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -362,7 +362,7 @@
 │                                                              │
 │  Platform Configuration                                     │
 │  ┌─────────────────────────────────────────┐               │
-│  │ Platform Name: Tikit                     │               │
+│  │ Platform Name: Grooovy                     │               │
 │  │ Platform Fee: 10%                        │               │
 │  │ Currency: NGN (₦)                        │               │
 │  │ Timezone: WAT (UTC+1)                    │               │
@@ -376,7 +376,7 @@
 │                                                              │
 │  SMS/WhatsApp Settings                                      │
 │  Provider: Africa's Talking                                 │
-│  Sender ID: Tikit                                           │
+│  Sender ID: Grooovy                                           │
 │  ☑️ OTP Messages                                            │
 │  ☑️ Event Reminders                                         │
 │  ☑️ Payment Confirmations                                   │
@@ -390,7 +390,7 @@
 │                                                              │
 │  Email Settings                                             │
 │  SMTP Server: smtp.gmail.com                                │
-│  From Email: noreply@tikit.ng                               │
+│  From Email: noreply@grooovy.com                               │
 │  ☑️ Welcome Emails                                          │
 │  ☑️ Transaction Receipts                                    │
 │                                                              │

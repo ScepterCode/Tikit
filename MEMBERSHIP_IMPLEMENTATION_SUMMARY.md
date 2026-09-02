@@ -20,7 +20,7 @@ Complete three-tier membership system with payment integration, feature gating, 
 - **Custom Branding** (logo, colors)
 - **Advanced Analytics** dashboard
 - **Email Marketing** (500 emails/month)
-- **Remove Tikit Branding**
+- **Remove Grooovy Branding**
 
 ### 👑 Legend ($30/month)
 **Monthly Cost**: $30

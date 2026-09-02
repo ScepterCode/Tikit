@@ -1,8 +1,8 @@
-# Tikit Web Application Design Document
+# Grooovy Web Application Design Document
 
 ## Overview
 
-Tikit is a progressive web application (PWA) designed to democratize event ticketing in Nigeria by addressing the unique challenges of the Nigerian market including limited internet connectivity, diverse payment methods, and cultural event requirements. The system architecture prioritizes offline-first capabilities, USSD integration for feature phones, and real-time synchronization.
+Grooovy is a progressive web application (PWA) designed to democratize event ticketing in Nigeria by addressing the unique challenges of the Nigerian market including limited internet connectivity, diverse payment methods, and cultural event requirements. The system architecture prioritizes offline-first capabilities, USSD integration for feature phones, and real-time synchronization.
 
 The application follows a modern web architecture with a React-based frontend, Node.js/Express backend, Firebase for real-time features, and PostgreSQL for transactional data. The design emphasizes progressive enhancement, ensuring core functionality works on 2G networks while providing enhanced experiences on faster connections.
 
@@ -696,7 +696,7 @@ interface ErrorResponse {
 - Minimum 100 iterations per property test
 - Use custom generators for domain-specific data (Nigerian states, phone numbers, event types)
 - Implement shrinking for minimal failing examples
-- Tag each property test with format: `**Feature: tikit-webapp, Property {number}: {property_text}**`
+- Tag each property test with format: `**Feature: grooovy-webapp, Property {number}: {property_text}**`
 
 **Property Test Categories:**
 
@@ -734,7 +734,7 @@ import { describe, it, expect } from 'vitest';
 describe('Property Tests', () => {
   it('Property 22: Bulk booking cost calculation', () => {
     /**
-     * Feature: tikit-webapp, Property 22: Bulk booking cost calculation
+     * Feature: grooovy-webapp, Property 22: Bulk booking cost calculation
      * Validates: Requirements 7.2
      */
     fc.assert(

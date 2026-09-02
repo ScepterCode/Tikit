@@ -70,7 +70,7 @@ Example endpoints:
 http://localhost:3000
 ```
 
-You should see the Tikit app interface.
+You should see the Grooovy app interface.
 
 ### 2. Try Registration/Login
 The onboarding flow should work:

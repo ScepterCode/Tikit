@@ -43,4 +43,4 @@ This will create all the necessary tables:
 ## 📋 **Schema File Location:**
 `apps/backend/src/scripts/supabase-schema.sql`
 
-**Once you run the database schema, you'll have a fully functional Tikit app! 🚀**
+**Once you run the database schema, you'll have a fully functional Grooovy app! 🚀**

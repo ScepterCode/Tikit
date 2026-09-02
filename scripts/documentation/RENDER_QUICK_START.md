@@ -25,7 +25,7 @@ git push origin main
    - `SUPABASE_SERVICE_KEY`: `your-service-key`
    - `SUPABASE_ANON_KEY`: `your-anon-key`
 6. Click **"Apply"** → Wait for deployment
-7. Note your backend URL: `https://tikit-fastapi-backend.onrender.com`
+7. Note your backend URL: `https://grooovy-fastapi-backend.onrender.com`
 
 ### Step 3: Deploy Frontend to Vercel
 ```bash
@@ -37,7 +37,7 @@ npx vercel --prod
 
 ### Step 4: Configure Frontend Environment
 In Vercel dashboard → Settings → Environment Variables:
-- `VITE_API_BASE_URL`: `https://tikit-fastapi-backend.onrender.com`
+- `VITE_API_BASE_URL`: `https://grooovy-fastapi-backend.onrender.com`
 - `VITE_SUPABASE_URL`: `https://your-project.supabase.co`
 - `VITE_SUPABASE_ANON_KEY`: `your-anon-key`
 
@@ -63,7 +63,7 @@ git push origin main
 - API Test: `https://your-backend.onrender.com/api/test`
 
 ## 🎉 You're Live!
-Your Tikit system is now running on:
+Your Grooovy system is now running on:
 - **Backend**: Render (FastAPI + Redis)
 - **Frontend**: Vercel (React)
 - **Database**: Supabase (PostgreSQL)

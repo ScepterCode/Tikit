@@ -1,4 +1,4 @@
-# 🎨 Tikit UI Architecture & Design System
+# 🎨 Grooovy UI Architecture & Design System
 
 ## Overview
 

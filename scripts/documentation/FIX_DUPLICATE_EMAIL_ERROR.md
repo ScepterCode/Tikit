@@ -96,7 +96,7 @@ This is normal and expected for duplicate email cases.
 Run the verification script:
 
 ```bash
-cd Tikit
+cd Grooovy
 python investigate_auth_and_user_storage.py
 ```
 

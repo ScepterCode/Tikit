@@ -68,11 +68,11 @@ If you don't want to deal with Supabase pausing, use Docker:
 
 ```bash
 # Start PostgreSQL in Docker
-docker run --name tikit-db -e POSTGRES_PASSWORD=tikit123 -e POSTGRES_DB=tikit -p 5432:5432 -d postgres:15
+docker run --name grooovy-db -e POSTGRES_PASSWORD=grooovy123 -e POSTGRES_DB=grooovy -p 5432:5432 -d postgres:15
 
 # Update apps/backend/.env
-DATABASE_URL=postgresql://postgres:tikit123@localhost:5432/tikit
-DIRECT_URL=postgresql://postgres:tikit123@localhost:5432/tikit
+DATABASE_URL=postgresql://postgres:grooovy123@localhost:5432/grooovy
+DIRECT_URL=postgresql://postgres:grooovy123@localhost:5432/grooovy
 
 # Run migrations
 cd apps/backend

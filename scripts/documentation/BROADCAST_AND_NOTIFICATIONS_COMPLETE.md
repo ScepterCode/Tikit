@@ -452,8 +452,8 @@ python test_full_flow.py
 - ✅ `apps/frontend/src/pages/admin/AdminDashboard.tsx` - Dashboard page
 
 ### Test Scripts:
-- ✅ `Tikit/create_test_data.py` - Create test data
-- ✅ `Tikit/test_full_flow.py` - Test full flow
+- ✅ `Grooovy/create_test_data.py` - Create test data
+- ✅ `Grooovy/test_full_flow.py` - Test full flow
 
 ---
 

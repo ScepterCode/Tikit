@@ -182,20 +182,20 @@ npm run dev
 
 ### Test Ticket Creation
 ```bash
-cd Tikit
+cd Grooovy
 python test_ticket_purchase_flow.py
 ```
 
 ### Test Email Sending
 ```bash
-cd Tikit
+cd Grooovy
 python send_test_ticket_email.py
 python trigger_email_function.py
 ```
 
 ### Check Database
 ```bash
-cd Tikit
+cd Grooovy
 python check_users_schema.py
 ```
 

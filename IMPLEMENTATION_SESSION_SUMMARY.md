@@ -130,7 +130,7 @@ POST /auth/resend-verification
 
 **Usage:**
 ```bash
-cd Tikit
+cd Grooovy
 python test_email_service.py
 # Enter test email when prompted
 # Receive 3 test emails
@@ -243,7 +243,7 @@ python test_email_service.py
 ## 📁 File Structure
 
 ```
-Tikit/
+Grooovy/
 ├── apps/
 │   ├── backend-fastapi/
 │   │   ├── services/

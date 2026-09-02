@@ -30,12 +30,12 @@ If you have PostgreSQL installed locally:
 
 1. Create a test database:
    ```bash
-   createdb tikit_test
+   createdb grooovy_test
    ```
 
 2. Update `apps/backend/.env.test` with your local credentials:
    ```env
-   DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/tikit_test
+   DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/grooovy_test
    ```
 
 3. Run Prisma migrations:
@@ -50,12 +50,12 @@ If you want to use Docker:
 
 1. Start a PostgreSQL container:
    ```bash
-   docker run --name tikit-test-db -e POSTGRES_PASSWORD=testpassword -e POSTGRES_DB=tikit_test -p 5432:5432 -d postgres:15
+   docker run --name grooovy-test-db -e POSTGRES_PASSWORD=testpassword -e POSTGRES_DB=grooovy_test -p 5432:5432 -d postgres:15
    ```
 
 2. Update `apps/backend/.env.test`:
    ```env
-   DATABASE_URL=postgresql://postgres:testpassword@localhost:5432/tikit_test
+   DATABASE_URL=postgresql://postgres:testpassword@localhost:5432/grooovy_test
    ```
 
 3. Run Prisma migrations:

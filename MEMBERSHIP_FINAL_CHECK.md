@@ -236,11 +236,11 @@ I have thoroughly verified all frontend and backend components. Everything is pr
 ### Test Commands:
 ```bash
 # Terminal 1 - Backend
-cd Tikit/apps/backend-fastapi
+cd Grooovy/apps/backend-fastapi
 python main.py
 
 # Terminal 2 - Frontend  
-cd Tikit/apps/frontend
+cd Grooovy/apps/frontend
 npm run dev
 
 # Browser

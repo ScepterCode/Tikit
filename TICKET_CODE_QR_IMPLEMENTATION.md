@@ -1,7 +1,7 @@
 # Ticket Code and QR Code Implementation
 
 ## Overview
-Complete implementation of ticket codes and QR codes for the Tikit ticketing system.
+Complete implementation of ticket codes and QR codes for the Grooovy ticketing system.
 
 ## Features Implemented
 

@@ -361,7 +361,7 @@ The authentication system now provides:
 - **Smooth Navigation**: No unexpected logouts
 - **Audit Trail**: Complete security logging
 
-Your Tikit application now has **enterprise-grade authentication security** with a **seamless user experience**!
+Your Grooovy application now has **enterprise-grade authentication security** with a **seamless user experience**!
 
 ---
 

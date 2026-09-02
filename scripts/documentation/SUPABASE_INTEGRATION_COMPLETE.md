@@ -2,7 +2,7 @@
 
 ## ✅ Major Achievements
 
-This update represents a complete transformation of the Tikit event management platform from SQLite to Supabase, with full authentication, real-time features, and production-ready deployment.
+This update represents a complete transformation of the Grooovy event management platform from SQLite to Supabase, with full authentication, real-time features, and production-ready deployment.
 
 ### 🔧 Core Fixes Implemented
 

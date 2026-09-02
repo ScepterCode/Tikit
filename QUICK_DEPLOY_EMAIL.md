@@ -33,7 +33,7 @@ supabase link --project-ref YOUR_PROJECT_REF
 
 ### 4. Deploy Edge Function
 ```bash
-cd Tikit
+cd Grooovy
 supabase functions deploy send-emails
 ```
 

@@ -16,7 +16,7 @@ You've added the RESEND_API_KEY to Supabase secrets. Great! Now just update the 
 ### Step 2: Replace Code (1 minute)
 
 1. **Delete** all existing code in the editor
-2. **Open** the file: `Tikit/supabase/functions/send-emails/index-resend.ts`
+2. **Open** the file: `Grooovy/supabase/functions/send-emails/index-resend.ts`
 3. **Copy** ALL the code from that file
 4. **Paste** into the Supabase editor
 
@@ -83,7 +83,7 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            from: 'Tikit <noreply@tikit.app>',
+            from: 'Grooovy <noreply@grooovy.com>',
             to: [email.to_email],
             subject: email.subject,
             html: email.html_body,
@@ -181,7 +181,7 @@ serve(async (req) => {
 Run this command to send your emails:
 
 ```bash
-cd Tikit
+cd Grooovy
 python trigger_email_function.py
 ```
 

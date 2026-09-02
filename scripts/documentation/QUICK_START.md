@@ -15,10 +15,10 @@
 **Using Local PostgreSQL**:
 ```bash
 # 1. Create database
-createdb tikit
+createdb grooovy
 
 # 2. Update .env and .env.test
-DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/tikit
+DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/grooovy
 ```
 
 ### 2. Redis Setup (2 minutes)

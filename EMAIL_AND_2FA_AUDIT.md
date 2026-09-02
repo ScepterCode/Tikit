@@ -29,7 +29,7 @@ SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@tikit.app")
+EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@grooovy.com")
 ```
 
 **Status**: ✅ Configuration exists
@@ -356,7 +356,7 @@ class EmailService:
         html_body = f"""
         <html>
         <body>
-            <h2>Welcome to Tikit, {user_name}!</h2>
+            <h2>Welcome to Grooovy, {user_name}!</h2>
             <p>Please verify your email address by clicking the link below:</p>
             <a href="{verification_url}" style="background-color: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
                 Verify Email
@@ -369,7 +369,7 @@ class EmailService:
         
         return await self.send_email(
             to_email=email,
-            subject="Verify Your Tikit Account",
+            subject="Verify Your Grooovy Account",
             html_body=html_body
         )
     
@@ -379,7 +379,7 @@ class EmailService:
         html_body = f"""
         <html>
         <body>
-            <h2>Your Tikit Verification Code</h2>
+            <h2>Your Grooovy Verification Code</h2>
             <p>Your OTP code for {purpose}:</p>
             <h1 style="font-size: 32px; letter-spacing: 8px; color: #667eea;">{otp_code}</h1>
             <p>This code expires in {expires_in // 60} minutes.</p>
@@ -390,7 +390,7 @@ class EmailService:
         
         return await self.send_email(
             to_email=email,
-            subject=f"Your Tikit OTP Code: {otp_code}",
+            subject=f"Your Grooovy OTP Code: {otp_code}",
             html_body=html_body
         )
     
@@ -464,7 +464,7 @@ class EmailService:
         
         return await self.send_email(
             to_email=email,
-            subject="Reset Your Tikit Password",
+            subject="Reset Your Grooovy Password",
             html_body=html_body
         )
     
@@ -645,7 +645,7 @@ class SMSService:
                           purpose: str) -> bool:
         """Send OTP via SMS"""
         try:
-            message = f"Your Tikit OTP for {purpose}: {otp_code}. Valid for 5 minutes."
+            message = f"Your Grooovy OTP for {purpose}: {otp_code}. Valid for 5 minutes."
             
             response = self.sms.send(message, [phone_number])
             
@@ -675,7 +675,7 @@ class SMSService:
                           purpose: str) -> bool:
         try:
             message = self.client.messages.create(
-                body=f"Your Tikit OTP for {purpose}: {otp_code}. Valid for 5 minutes.",
+                body=f"Your Grooovy OTP for {purpose}: {otp_code}. Valid for 5 minutes.",
                 from_=self.from_number,
                 to=phone_number
             )
@@ -852,5 +852,5 @@ ON email_queue(created_at DESC);
 2. **Week 2**: Add SMS service + complete 2FA
 3. **Week 3**: Testing + monitoring + documentation
 
-With these implementations, Tikit will have world-class email and 2FA security! 🚀
+With these implementations, Grooovy will have world-class email and 2FA security! 🚀
 

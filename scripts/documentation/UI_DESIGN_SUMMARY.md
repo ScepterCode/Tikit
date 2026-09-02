@@ -1,4 +1,4 @@
-# 🎨 Tikit UI Design - Complete Summary
+# 🎨 Grooovy UI Design - Complete Summary
 
 ## What Has Been Designed
 

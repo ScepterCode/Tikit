@@ -223,7 +223,7 @@ const handleBankSelect = (bank: any) => {
 
 ## Files Modified
 
-- `Tikit/apps/frontend/src/components/wallet/UnifiedWalletDashboard.tsx`
+- `Grooovy/apps/frontend/src/components/wallet/UnifiedWalletDashboard.tsx`
   - Added searchable bank selector
   - Added filtering logic
   - Added autocomplete dropdown

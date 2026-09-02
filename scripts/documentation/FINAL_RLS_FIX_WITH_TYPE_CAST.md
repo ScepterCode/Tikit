@@ -19,7 +19,7 @@
 This fixes ONLY the users table (the main recursion issue).
 
 1. Open Supabase SQL Editor
-2. Copy `Tikit/fix_users_table_only.sql`
+2. Copy `Grooovy/fix_users_table_only.sql`
 3. Paste and Run
 4. Should complete without errors
 
@@ -37,7 +37,7 @@ This fixes ONLY the users table (the main recursion issue).
 This fixes users, payments, bookings, tickets, and events tables.
 
 1. Open Supabase SQL Editor
-2. Copy `Tikit/fix_all_tables_final.sql`
+2. Copy `Grooovy/fix_all_tables_final.sql`
 3. Paste and Run
 4. Should complete without errors
 
@@ -96,7 +96,7 @@ And:
 After running the fix:
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 ```
 

@@ -49,7 +49,7 @@
 │  ├────────────────────────────────────────────────────────────┤ │
 │  │ id          │ UUID                                         │ │
 │  │ to_email    │ user@example.com                            │ │
-│  │ subject     │ "Verify Your Tikit Account"                 │ │
+│  │ subject     │ "Verify Your Grooovy Account"                 │ │
 │  │ html_body   │ <html>...</html>                            │ │
 │  │ text_body   │ Plain text version                          │ │
 │  │ email_type  │ verification / otp / ticket / etc.          │ │
@@ -111,8 +111,8 @@
 │  📧 Email Received!                                             │
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │ From: Tikit <noreply@tikit.app>                           │ │
-│  │ Subject: Verify Your Tikit Account                         │ │
+│  │ From: Grooovy <noreply@grooovy.com>                           │ │
+│  │ Subject: Verify Your Grooovy Account                         │ │
 │  │                                                            │ │
 │  │ [Beautiful HTML Email with Button]                         │ │
 │  │                                                            │ │

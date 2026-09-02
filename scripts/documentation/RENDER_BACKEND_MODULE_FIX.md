@@ -14,7 +14,7 @@ ERROR: Error loading ASGI app. Could not import module "simple_main".
 ## Solution Implemented
 
 ### 1. Created Missing Module
-- **File**: `Tikit/apps/backend-fastapi/simple_main.py`
+- **File**: `Grooovy/apps/backend-fastapi/simple_main.py`
 - **Purpose**: Minimal FastAPI application for Render deployment
 - **Features**:
   - Basic FastAPI app with CORS middleware

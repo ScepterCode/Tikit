@@ -25,10 +25,10 @@ You have two main options:
 
 #### Option B: Local PostgreSQL
 1. Install PostgreSQL if not already installed
-2. Create a database: `createdb tikit`
+2. Create a database: `createdb grooovy`
 3. Update both `.env` and `.env.test`:
    ```env
-   DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/tikit
+   DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/grooovy
    ```
 
 **Important**: Use the **same DATABASE_URL** in both `.env` and `.env.test` files. Tests will clean up after themselves.
@@ -108,7 +108,7 @@ Only needed if you want to test SMS OTP or USSD features:
    ```env
    AFRICASTALKING_USERNAME=your_username
    AFRICASTALKING_API_KEY=your_api_key
-   AFRICASTALKING_SENDER_ID=Tikit
+   AFRICASTALKING_SENDER_ID=Grooovy
    ```
 
 **Note**: Tests mock this service, so `.env.test` doesn't need real values.

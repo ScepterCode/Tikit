@@ -44,4 +44,4 @@ This will create all the necessary tables, indexes, and security policies.
 - Full setup guide: `SETUP_SUPABASE_DATABASE.md`
 - The app will work perfectly once the database is set up!
 
-**You're almost there! Just run the database schema and you'll have a fully functional Tikit app! 🚀**
+**You're almost there! Just run the database schema and you'll have a fully functional Grooovy app! 🚀**

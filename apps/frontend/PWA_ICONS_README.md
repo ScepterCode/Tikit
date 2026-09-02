@@ -1,6 +1,6 @@
 # PWA Icons Setup
 
-This document describes the icon assets needed for the Tikit PWA.
+This document describes the icon assets needed for the Grooovy PWA.
 
 ## Required Icons
 
@@ -34,13 +34,13 @@ iOS requires specific splash screen images for different device sizes:
 - Text: `#1f2937` (Dark gray)
 
 ### Icon Design
-1. Use the Tikit logo with sufficient padding (20% margin)
+1. Use the Grooovy logo with sufficient padding (20% margin)
 2. Ensure the icon is recognizable at small sizes
 3. Use a simple, bold design that works on both light and dark backgrounds
 4. For maskable icons, keep important content within the safe zone (80% of canvas)
 
 ### Splash Screen Design
-1. Use brand colors with the Tikit logo centered
+1. Use brand colors with the Grooovy logo centered
 2. Include a subtle loading indicator or tagline
 3. Maintain consistent branding across all sizes
 4. Optimize file sizes (use PNG compression)
@@ -103,8 +103,8 @@ The PWA manifest is configured in `vite.config.ts` with the following settings:
 
 ```typescript
 manifest: {
-  name: 'Tikit - Event Ticketing Platform',
-  short_name: 'Tikit',
+  name: 'Grooovy - Event Ticketing Platform',
+  short_name: 'Grooovy',
   description: 'Nigerian event ticketing platform with offline support',
   theme_color: '#10b981',
   background_color: '#ffffff',

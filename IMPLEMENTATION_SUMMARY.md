@@ -454,14 +454,14 @@ npm run dev
 
 ### Test Email System
 ```bash
-cd Tikit
+cd Grooovy
 python send_test_ticket_email.py
 python trigger_email_function.py
 ```
 
 ### Check Database
 ```bash
-cd Tikit
+cd Grooovy
 python check_users_schema.py
 ```
 

@@ -135,12 +135,12 @@ All systems are tested and working correctly.
 
 2. **Create test data:**
    ```bash
-   python Tikit/create_test_data.py
+   python Grooovy/create_test_data.py
    ```
 
 3. **Run full flow test:**
    ```bash
-   python Tikit/test_full_flow.py
+   python Grooovy/test_full_flow.py
    ```
 
 ### Manual Testing
@@ -194,13 +194,13 @@ All systems are tested and working correctly.
 - `apps/frontend/src/pages/organizer/OrganizerDashboard.tsx` - Organizer dashboard
 
 ### Test Scripts
-- `Tikit/create_test_data.py` - Create test data
-- `Tikit/test_full_flow.py` - Test complete flow
+- `Grooovy/create_test_data.py` - Create test data
+- `Grooovy/test_full_flow.py` - Test complete flow
 
 ### Documentation
-- `Tikit/BROADCAST_AND_NOTIFICATIONS_COMPLETE.md` - Implementation guide
-- `Tikit/FINAL_VERIFICATION.md` - Testing checklist
-- `Tikit/SYSTEM_STATUS_REPORT.md` - This file
+- `Grooovy/BROADCAST_AND_NOTIFICATIONS_COMPLETE.md` - Implementation guide
+- `Grooovy/FINAL_VERIFICATION.md` - Testing checklist
+- `Grooovy/SYSTEM_STATUS_REPORT.md` - This file
 
 ---
 

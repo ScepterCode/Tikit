@@ -1,7 +1,7 @@
 # 🚀 Render + Vercel Deployment Guide
 
 ## Overview
-Complete guide for deploying your Tikit system using Render for the FastAPI backend and Vercel for the React frontend.
+Complete guide for deploying your Grooovy system using Render for the FastAPI backend and Vercel for the React frontend.
 
 ## 🏗️ Architecture
 ```
@@ -48,7 +48,7 @@ git add .
 git commit -m "Initial commit for Render deployment"
 
 # Push to GitHub
-git remote add origin https://github.com/yourusername/tikit.git
+git remote add origin https://github.com/yourusername/grooovy.git
 git push -u origin main
 ```
 
@@ -90,7 +90,7 @@ SUPABASE_ANON_KEY=your-anon-key-here
 #### 2.4 Get Backend URL
 After deployment, note your backend URL:
 ```
-https://tikit-fastapi-backend.onrender.com
+https://grooovy-fastapi-backend.onrender.com
 ```
 
 ### Phase 3: Deploy Frontend to Vercel
@@ -113,7 +113,7 @@ vercel --prod
 In Vercel dashboard or CLI:
 ```bash
 vercel env add VITE_API_BASE_URL production
-# Enter: https://tikit-fastapi-backend.onrender.com
+# Enter: https://grooovy-fastapi-backend.onrender.com
 
 vercel env add VITE_SUPABASE_URL production
 # Enter: https://your-project.supabase.co
@@ -188,7 +188,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 # In render.yaml
 services:
   - type: web
-    name: tikit-fastapi-backend
+    name: grooovy-fastapi-backend
     plan: standard  # Upgrade from starter
     numInstances: 2  # Multiple instances
     autoDeploy: true
@@ -199,7 +199,7 @@ services:
 ```yaml
 # In render.yaml
   - type: redis
-    name: tikit-redis
+    name: grooovy-redis
     plan: standard  # Upgrade for more memory
     maxmemoryPolicy: allkeys-lru
 ```
@@ -375,7 +375,7 @@ curl https://your-backend.onrender.com/api/test
 
 ## 🎉 Conclusion
 
-Your Tikit system is now deployed on a robust, scalable infrastructure:
+Your Grooovy system is now deployed on a robust, scalable infrastructure:
 
 - **Render**: Excellent Python support, automatic deployments, built-in Redis
 - **Vercel**: Optimized for React, global CDN, automatic HTTPS

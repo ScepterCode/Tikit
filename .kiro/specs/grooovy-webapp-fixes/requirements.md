@@ -1,15 +1,15 @@
-# Requirements Document - Tikit Webapp Fixes and Missing Tests
+# Requirements Document - Grooovy Webapp Fixes and Missing Tests
 
 ## Introduction
 
-This specification covers the remaining incomplete tasks and missing property-based tests from the Tikit webapp implementation. These items need to be completed to ensure full test coverage and system correctness validation.
+This specification covers the remaining incomplete tasks and missing property-based tests from the Grooovy webapp implementation. These items need to be completed to ensure full test coverage and system correctness validation.
 
 ## Glossary
 
 - **Property-Based Test (PBT)**: A test that validates universal properties across many generated inputs
 - **JWT**: JSON Web Token used for authentication
 - **RBAC**: Role-Based Access Control for permission management
-- **Tikit System**: The complete web application including frontend, backend, and USSD integration
+- **Grooovy System**: The complete web application including frontend, backend, and USSD integration
 
 ## Requirements
 

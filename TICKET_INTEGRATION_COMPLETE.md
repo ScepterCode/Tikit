@@ -273,7 +273,7 @@ npm run dev
 
 ```bash
 # Send test ticket email
-cd Tikit
+cd Grooovy
 python send_test_ticket_email.py
 
 # Trigger email sending

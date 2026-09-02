@@ -1,4 +1,4 @@
-# 🌟 What's Left to Make Tikit World-Class
+# 🌟 What's Left to Make Grooovy World-Class
 
 ## ✅ What You've Already Completed
 
@@ -121,7 +121,7 @@ npm install @sentry/react @sentry/node
 
 **Steps**:
 1. Go to Resend dashboard
-2. Add domain: tikit.app
+2. Add domain: grooovy.com
 3. Add DNS records to domain provider
 4. Verify domain
 5. Update `EMAIL_FROM` in config
@@ -507,7 +507,7 @@ npm install react-ga4
 
 ## 🚀 Your Competitive Advantages
 
-### What Makes Tikit Special:
+### What Makes Grooovy Special:
 1. **Spray Money** - Unique to Nigerian culture
 2. **Secret Events** - Privacy-focused
 3. **Wallet System** - Faster checkout
@@ -515,7 +515,7 @@ npm install react-ga4
 5. **Local Focus** - Built for African events
 
 ### Marketing Message:
-> "Tikit: The only ticketing platform built for African events. 
+> "Grooovy: The only ticketing platform built for African events. 
 > Spray money digitally, host secret events, and sell tickets 
 > with the lowest fees in Nigeria."
 

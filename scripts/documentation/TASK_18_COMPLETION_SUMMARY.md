@@ -63,7 +63,7 @@ Task 18 (Security hardening) has been successfully completed. All four subtasks 
 **Implementation:**
 
 #### CORS Configuration
-- Configured origin whitelist (localhost:3000, localhost:5173, tikit.vercel.app, FRONTEND_URL)
+- Configured origin whitelist (localhost:3000, localhost:5173, grooovy.vercel.app, FRONTEND_URL)
 - Enabled credentials support for cookies
 - Set allowed methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
 - Configured allowed headers including X-CSRF-Token
@@ -218,7 +218,7 @@ FRONTEND_URL=https://your-production-domain.com
 # Security Alerts (already configured)
 AFRICASTALKING_API_KEY=<your-api-key>
 AFRICASTALKING_USERNAME=<your-username>
-AFRICASTALKING_SENDER_ID=Tikit
+AFRICASTALKING_SENDER_ID=Grooovy
 
 # Redis (already configured)
 REDIS_URL=redis://localhost:6379

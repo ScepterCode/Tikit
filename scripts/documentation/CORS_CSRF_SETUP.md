@@ -1,6 +1,6 @@
 # CORS and CSRF Protection Setup
 
-This document explains the CORS (Cross-Origin Resource Sharing) and CSRF (Cross-Site Request Forgery) protection implemented in the Tikit backend.
+This document explains the CORS (Cross-Origin Resource Sharing) and CSRF (Cross-Site Request Forgery) protection implemented in the Grooovy backend.
 
 ## CORS Configuration
 
@@ -14,7 +14,7 @@ The following origins are whitelisted:
 
 - `http://localhost:3000` - Local development (alternative port)
 - `http://localhost:5173` - Local development (Vite default)
-- `https://tikit.vercel.app` - Production frontend
+- `https://grooovy.vercel.app` - Production frontend
 - Custom origin from `FRONTEND_URL` environment variable
 
 ### Configuration Options

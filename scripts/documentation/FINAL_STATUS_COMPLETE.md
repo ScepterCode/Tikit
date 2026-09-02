@@ -272,7 +272,7 @@
 4. Check browser console for errors
 
 ### If Admin Pages Show No Data
-1. Run `python Tikit/create_test_data.py` to create test data
+1. Run `python Grooovy/create_test_data.py` to create test data
 2. Refresh the page
 3. Check backend logs for errors
 4. Verify API endpoints are responding

@@ -14,7 +14,7 @@ Supabase Security Advisor found:
 
 1. **Open** Supabase Dashboard → SQL Editor
 2. **Click** "New Query"
-3. **Open** file: `Tikit/fix_remaining_security_issues.sql`
+3. **Open** file: `Grooovy/fix_remaining_security_issues.sql`
 4. **Copy** ALL content
 5. **Paste** into SQL Editor
 6. **Click** "Run"

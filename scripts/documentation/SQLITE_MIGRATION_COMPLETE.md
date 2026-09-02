@@ -2,7 +2,7 @@
 
 ## What Was Done
 
-Successfully migrated the Tikit backend from PostgreSQL/Supabase to SQLite for local development.
+Successfully migrated the Grooovy backend from PostgreSQL/Supabase to SQLite for local development.
 
 ## Changes Made
 

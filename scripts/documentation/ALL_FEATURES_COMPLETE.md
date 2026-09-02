@@ -334,7 +334,7 @@ All in-memory databases need to be migrated to Supabase:
 
 ### Environment Variables:
 ```env
-VITE_API_BASE_URL=https://api.tikit.com
+VITE_API_BASE_URL=https://api.grooovy.com
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
@@ -378,4 +378,4 @@ The mock backend provides a solid foundation for testing and can be seamlessly m
 
 **Last Updated**: March 9, 2026
 **Developer**: Kiro AI Assistant
-**Project**: Tikit - Event Ticketing Platform
+**Project**: Grooovy - Event Ticketing Platform

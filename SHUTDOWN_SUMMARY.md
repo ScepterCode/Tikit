@@ -292,7 +292,7 @@ apps/frontend/src/pages/organizer/
 - **Commit Message**: "feat: Implement payment flow improvements and organizer payment service"
 
 ### Local Path
-- **Workspace**: `C:\Users\kelechi Daniel\Desktop\Scepter\Grooovy\Tikit`
+- **Workspace**: `C:\Users\kelechi Daniel\Desktop\Scepter\Grooovy\Grooovy`
 
 ---
 

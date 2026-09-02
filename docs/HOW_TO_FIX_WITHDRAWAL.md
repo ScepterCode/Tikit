@@ -37,7 +37,7 @@ Valid keys look like: `FLWSECK-xxxxxxxxxxxxxxxxxxxxxxxx`
 
 ### Step 2: Update Your .env File
 
-1. Open: `Tikit/apps/backend-fastapi/.env`
+1. Open: `Grooovy/apps/backend-fastapi/.env`
 2. Find this line:
    ```env
    FLUTTERWAVE_LIVE_SECRET_KEY=YAgj9aTkeCiZrIZh3YpfzLwuu86zA9hu

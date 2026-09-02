@@ -34,7 +34,7 @@ This is the corrected version that:
 3. Click **New Query** button
 
 ### Step 2: Run the Corrected Fix (2 min)
-1. Open file: `Tikit/fix_rls_recursion_corrected.sql`
+1. Open file: `Grooovy/fix_rls_recursion_corrected.sql`
 2. Press `Ctrl+A` (select all)
 3. Press `Ctrl+C` (copy)
 4. Go to Supabase SQL Editor
@@ -74,7 +74,7 @@ And then a list of users table policies:
 Run the comprehensive test:
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 ```
 

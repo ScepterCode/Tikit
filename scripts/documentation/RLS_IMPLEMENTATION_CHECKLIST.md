@@ -15,7 +15,7 @@
 - [ ] Open Supabase Dashboard
 - [ ] Click "SQL Editor" in left sidebar
 - [ ] Click "New Query" button
-- [ ] Open file: `Tikit/setup_proper_users_table.sql`
+- [ ] Open file: `Grooovy/setup_proper_users_table.sql`
 - [ ] Copy ALL content from the file
 - [ ] Paste into SQL Editor
 - [ ] Click "Run" button
@@ -34,7 +34,7 @@
 
 - [ ] Still in SQL Editor
 - [ ] Click "New Query" button again
-- [ ] Open file: `Tikit/PHASE1_CRITICAL_SECURITY_RLS.sql`
+- [ ] Open file: `Grooovy/PHASE1_CRITICAL_SECURITY_RLS.sql`
 - [ ] Copy ALL content from the file
 - [ ] Paste into SQL Editor
 - [ ] Click "Run" button
@@ -58,7 +58,7 @@
 
 - [ ] Still in SQL Editor
 - [ ] Click "New Query" button again
-- [ ] Open file: `Tikit/verify_rls_implementation.sql`
+- [ ] Open file: `Grooovy/verify_rls_implementation.sql`
 - [ ] Copy ALL content from the file
 - [ ] Paste into SQL Editor
 - [ ] Click "Run" button
@@ -116,7 +116,7 @@ ORDER BY role, email;
 
 ### Option A: Browser Test Page (Recommended)
 
-- [ ] Open file: `Tikit/test_rls_from_frontend.html` in browser
+- [ ] Open file: `Grooovy/test_rls_from_frontend.html` in browser
 - [ ] When prompted, enter your Supabase URL
 - [ ] When prompted, enter your Supabase Anon Key
 - [ ] Enter email: `organizer@grooovy.netlify.app`

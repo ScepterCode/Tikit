@@ -220,7 +220,7 @@ Customize email templates in Supabase Dashboard:
 
 ```bash
 # Run test script
-cd Tikit
+cd Grooovy
 python test_supabase_email.py
 ```
 
@@ -275,7 +275,7 @@ WHERE status = 'failed';
 # In apps/backend-fastapi/.env
 ENABLE_EMAIL_NOTIFICATIONS=true
 FRONTEND_URL=http://localhost:3000
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 ```
 
 **No SMTP credentials needed!** 🎉

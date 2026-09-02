@@ -1,8 +1,8 @@
-# 🎫 Tikit User Flow Guide
+# 🎫 Grooovy User Flow Guide
 
 ## Overview
 
-Tikit is a Nigerian event ticketing platform designed for weddings, crusades, burials, festivals, and rural events. It bridges the digital divide with USSD support, offline capabilities, multilingual interface, and flexible payment options.
+Grooovy is a Nigerian event ticketing platform designed for weddings, crusades, burials, festivals, and rural events. It bridges the digital divide with USSD support, offline capabilities, multilingual interface, and flexible payment options.
 
 ## Target Users
 
@@ -495,13 +495,13 @@ Tikit is a Nigerian event ticketing platform designed for weddings, crusades, bu
 
 ## 📱 User Journey: USSD User (Feature Phone)
 
-### Accessing Tikit via USSD
+### Accessing Grooovy via USSD
 
 **Dial: *7477#**
 
 **Main Menu:**
 ```
-Welcome to Tikit
+Welcome to Grooovy
 1. Buy Ticket
 2. Check My Tickets
 3. Sponsor Someone
@@ -646,7 +646,7 @@ Enter OTP: ____
 
 **Method 1: Access Code**
 - User receives 4-digit code
-- Opens Tikit app
+- Opens Grooovy app
 - Clicks "Enter Event Code"
 - Enters code
 - Event page opens

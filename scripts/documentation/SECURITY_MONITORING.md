@@ -1,6 +1,6 @@
 # Security Monitoring Setup
 
-This document explains the security monitoring, breach detection, account locking, and security alert features implemented in the Tikit backend.
+This document explains the security monitoring, breach detection, account locking, and security alert features implemented in the Grooovy backend.
 
 ## Overview
 
@@ -66,7 +66,7 @@ Users are notified immediately when security events occur:
 
 #### Alert Content
 ```
-SECURITY ALERT: Your Tikit account has been locked due to [reason]. 
+SECURITY ALERT: Your Grooovy account has been locked due to [reason]. 
 If this wasn't you, please contact support immediately. 
 Your account will be automatically unlocked in 30 minutes.
 ```
@@ -425,7 +425,7 @@ Authorization: Bearer <token>
 # SMS Configuration (for security alerts)
 AFRICASTALKING_API_KEY=your_api_key
 AFRICASTALKING_USERNAME=your_username
-AFRICASTALKING_SENDER_ID=Tikit
+AFRICASTALKING_SENDER_ID=Grooovy
 
 # Redis Configuration (for storing locks and events)
 REDIS_URL=redis://localhost:6379

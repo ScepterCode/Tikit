@@ -43,7 +43,7 @@ The dashboard routing issue was caused by **the wrong backend being deployed**:
 
 ### Option 2: Manual Render Dashboard Check
 1. **Go to**: https://dashboard.render.com
-2. **Find your service**: `tikit-fastapi-backend`
+2. **Find your service**: `grooovy-fastapi-backend`
 3. **Check deployment status**: Should show recent deployment
 4. **Manual redeploy**: If needed, click "Manual Deploy" → "Deploy latest commit"
 

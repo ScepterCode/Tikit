@@ -30,10 +30,10 @@ npm run dev
 #### **Option B: Quick Commands**
 ```bash
 # Backend (run in one terminal)
-cd Tikit/apps/backend-fastapi && python main_minimal.py
+cd Grooovy/apps/backend-fastapi && python main_minimal.py
 
 # Frontend (run in another terminal)  
-cd Tikit/apps/frontend && npm run dev
+cd Grooovy/apps/frontend && npm run dev
 ```
 
 ### **STEP 2: VERIFY SYSTEM** ✅

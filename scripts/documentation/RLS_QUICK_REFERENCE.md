@@ -158,7 +158,7 @@ const { data } = await supabase.from('payments').select('*');
 
 ## 📁 FILES NEEDED
 
-All in `Tikit/` directory:
+All in `Grooovy/` directory:
 
 1. **setup_proper_users_table.sql** - Step 1
 2. **PHASE1_CRITICAL_SECURITY_RLS.sql** - Step 2

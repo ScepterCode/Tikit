@@ -12,7 +12,7 @@
 1. Go to [Supabase Dashboard](https://app.supabase.com/)
 2. Click "New project"
 3. Enter project details:
-   - Name: "tikit-production"
+   - Name: "grooovy-production"
    - Database Password: (generate strong password)
    - Region: Choose closest to your users
 4. Wait for project to be created (~2 minutes)
@@ -146,7 +146,7 @@ Test the Supabase connection:
 
 ```bash
 # Start backend
-pnpm --filter @tikit/backend dev
+pnpm --filter @grooovy/backend dev
 
 # Check health endpoint
 curl http://localhost:4000/health

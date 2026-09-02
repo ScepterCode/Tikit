@@ -1,10 +1,10 @@
 # CI/CD Pipeline Setup
 
-This document describes the Continuous Integration and Continuous Deployment (CI/CD) pipeline for the Tikit platform.
+This document describes the Continuous Integration and Continuous Deployment (CI/CD) pipeline for the Grooovy platform.
 
 ## Overview
 
-The Tikit platform uses GitHub Actions for CI/CD with the following workflows:
+The Grooovy platform uses GitHub Actions for CI/CD with the following workflows:
 
 1. **CI Pipeline** - Runs on every pull request and push
 2. **Staging Deployment** - Deploys to staging on push to `develop` branch
@@ -77,7 +77,7 @@ Configure the following secrets in GitHub repository settings:
 ### Environment URLs
 - `STAGING_API_URL` - Staging backend URL
 - `STAGING_FRONTEND_URL` - Staging frontend URL
-- `PRODUCTION_API_URL` - Production backend URL (https://api.tikit.ng)
+- `PRODUCTION_API_URL` - Production backend URL (https://api.grooovy.com)
 
 ### Supabase Secrets
 **Staging:**
@@ -99,12 +99,12 @@ Configure the following secrets in GitHub repository settings:
 ### Staging Environment
 
 **Frontend (Vercel):**
-- URL: `https://tikit-staging.vercel.app`
+- URL: `https://grooovy-staging.vercel.app`
 - Environment: `staging`
 - Auto-deploy: On push to `develop`
 
 **Backend (Railway):**
-- URL: `https://api-staging.tikit.ng`
+- URL: `https://api-staging.grooovy.com`
 - Service: `backend-staging`
 - Database: PostgreSQL (Railway managed)
 - Redis: Redis (Railway managed)
@@ -112,13 +112,13 @@ Configure the following secrets in GitHub repository settings:
 ### Production Environment
 
 **Frontend (Vercel):**
-- URL: `https://tikit.ng`
+- URL: `https://grooovy.com`
 - Environment: `production`
 - Auto-deploy: On push to `main`
 - CDN: Cloudflare
 
 **Backend (Railway):**
-- URL: `https://api.tikit.ng`
+- URL: `https://api.grooovy.com`
 - Service: `backend-production`
 - Database: PostgreSQL with read replicas
 - Redis: Redis cluster
@@ -191,13 +191,13 @@ npx prisma migrate deploy
 ### Health Checks
 
 **Frontend:**
-- URL: `https://tikit.ng`
-- Manifest: `https://tikit.ng/manifest.json`
+- URL: `https://grooovy.com`
+- Manifest: `https://grooovy.com/manifest.json`
 - Service Worker: Check in DevTools > Application
 
 **Backend:**
-- Health: `https://api.tikit.ng/health`
-- Events API: `https://api.tikit.ng/api/events`
+- Health: `https://api.grooovy.com/health`
+- Events API: `https://api.grooovy.com/api/events`
 
 ### Performance Monitoring
 
@@ -284,18 +284,18 @@ test: add integration tests for group buy
 **Lint Errors:**
 ```bash
 # Fix automatically
-pnpm --filter @tikit/frontend lint --fix
-pnpm --filter @tikit/backend lint --fix
+pnpm --filter @grooovy/frontend lint --fix
+pnpm --filter @grooovy/backend lint --fix
 ```
 
 **Test Failures:**
 ```bash
 # Run tests locally
-pnpm --filter @tikit/frontend test
-pnpm --filter @tikit/backend test
+pnpm --filter @grooovy/frontend test
+pnpm --filter @grooovy/backend test
 
 # Run specific test
-pnpm --filter @tikit/frontend test <test-file>
+pnpm --filter @grooovy/frontend test <test-file>
 ```
 
 **Build Failures:**

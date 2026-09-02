@@ -1,7 +1,7 @@
 # 🚀 Supabase Quick Setup for Production
 
 ## Current Status
-Your Tikit app is deployed on Vercel but needs Supabase connection. The app is **ready to work with Supabase** - just needs credentials.
+Your Grooovy app is deployed on Vercel but needs Supabase connection. The app is **ready to work with Supabase** - just needs credentials.
 
 ## ⚡ 5-Minute Setup
 
@@ -9,7 +9,7 @@ Your Tikit app is deployed on Vercel but needs Supabase connection. The app is *
 1. Go to [supabase.com](https://supabase.com) and sign up/login
 2. Click "New Project"
 3. Choose organization and enter:
-   - **Name**: `tikit-production`
+   - **Name**: `grooovy-production`
    - **Database Password**: (generate a strong password)
    - **Region**: `West Europe (Frankfurt)` (closest to Nigeria)
 4. Click "Create new project"
@@ -23,7 +23,7 @@ Your Tikit app is deployed on Vercel but needs Supabase connection. The app is *
 
 ### Step 3: Update Vercel Environment Variables (1 minute)
 1. Go to [vercel.com/dashboard](https://vercel.com/dashboard)
-2. Open your Tikit project
+2. Open your Grooovy project
 3. Go to **Settings → Environment Variables**
 4. Add these two variables:
    ```
@@ -121,7 +121,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.spray_money_leaderboard;
 
 ## ✅ Test Your Setup
 
-1. Visit your app: `https://tikit-ik4l.vercel.app`
+1. Visit your app: `https://grooovy-ik4l.vercel.app`
 2. Try to register a new account
 3. Check your Supabase dashboard → Authentication → Users
 4. You should see the new user appear!

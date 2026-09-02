@@ -1,4 +1,4 @@
-# 🎉 Tikit Feature Demonstration - Complete
+# 🎉 Grooovy Feature Demonstration - Complete
 
 ## Summary
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the auto-scaling strategy for the Tikit backend to handle variable load and meet the requirement of supporting 10,000+ concurrent users.
+This document outlines the auto-scaling strategy for the Grooovy backend to handle variable load and meet the requirement of supporting 10,000+ concurrent users.
 
 ## Scaling Strategy
 
@@ -75,7 +75,7 @@ Render provides auto-scaling configuration:
 ```yaml
 services:
   - type: web
-    name: tikit-backend
+    name: grooovy-backend
     env: node
     plan: standard
     buildCommand: npm run build
@@ -293,7 +293,7 @@ PostgreSQL (20 actual connections)
 **Configuration:**
 ```ini
 [databases]
-tikit = host=postgres.railway.internal port=5432 dbname=tikit
+grooovy = host=postgres.railway.internal port=5432 dbname=grooovy
 
 [pgbouncer]
 pool_mode = transaction
@@ -486,7 +486,7 @@ export const options = {
 };
 
 export default function () {
-  const res = http.get('https://api.tikit.app/api/events');
+  const res = http.get('https://api.grooovy.com/api/events');
   check(res, {
     'status is 200': (r) => r.status === 200,
     'response time < 500ms': (r) => r.timings.duration < 500,

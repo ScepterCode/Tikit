@@ -82,19 +82,19 @@ I've created 10 files to help you:
 
 **Script 1** (3 min):
 ```
-Open: Tikit/setup_proper_users_table.sql
+Open: Grooovy/setup_proper_users_table.sql
 Copy all → Paste in Supabase SQL Editor → Run
 ```
 
 **Script 2** (3 min):
 ```
-Open: Tikit/PHASE1_CRITICAL_SECURITY_RLS.sql
+Open: Grooovy/PHASE1_CRITICAL_SECURITY_RLS.sql
 Copy all → Paste in Supabase SQL Editor → Run
 ```
 
 **Script 3** (3 min):
 ```
-Open: Tikit/verify_rls_implementation.sql
+Open: Grooovy/verify_rls_implementation.sql
 Copy all → Paste in Supabase SQL Editor → Run
 ```
 
@@ -102,7 +102,7 @@ Copy all → Paste in Supabase SQL Editor → Run
 
 **Browser Test**:
 ```
-Open: Tikit/test_rls_from_frontend.html in browser
+Open: Grooovy/test_rls_from_frontend.html in browser
 Login → Run All Tests → Verify all pass
 ```
 
@@ -304,7 +304,7 @@ Then follow checklist
 **I recommend starting with the checklist:**
 
 ```
-📁 Open: Tikit/RLS_IMPLEMENTATION_CHECKLIST.md
+📁 Open: Grooovy/RLS_IMPLEMENTATION_CHECKLIST.md
 ```
 
 It will guide you through every step with checkboxes to track your progress.

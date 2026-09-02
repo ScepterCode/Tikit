@@ -1,6 +1,6 @@
 # Integration Tests
 
-This directory contains end-to-end integration tests for the Tikit platform using Playwright.
+This directory contains end-to-end integration tests for the Grooovy platform using Playwright.
 
 ## Overview
 
@@ -223,8 +223,8 @@ Tests run automatically in CI/CD pipeline:
 
 Set these in CI/CD:
 ```bash
-BASE_URL=https://tikit.ng
-API_URL=https://api.tikit.ng
+BASE_URL=https://grooovy.com
+API_URL=https://api.grooovy.com
 ```
 
 ## Test Data

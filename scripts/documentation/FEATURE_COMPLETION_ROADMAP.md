@@ -1,4 +1,4 @@
-# Tikit Feature Completion Roadmap
+# Grooovy Feature Completion Roadmap
 
 ## Executive Summary
 Based on comprehensive project analysis, here's the status of 8 key features and detailed proposals for completing them.

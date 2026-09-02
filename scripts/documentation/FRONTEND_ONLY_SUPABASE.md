@@ -18,7 +18,7 @@ The frontend is already configured to use Supabase exclusively when credentials 
 1. **Go to [supabase.com](https://supabase.com)**
 2. **Create account/login**
 3. **New Project:**
-   - Name: `tikit-test`
+   - Name: `grooovy-test`
    - Password: Generate strong password
    - Region: `West Europe (Frankfurt)`
    - Plan: **Free**
@@ -94,7 +94,7 @@ VITE_SUPABASE_URL=https://[your-project-id].supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs[your-real-anon-key]
 
 # App Configuration
-VITE_APP_NAME=Tikit
+VITE_APP_NAME=Grooovy
 VITE_APP_VERSION=1.0.0
 VITE_APP_ENVIRONMENT=development
 ```

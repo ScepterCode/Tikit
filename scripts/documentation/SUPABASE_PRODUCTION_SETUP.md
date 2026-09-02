@@ -1,7 +1,7 @@
-# 🔥 Supabase Production Setup for Tikit
+# 🔥 Supabase Production Setup for Grooovy
 
 ## Current Status
-The Tikit app is deployed on Vercel but needs Supabase connection for production. The app currently has:
+The Grooovy app is deployed on Vercel but needs Supabase connection for production. The app currently has:
 - ✅ Supabase client configured in frontend
 - ✅ Real-time hooks implemented
 - ✅ Database schema ready

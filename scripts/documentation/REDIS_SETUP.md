@@ -45,7 +45,7 @@ For production with authentication:
 REDIS_URL=redis://username:password@host:port
 ```
 
-## Usage in Tikit
+## Usage in Grooovy
 
 Redis is used for:
 

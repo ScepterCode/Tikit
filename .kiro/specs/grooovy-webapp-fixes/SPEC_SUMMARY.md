@@ -1,14 +1,14 @@
-# Tikit Webapp Fixes - Spec Summary
+# Grooovy Webapp Fixes - Spec Summary
 
 ## Overview
 
-This specification was created to organize all incomplete tasks and missing property-based tests from the main `tikit-webapp` specification into a dedicated, focused spec for completion.
+This specification was created to organize all incomplete tasks and missing property-based tests from the main `grooovy-webapp` specification into a dedicated, focused spec for completion.
 
 ## What Was Organized
 
 ### Incomplete Tasks from Main Spec
 
-The following tasks were identified as incomplete in `.kiro/specs/tikit-webapp/tasks.md`:
+The following tasks were identified as incomplete in `.kiro/specs/grooovy-webapp/tasks.md`:
 
 1. **Task 2.4** - Write property test for JWT token generation (Property 45)
 2. **Task 2.8** - Write property test for security breach response (Property 48)
@@ -66,7 +66,7 @@ These tasks represent property-based tests that validate critical system correct
 
 ## Relationship to Main Spec
 
-This spec is a **supplement** to the main `tikit-webapp` spec:
+This spec is a **supplement** to the main `grooovy-webapp` spec:
 - Does not duplicate any completed work
 - References the same requirements and properties
 - Uses the same testing infrastructure
@@ -91,7 +91,7 @@ This spec will be considered complete when:
 
 ## Files Created
 
-- `.kiro/specs/tikit-webapp-fixes/requirements.md` - Requirements for missing tests
-- `.kiro/specs/tikit-webapp-fixes/design.md` - Design and testing strategy
-- `.kiro/specs/tikit-webapp-fixes/tasks.md` - Implementation task list
-- `.kiro/specs/tikit-webapp-fixes/SPEC_SUMMARY.md` - This summary document
+- `.kiro/specs/grooovy-webapp-fixes/requirements.md` - Requirements for missing tests
+- `.kiro/specs/grooovy-webapp-fixes/design.md` - Design and testing strategy
+- `.kiro/specs/grooovy-webapp-fixes/tasks.md` - Implementation task list
+- `.kiro/specs/grooovy-webapp-fixes/SPEC_SUMMARY.md` - This summary document

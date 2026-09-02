@@ -68,7 +68,7 @@ USING (auth.uid() = id);
 
 ### Step 2: Run the Fix Script
 
-1. Open file: `Tikit/fix_rls_infinite_recursion.sql`
+1. Open file: `Grooovy/fix_rls_infinite_recursion.sql`
 2. Copy ALL content (Ctrl+A, Ctrl+C)
 3. Paste into SQL Editor (Ctrl+V)
 4. Click **Run** (or Ctrl+Enter)

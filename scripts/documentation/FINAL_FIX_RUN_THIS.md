@@ -33,7 +33,7 @@ After encountering SQL syntax errors with `OLD` and `NEW` (which only work in tr
 3. Click **New Query**
 
 ### Step 2: Copy and Run
-1. Open: `Tikit/fix_rls_simple.sql`
+1. Open: `Grooovy/fix_rls_simple.sql`
 2. Select all (`Ctrl+A`)
 3. Copy (`Ctrl+C`)
 4. Paste in SQL Editor (`Ctrl+V`)
@@ -94,7 +94,7 @@ And:
 ## 🧪 Test It
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 ```
 

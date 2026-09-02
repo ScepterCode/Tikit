@@ -309,7 +309,7 @@ The authentication system now provides **maximum security** with:
 
 ### **Enterprise-Grade Authentication**
 
-Your Tikit application now has:
+Your Grooovy application now has:
 - **Bank-Level Security**: No automatic login vulnerabilities
 - **Complete User Control**: Explicit authentication required
 - **Clean State Management**: No persistent authentication data

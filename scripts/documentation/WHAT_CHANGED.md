@@ -228,7 +228,7 @@ POST /api/test/send-notification - Sends test notification
 
 ### 1. Check Backend is Working
 ```bash
-python Tikit/verify_system_working.py
+python Grooovy/verify_system_working.py
 ```
 
 **Expected Output:**
@@ -260,8 +260,8 @@ python Tikit/verify_system_working.py
 - ✅ `apps/frontend/src/pages/organizer/OrganizerDashboard.tsx` - Added NotificationCenter
 
 ### Test Scripts (2 files)
-- ✅ `Tikit/verify_system_working.py` - System verification
-- ✅ `Tikit/QUICK_TEST_GUIDE.md` - Testing guide
+- ✅ `Grooovy/verify_system_working.py` - System verification
+- ✅ `Grooovy/QUICK_TEST_GUIDE.md` - Testing guide
 
 ---
 
@@ -353,5 +353,5 @@ python Tikit/verify_system_working.py
 
 **Status:** ✅ ALL CHANGES IMPLEMENTED AND WORKING  
 **Date:** March 9, 2026  
-**Verification:** Run `python Tikit/verify_system_working.py`
+**Verification:** Run `python Grooovy/verify_system_working.py`
 

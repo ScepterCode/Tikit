@@ -11,7 +11,7 @@ Both servers are running and all systems are working correctly.
 Run this command to verify everything:
 
 ```bash
-python Tikit/verify_system_working.py
+python Grooovy/verify_system_working.py
 ```
 
 **Expected Output:**
@@ -141,7 +141,7 @@ Go to: **http://localhost:3000/auth/login**
 4. Check browser console for errors
 
 ### If dashboard stats are 0:
-1. Run `python Tikit/create_test_data.py` to create test data
+1. Run `python Grooovy/create_test_data.py` to create test data
 2. Refresh the page
 3. Stats should update
 
@@ -179,7 +179,7 @@ The system has test data already created:
 
 To create more test data:
 ```bash
-python Tikit/create_test_data.py
+python Grooovy/create_test_data.py
 ```
 
 ---

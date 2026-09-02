@@ -67,7 +67,7 @@ You'll see several result sets:
 Run this Python script to verify:
 
 ```bash
-cd Tikit
+cd Grooovy
 python investigate_auth_and_user_storage.py
 ```
 

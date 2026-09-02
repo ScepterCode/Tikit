@@ -69,7 +69,7 @@ if config.SENTRY_DSN:
         traces_sample_rate=1.0 if config.ENVIRONMENT == "development" else 0.1,
         profiles_sample_rate=1.0 if config.ENVIRONMENT == "development" else 0.1,
         environment=config.ENVIRONMENT,
-        release=f"tikit-backend@{config.VERSION}",
+        release=f"grooovy-backend@{config.VERSION}",
         # Send user context
         send_default_pii=False,  # Don't send PII by default
     )
@@ -159,7 +159,7 @@ export function initSentry() {
     replaysOnErrorSampleRate: 1.0,
     
     environment: import.meta.env.MODE,
-    release: `tikit-frontend@${import.meta.env.VITE_VERSION || "1.0.0"}`,
+    release: `grooovy-frontend@${import.meta.env.VITE_VERSION || "1.0.0"}`,
     
     // Don't send PII
     beforeSend(event) {

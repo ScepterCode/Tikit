@@ -1,7 +1,7 @@
 # 🚀 Production Ready - Supabase Setup
 
 ## ✅ Current Status
-Your Tikit app is **100% production ready** with NO localhost dependencies!
+Your Grooovy app is **100% production ready** with NO localhost dependencies!
 
 The app will now show a setup screen when Supabase isn't configured, guiding users through the process.
 

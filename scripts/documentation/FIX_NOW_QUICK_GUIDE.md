@@ -18,7 +18,7 @@
 4. Click **New Query** button
 
 ### Step 2: Run Fix Script (2 min)
-1. Open file: `Tikit/fix_rls_infinite_recursion.sql`
+1. Open file: `Grooovy/fix_rls_infinite_recursion.sql`
 2. Press `Ctrl+A` (select all)
 3. Press `Ctrl+C` (copy)
 4. Go back to Supabase SQL Editor
@@ -28,7 +28,7 @@
 
 ### Step 3: Verify Fix (2 min)
 ```bash
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 ```
 
@@ -66,10 +66,10 @@ Pass Rate:    100%
 
 ## 🎯 Files You Need
 
-1. **Fix script**: `Tikit/fix_rls_infinite_recursion.sql` ← RUN THIS
-2. **Test script**: `Tikit/test_supabase_storage_comprehensive.py` ← VERIFY WITH THIS
-3. **Full guide**: `Tikit/RLS_RECURSION_FIX_GUIDE.md` ← READ IF NEEDED
-4. **Test results**: `Tikit/STORAGE_TEST_RESULTS.md` ← SEE WHAT FAILED
+1. **Fix script**: `Grooovy/fix_rls_infinite_recursion.sql` ← RUN THIS
+2. **Test script**: `Grooovy/test_supabase_storage_comprehensive.py` ← VERIFY WITH THIS
+3. **Full guide**: `Grooovy/RLS_RECURSION_FIX_GUIDE.md` ← READ IF NEEDED
+4. **Test results**: `Grooovy/STORAGE_TEST_RESULTS.md` ← SEE WHAT FAILED
 
 ---
 
@@ -77,12 +77,12 @@ Pass Rate:    100%
 
 ```bash
 # 1. Copy this file content:
-Tikit/fix_rls_infinite_recursion.sql
+Grooovy/fix_rls_infinite_recursion.sql
 
 # 2. Paste and run in Supabase SQL Editor
 
 # 3. Test it:
-cd Tikit
+cd Grooovy
 python test_supabase_storage_comprehensive.py
 
 # Done! ✅

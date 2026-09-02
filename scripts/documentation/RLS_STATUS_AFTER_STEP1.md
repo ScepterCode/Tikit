@@ -34,7 +34,7 @@ You need to run the second SQL script to protect the remaining 5 critical tables
 
 1. **Stay in Supabase SQL Editor**
 2. **Click "New Query"**
-3. **Open file**: `Tikit/PHASE1_CRITICAL_SECURITY_RLS.sql`
+3. **Open file**: `Grooovy/PHASE1_CRITICAL_SECURITY_RLS.sql`
 4. **Copy ALL content** from the file
 5. **Paste** into SQL Editor
 6. **Click "Run"**
@@ -97,9 +97,9 @@ Once you run `PHASE1_CRITICAL_SECURITY_RLS.sql`:
 
 ## 📁 File to Run Next
 
-**File**: `Tikit/PHASE1_CRITICAL_SECURITY_RLS.sql`
+**File**: `Grooovy/PHASE1_CRITICAL_SECURITY_RLS.sql`
 
-**Location**: In your Tikit directory
+**Location**: In your Grooovy directory
 
 **What it does**:
 - Enables RLS on 5 more tables
@@ -116,7 +116,7 @@ Once you run `PHASE1_CRITICAL_SECURITY_RLS.sql`:
 
 ## 🚀 Ready?
 
-**Open**: `Tikit/PHASE1_CRITICAL_SECURITY_RLS.sql`
+**Open**: `Grooovy/PHASE1_CRITICAL_SECURITY_RLS.sql`
 
 **Copy all content** and paste into Supabase SQL Editor
 

@@ -1,12 +1,12 @@
-# Tikit Webapp Fixes and Missing Tests - Design Document
+# Grooovy Webapp Fixes and Missing Tests - Design Document
 
 ## Overview
 
-This document outlines the design for completing the remaining property-based tests and fixing any incomplete functionality in the Tikit webapp. The focus is on ensuring comprehensive test coverage and validating system correctness through property-based testing.
+This document outlines the design for completing the remaining property-based tests and fixing any incomplete functionality in the Grooovy webapp. The focus is on ensuring comprehensive test coverage and validating system correctness through property-based testing.
 
 ## Architecture
 
-All tests will follow the existing architecture and testing patterns established in the main Tikit webapp. Tests will use:
+All tests will follow the existing architecture and testing patterns established in the main Grooovy webapp. Tests will use:
 - **Vitest** for unit and property-based tests
 - **fast-check** for property-based test generation
 - **Playwright** for integration tests (if needed)
@@ -67,7 +67,7 @@ All tests should handle errors gracefully:
 
 - Minimum 100 iterations per property test
 - Use custom generators for domain-specific data
-- Tag each test with format: `**Feature: tikit-webapp-fixes, Property {number}: {property_text}**`
+- Tag each test with format: `**Feature: grooovy-webapp-fixes, Property {number}: {property_text}**`
 
 ### Test Implementation Approach
 

@@ -43,7 +43,7 @@ Use this checklist to complete the email & 2FA setup.
 2. **Generate App Password**
    - Visit: https://myaccount.google.com/apppasswords
    - Select "Mail" and "Other (Custom name)"
-   - Name it "Tikit"
+   - Name it "Grooovy"
    - Copy the 16-character password
 
 3. **Update .env file**
@@ -54,7 +54,7 @@ Use this checklist to complete the email & 2FA setup.
    SMTP_PORT=587
    SMTP_USERNAME=your-email@gmail.com
    SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx
-   EMAIL_FROM=noreply@tikit.app
+   EMAIL_FROM=noreply@grooovy.com
    ENABLE_EMAIL_NOTIFICATIONS=true
    ```
 
@@ -68,7 +68,7 @@ Use this checklist to complete the email & 2FA setup.
    SMTP_PORT=587
    SMTP_USERNAME=apikey
    SMTP_PASSWORD=your-sendgrid-api-key
-   EMAIL_FROM=noreply@tikit.app
+   EMAIL_FROM=noreply@grooovy.com
    ENABLE_EMAIL_NOTIFICATIONS=true
    ```
 
@@ -115,7 +115,7 @@ Use this checklist to complete the email & 2FA setup.
 ### Step 3: Test Email Service ⏱️ 10 min
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_email_service.py
 ```
 
@@ -150,7 +150,7 @@ python test_email_service.py
 
 2. **Check Email**
    - Open email inbox
-   - Find verification email from Tikit
+   - Find verification email from Grooovy
    - Verify HTML renders correctly
 
 3. **Verify Email**
@@ -188,7 +188,7 @@ python test_email_service.py
 
 3. **Check Email**
    - Open email inbox
-   - Find OTP email from Tikit
+   - Find OTP email from Grooovy
    - Note the 6-digit code
 
 4. **Verify API Response**

@@ -1,4 +1,4 @@
-# 🚀 Tikit FastAPI Backend
+# 🚀 Grooovy FastAPI Backend
 
 High-performance event management API built with FastAPI, Supabase, and modern Python technologies.
 
@@ -77,8 +77,8 @@ docker-compose up -d
 
 2. **Or build manually**
 ```bash
-docker build -t tikit-fastapi .
-docker run -p 8000:8000 tikit-fastapi
+docker build -t grooovy-fastapi .
+docker run -p 8000:8000 grooovy-fastapi
 ```
 
 ## 📁 Project Structure
@@ -255,9 +255,9 @@ doctl apps create app.yaml
 ```bash
 # Build and push to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin
-docker build -t tikit-fastapi .
-docker tag tikit-fastapi:latest your-account.dkr.ecr.us-east-1.amazonaws.com/tikit-fastapi:latest
-docker push your-account.dkr.ecr.us-east-1.amazonaws.com/tikit-fastapi:latest
+docker build -t grooovy-fastapi .
+docker tag grooovy-fastapi:latest your-account.dkr.ecr.us-east-1.amazonaws.com/grooovy-fastapi:latest
+docker push your-account.dkr.ecr.us-east-1.amazonaws.com/grooovy-fastapi:latest
 ```
 
 ## 🔍 Monitoring
@@ -325,7 +325,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: Check the `/docs` endpoint
 - **Issues**: Create GitHub issues for bugs
 - **Discussions**: Use GitHub discussions for questions
-- **Email**: support@tikit.app
+- **Email**: support@grooovy.com
 
 ---
 

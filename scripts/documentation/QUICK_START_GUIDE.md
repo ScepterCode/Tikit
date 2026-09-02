@@ -18,13 +18,13 @@
 
 ### 1. Start the Backend
 ```bash
-cd Tikit/apps/backend-fastapi
+cd Grooovy/apps/backend-fastapi
 uvicorn simple_main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 2. Start the Frontend
 ```bash
-cd Tikit/apps/frontend
+cd Grooovy/apps/frontend
 pnpm dev
 ```
 

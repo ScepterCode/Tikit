@@ -1,4 +1,4 @@
-# 🚀 COMPLETE SUPABASE SETUP - Get Tikit Online NOW
+# 🚀 COMPLETE SUPABASE SETUP - Get Grooovy Online NOW
 
 ## 🎯 Current Issue
 Your app is still showing localhost errors because:
@@ -15,7 +15,7 @@ Your app is still showing localhost errors because:
 3. **Sign up with GitHub** (recommended for easy integration)
 4. **Create New Project:**
    - **Organization**: Create new or use existing
-   - **Name**: `tikit-production`
+   - **Name**: `grooovy-production`
    - **Database Password**: Generate strong password (save it!)
    - **Region**: `West Europe (Frankfurt)` (closest to Nigeria)
    - **Pricing**: Free tier (perfect for production)
@@ -178,7 +178,7 @@ ON CONFLICT (event_id, user_id) DO NOTHING;
 ### Step 4: Configure Vercel Environment Variables (2 minutes)
 
 1. **Go to [vercel.com/dashboard](https://vercel.com/dashboard)**
-2. **Open your Tikit project**
+2. **Open your Grooovy project**
 3. **Go to Settings → Environment Variables**
 4. **Add these variables:**
 
@@ -228,7 +228,7 @@ After completing these steps:
 
 ## 🚀 YOUR APP WILL BE LIVE!
 
-Once you complete these steps, your Tikit app will be:
+Once you complete these steps, your Grooovy app will be:
 - ✅ **100% functional** with all features working
 - ✅ **Production-ready** with proper database
 - ✅ **Real-time enabled** for live updates

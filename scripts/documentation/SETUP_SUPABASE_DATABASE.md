@@ -50,4 +50,4 @@ After setup, you should be able to:
 - ✅ Purchase tickets
 - ✅ Use all app features
 
-The database schema includes everything needed for the full Tikit functionality! 🚀
+The database schema includes everything needed for the full Grooovy functionality! 🚀

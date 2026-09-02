@@ -1,9 +1,9 @@
-# Tikit Project Structure
+# Grooovy Project Structure
 
 ## 📁 Directory Organization
 
 ```
-Tikit/
+Grooovy/
 ├── docs/              # 📚 All documentation (66 files)
 ├── tests/             # 🧪 All tests and utilities (32 files)
 ├── scripts/           # 📜 SQL scripts and database files (2 files)

@@ -1,4 +1,4 @@
-# Tikit Project Diagnosis Summary
+# Grooovy Project Diagnosis Summary
 
 ## Quick Status Overview
 

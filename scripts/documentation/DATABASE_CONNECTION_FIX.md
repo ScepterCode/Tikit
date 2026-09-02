@@ -116,12 +116,12 @@ If Supabase continues to have issues, you can use a local PostgreSQL database:
 2. **Install** with default settings
 3. **Create database**:
    ```bash
-   createdb tikit
+   createdb grooovy
    ```
 4. **Update `.env`**:
    ```env
-   DATABASE_URL=postgresql://postgres:your_password@localhost:5432/tikit
-   DIRECT_URL=postgresql://postgres:your_password@localhost:5432/tikit
+   DATABASE_URL=postgresql://postgres:your_password@localhost:5432/grooovy
+   DIRECT_URL=postgresql://postgres:your_password@localhost:5432/grooovy
    ```
 
 ### Option B: Use Docker (Easiest)
@@ -129,12 +129,12 @@ If Supabase continues to have issues, you can use a local PostgreSQL database:
 1. **Install Docker Desktop**: https://www.docker.com/products/docker-desktop/
 2. **Start PostgreSQL container**:
    ```bash
-   docker run --name tikit-postgres -e POSTGRES_PASSWORD=tikit123 -e POSTGRES_DB=tikit -p 5432:5432 -d postgres:15
+   docker run --name grooovy-postgres -e POSTGRES_PASSWORD=grooovy123 -e POSTGRES_DB=grooovy -p 5432:5432 -d postgres:15
    ```
 3. **Update `.env`**:
    ```env
-   DATABASE_URL=postgresql://postgres:tikit123@localhost:5432/tikit
-   DIRECT_URL=postgresql://postgres:tikit123@localhost:5432/tikit
+   DATABASE_URL=postgresql://postgres:grooovy123@localhost:5432/grooovy
+   DIRECT_URL=postgresql://postgres:grooovy123@localhost:5432/grooovy
    ```
 4. **Run migrations**:
    ```bash
@@ -151,7 +151,7 @@ If Supabase continues to have issues, you can use a local PostgreSQL database:
 
 ### Error: "Database does not exist"
 - The database name should be `postgres` for Supabase
-- For local PostgreSQL, create the database first: `createdb tikit`
+- For local PostgreSQL, create the database first: `createdb grooovy`
 
 ### Error: "Connection timeout"
 - Check your internet connection

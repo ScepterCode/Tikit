@@ -1,7 +1,7 @@
-# 🚀 Tikit Production Hosting Guide
+# 🚀 Grooovy Production Hosting Guide
 
 ## Overview
-Complete guide for hosting your Tikit event management system with FastAPI backend, React frontend, and Supabase database.
+Complete guide for hosting your Grooovy event management system with FastAPI backend, React frontend, and Supabase database.
 
 ## 🏗️ System Architecture
 
@@ -210,7 +210,7 @@ railway up
 # render.yaml
 services:
   - type: web
-    name: tikit-backend
+    name: grooovy-backend
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -223,13 +223,13 @@ services:
           property: connectionString
 
   - type: web
-    name: tikit-frontend
+    name: grooovy-frontend
     env: node
     buildCommand: npm run build
     startCommand: npm run preview
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://tikit-backend.onrender.com
+        value: https://grooovy-backend.onrender.com
 ```
 
 ### Option B: Cloud Providers
@@ -252,7 +252,7 @@ services:
 #### DigitalOcean App Platform
 ```yaml
 # app.yaml
-name: tikit
+name: grooovy
 services:
 - name: backend
   source_dir: /apps/backend-fastapi
@@ -377,7 +377,7 @@ jobs:
 ```bash
 # deploy.sh
 #!/bin/bash
-echo "Deploying Tikit to production..."
+echo "Deploying Grooovy to production..."
 
 # Deploy backend
 cd apps/backend-fastapi
@@ -458,7 +458,7 @@ python migrate_data.py --source old_db --target supabase
 
 ## 🎉 Conclusion
 
-Your Tikit system is now ready for production! The recommended Railway + Vercel + Supabase stack provides:
+Your Grooovy system is now ready for production! The recommended Railway + Vercel + Supabase stack provides:
 
 - **Scalability**: Auto-scaling based on demand
 - **Reliability**: 99.9% uptime guarantees

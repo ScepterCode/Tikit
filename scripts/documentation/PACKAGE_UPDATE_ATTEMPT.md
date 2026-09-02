@@ -72,7 +72,7 @@ Wait for better network conditions and run:
 pnpm update --latest
 pnpm add -D -w @eslint/js  # For ESLint 9
 # Then regenerate Prisma client
-pnpm --filter @tikit/backend prisma:generate
+pnpm --filter @grooovy/backend prisma:generate
 ```
 
 ## Decision

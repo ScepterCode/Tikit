@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-Complete email system for Tikit using Supabase's built-in email service. All code is implemented and tested - ready for deployment.
+Complete email system for Grooovy using Supabase's built-in email service. All code is implemented and tested - ready for deployment.
 
 ---
 
@@ -95,7 +95,7 @@ Complete email system for Tikit using Supabase's built-in email service. All cod
 ## 📦 File Structure
 
 ```
-Tikit/
+Grooovy/
 ├── apps/
 │   ├── backend-fastapi/
 │   │   ├── services/
@@ -481,7 +481,7 @@ SELECT * FROM email_queue ORDER BY created_at DESC LIMIT 10;
 
 ## 🎊 Conclusion
 
-Your Tikit app now has a complete, production-ready email system:
+Your Grooovy app now has a complete, production-ready email system:
 
 - ✅ **Implemented**: All code written and tested
 - ✅ **Documented**: Comprehensive guides and docs

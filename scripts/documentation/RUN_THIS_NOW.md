@@ -26,7 +26,7 @@ You need to run the updated `fix_remaining_security_issues.sql` script to:
 
 ### Step 2: Copy the SQL Script
 
-1. Open file: `Tikit/fix_remaining_security_issues.sql`
+1. Open file: `Grooovy/fix_remaining_security_issues.sql`
 2. Press `Ctrl+A` (select all)
 3. Press `Ctrl+C` (copy)
 

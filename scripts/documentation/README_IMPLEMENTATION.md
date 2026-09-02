@@ -208,7 +208,7 @@ User can mark as read or dismiss
 ### Creating Test Data
 
 ```bash
-python Tikit/create_test_data.py
+python Grooovy/create_test_data.py
 ```
 
 This will:
@@ -220,7 +220,7 @@ This will:
 ### Running Full Flow Test
 
 ```bash
-python Tikit/test_full_flow.py
+python Grooovy/test_full_flow.py
 ```
 
 This will:
@@ -304,14 +304,14 @@ apps/frontend/src/
 
 ### Test Scripts
 ```
-Tikit/
+Grooovy/
 ├── create_test_data.py (Create test data)
 └── test_full_flow.py (Test complete flow)
 ```
 
 ### Documentation
 ```
-Tikit/
+Grooovy/
 ├── BROADCAST_AND_NOTIFICATIONS_COMPLETE.md (Implementation guide)
 ├── FINAL_VERIFICATION.md (Testing checklist)
 ├── SYSTEM_STATUS_REPORT.md (System status)

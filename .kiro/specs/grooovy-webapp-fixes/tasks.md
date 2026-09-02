@@ -1,8 +1,8 @@
-# Implementation Plan - Tikit Webapp Fixes and Missing Tests
+# Implementation Plan - Grooovy Webapp Fixes and Missing Tests
 
 ## Overview
 
-This plan covers the implementation of missing property-based tests and completion of any incomplete functionality from the main Tikit webapp specification.
+This plan covers the implementation of missing property-based tests and completion of any incomplete functionality from the main Grooovy webapp specification.
 
 ## Tasks
 

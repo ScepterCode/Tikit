@@ -23,7 +23,7 @@ Since CLI installation can be tricky on Windows, here's how to deploy the Edge F
 ### Step 3: Copy Function Code (2 min)
 
 1. Delete any template code in the editor
-2. Open the file: `Tikit/supabase/functions/send-emails/index.ts`
+2. Open the file: `Grooovy/supabase/functions/send-emails/index.ts`
 3. Copy ALL the code from that file
 4. Paste it into the Supabase Dashboard editor
 
@@ -210,7 +210,7 @@ serve(async (req) => {
 **Or test via Python:**
 
 ```bash
-cd Tikit
+cd Grooovy
 python test_edge_function.py
 ```
 

@@ -88,7 +88,7 @@ Now you should test that RLS is working correctly.
 
 ### Option 1: Browser Test (Recommended)
 
-1. **Open**: `Tikit/test_rls_from_frontend.html` in your browser
+1. **Open**: `Grooovy/test_rls_from_frontend.html` in your browser
 2. **Enter** your Supabase URL and Anon Key when prompted
 3. **Login** as: `organizer@grooovy.netlify.app`
 4. **Click**: "Run All Tests"

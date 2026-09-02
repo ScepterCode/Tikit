@@ -19,7 +19,7 @@
 - Custom event branding (logo, colors)
 - Advanced analytics dashboard
 - Email marketing to attendees (up to 500 emails/month)
-- Remove "Powered by Tikit" branding
+- Remove "Powered by Grooovy" branding
 
 ### 3. Legend ($30/month)
 **Price**: $30/month

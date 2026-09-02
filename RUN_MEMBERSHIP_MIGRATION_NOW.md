@@ -2,7 +2,7 @@
 
 ## Step 1: Open Supabase Dashboard
 1. Go to https://supabase.com/dashboard
-2. Select your Tikit project
+2. Select your Grooovy project
 3. Click "SQL Editor" in the left sidebar
 
 ## Step 2: Run Migration

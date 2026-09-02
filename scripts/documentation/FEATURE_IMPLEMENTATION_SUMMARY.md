@@ -43,7 +43,7 @@
   - Working navigation between pages
   
 - ✅ **Top Header**
-  - Tikit logo
+  - Grooovy logo
   - User name display
   - Logout functionality
 

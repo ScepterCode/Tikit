@@ -15,7 +15,7 @@
 2. **Generate App Password**:
    - Go to: https://myaccount.google.com/apppasswords
    - Select "Mail" and "Other (Custom name)"
-   - Name it "Tikit"
+   - Name it "Grooovy"
    - Copy the 16-character password
 
 3. **Update `.env` file**:
@@ -25,7 +25,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx  # 16-char app password
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 ENABLE_EMAIL_NOTIFICATIONS=true
 ```
 
@@ -39,7 +39,7 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USERNAME=apikey
 SMTP_PASSWORD=your-sendgrid-api-key
-EMAIL_FROM=noreply@tikit.app
+EMAIL_FROM=noreply@grooovy.com
 ENABLE_EMAIL_NOTIFICATIONS=true
 ```
 
@@ -108,7 +108,7 @@ Files to create:
 ### Test Commands:
 ```bash
 # Test email service
-cd Tikit
+cd Grooovy
 python test_email_service.py
 
 # Test registration flow

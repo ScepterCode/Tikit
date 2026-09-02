@@ -35,7 +35,7 @@ test.describe('Offline Wallet', () => {
     // Check if IndexedDB is being used
     const hasIndexedDB = await page.evaluate(async () => {
       const dbs = await indexedDB.databases();
-      return dbs.some(db => db.name?.includes('tikit') || db.name?.includes('ticket'));
+      return dbs.some(db => db.name?.includes('grooovy') || db.name?.includes('ticket'));
     });
     
     // IndexedDB should be available for offline storage

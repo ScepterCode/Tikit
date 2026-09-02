@@ -107,7 +107,7 @@ console.log('\n🚀 NEXT STEPS TO COMPLETE SWITCH:\n');
 
 console.log('1. 🌐 CREATE SUPABASE PROJECT:');
 console.log('   - Go to https://supabase.com');
-console.log('   - Create new project: tikit-localhost-test');
+console.log('   - Create new project: grooovy-localhost-test');
 console.log('   - Get your credentials from Settings → API\n');
 
 console.log('2. 🔧 UPDATE BACKEND ENVIRONMENT:');

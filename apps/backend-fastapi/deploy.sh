@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Tikit FastAPI Backend Deployment Script
+# Grooovy FastAPI Backend Deployment Script
 # Supports multiple deployment targets: Railway, Render, DigitalOcean, AWS
 
 set -e
@@ -13,11 +13,11 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROJECT_NAME="tikit-fastapi"
-DOCKER_IMAGE="tikit/fastapi-backend"
+PROJECT_NAME="grooovy-fastapi"
+DOCKER_IMAGE="grooovy/fastapi-backend"
 VERSION=$(date +%Y%m%d-%H%M%S)
 
-echo -e "${BLUE}🚀 Tikit FastAPI Backend Deployment${NC}"
+echo -e "${BLUE}🚀 Grooovy FastAPI Backend Deployment${NC}"
 echo -e "${BLUE}====================================${NC}"
 
 # Function to print colored output
@@ -103,12 +103,12 @@ deploy_digitalocean() {
     # Create app spec if it doesn't exist
     if [ ! -f "app.yaml" ]; then
         cat > app.yaml << EOF
-name: tikit-fastapi
+name: grooovy-fastapi
 services:
 - name: api
   source_dir: /
   github:
-    repo: your-username/tikit
+    repo: your-username/grooovy
     branch: main
   run_command: uvicorn main:app --host 0.0.0.0 --port 8000
   environment_slug: python
@@ -147,7 +147,7 @@ deploy_aws() {
     
     # Build and push to ECR
     AWS_REGION=${AWS_REGION:-us-east-1}
-    ECR_REPO="tikit-fastapi"
+    ECR_REPO="grooovy-fastapi"
     
     # Get ECR login token
     aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
@@ -240,7 +240,7 @@ case "${1:-help}" in
         run_tests
         ;;
     "help"|*)
-        echo -e "${BLUE}Tikit FastAPI Deployment Script${NC}"
+        echo -e "${BLUE}Grooovy FastAPI Deployment Script${NC}"
         echo ""
         echo "Usage: $0 [command]"
         echo ""

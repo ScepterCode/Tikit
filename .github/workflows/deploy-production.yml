@@ -50,15 +50,15 @@ jobs:
       - name: Run smoke tests
         run: |
           sleep 30
-          curl -f https://tikit.ng || exit 1
-          curl -f https://tikit.ng/manifest.json || exit 1
+          curl -f https://grooovy.com || exit 1
+          curl -f https://grooovy.com/manifest.json || exit 1
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            https://tikit.ng
-            https://tikit.ng/events
+            https://grooovy.com
+            https://grooovy.com/events
           uploadArtifacts: true
           temporaryPublicStorage: true
 
@@ -91,8 +91,8 @@ jobs:
       - name: Run integration tests
         run: pnpm --filter @grooovy/frontend test:integration
         env:
-          BASE_URL: https://tikit.ng
-          API_URL: https://api.tikit.ng
+          BASE_URL: https://grooovy.com
+          API_URL: https://api.grooovy.com
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -115,7 +115,7 @@ jobs:
           status: ${{ job.status }}
           text: |
             Production deployment ${{ job.status }}
-            Frontend: https://tikit.ng
+            Frontend: https://grooovy.com
           webhook_url: ${{ secrets.SLACK_WEBHOOK }}
         if: always()
 
@@ -125,7 +125,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: tikit
+          SENTRY_PROJECT: grooovy
         with:
           environment: production
           version: ${{ github.sha }}

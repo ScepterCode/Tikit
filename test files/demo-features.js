@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Tikit Feature Demonstration Script
+ * Grooovy Feature Demonstration Script
  * 
  * This script demonstrates the key features that are already implemented:
  * - Spray Money Leaderboard
@@ -11,7 +11,7 @@
  * - Ticket verification system
  */
 
-console.log('🎉 Tikit Feature Demonstration');
+console.log('🎉 Grooovy Feature Demonstration');
 console.log('===============================\n');
 
 console.log('✅ IMPLEMENTED FEATURES:');
@@ -143,4 +143,4 @@ console.log('');
 
 console.log('All major features are implemented and working!');
 console.log('The real-time updates, payment processing, and cultural');
-console.log('features that make Tikit special are ready to use.');
+console.log('features that make Grooovy special are ready to use.');

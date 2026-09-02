@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Comprehensive System Test for Tikit Product
+ * Comprehensive System Test for Grooovy Product
  * Tests backend, database, and overall system health
  */
 
@@ -10,7 +10,7 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 
-console.log('🔍 TIKIT SYSTEM ANALYSIS STARTING...\n');
+console.log('🔍 GROOOVY SYSTEM ANALYSIS STARTING...\n');
 
 // Configuration
 const SUPABASE_URL = 'https://hwwzbsppzwcyvambeade.supabase.co';

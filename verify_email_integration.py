@@ -84,7 +84,7 @@ try:
             
             email_data = {
                 'to_email': user['email'],
-                'subject': 'Reset Your Tikit Password',
+                'subject': 'Reset Your Grooovy Password',
                 'html_body': email_html,
                 'text_body': f'Reset your password: http://localhost:3000/reset-password?token={reset_token}',
                 'email_type': 'password_reset',

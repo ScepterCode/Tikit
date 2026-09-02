@@ -6,7 +6,7 @@ Script to update all pages to use DashboardLayout instead of custom sidebars
 import os
 import re
 
-# Pages to update (relative to Tikit/apps/frontend/src/pages/)
+# Pages to update (relative to Grooovy/apps/frontend/src/pages/)
 PAGES_TO_UPDATE = [
     'organizer/OrganizerAttendees.tsx',
     'organizer/OrganizerBroadcast.tsx',

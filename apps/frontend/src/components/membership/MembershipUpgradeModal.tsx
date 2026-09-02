@@ -45,7 +45,7 @@ export function MembershipUpgradeModal({
         '🎨 Custom event branding',
         '📊 Advanced analytics dashboard',
         '📧 Email marketing (500/month)',
-        '🚫 Remove Tikit branding'
+        '🚫 Remove Grooovy branding'
       ]
     },
     legend: {

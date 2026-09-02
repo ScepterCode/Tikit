@@ -65,6 +65,6 @@ def fix_hardcoded_ports(root_dir):
     print(f"{'='*60}")
 
 if __name__ == "__main__":
-    # Run from Tikit directory
+    # Run from Grooovy directory
     root_dir = Path(__file__).parent
     fix_hardcoded_ports(root_dir)

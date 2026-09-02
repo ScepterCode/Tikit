@@ -72,7 +72,7 @@ export default function VerifyEmail() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-purple-600">Tikit</h1>
+            <h1 className="text-3xl font-bold text-purple-600">Grooovy</h1>
           </div>
 
           {/* Status Content */}
@@ -169,7 +169,7 @@ export default function VerifyEmail() {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <div className="flex items-center justify-center text-sm text-gray-600">
               <Mail className="w-4 h-4 mr-2" />
-              <span>Need help? Contact support@tikit.app</span>
+              <span>Need help? Contact support@grooovy.com</span>
             </div>
           </div>
         </div>

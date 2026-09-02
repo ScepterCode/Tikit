@@ -21,13 +21,13 @@ def send_test_email():
     print()
     
     # Email configuration
-    sender_email = "noreply@tikit.app"
+    sender_email = "noreply@grooovy.com"
     receiver_email = "scepterboss@gmail.com"
     
     # Create message
     message = MIMEMultipart("alternative")
-    message["Subject"] = "🎉 Test Email from Tikit"
-    message["From"] = f"Tikit <{sender_email}>"
+    message["Subject"] = "🎉 Test Email from Grooovy"
+    message["From"] = f"Grooovy <{sender_email}>"
     message["To"] = receiver_email
     
     # HTML content
@@ -53,9 +53,9 @@ def send_test_email():
                         <!-- Content -->
                         <tr>
                             <td style="padding: 40px;">
-                                <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 24px;">Your Tikit Email System is Working!</h2>
+                                <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 24px;">Your Grooovy Email System is Working!</h2>
                                 <p style="color: #6b7280; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                                    This is a test email from your Tikit application. If you're reading this, it means your email system is successfully configured and working!
+                                    This is a test email from your Grooovy application. If you're reading this, it means your email system is successfully configured and working!
                                 </p>
                                 
                                 <div style="background-color: #f3f4f6; border-left: 4px solid #667eea; padding: 16px; border-radius: 4px; margin: 20px 0;">
@@ -87,8 +87,8 @@ def send_test_email():
                         <tr>
                             <td style="padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
                                 <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-                                    Sent from your Tikit application<br>
-                                    © 2026 Tikit. All rights reserved.
+                                    Sent from your Grooovy application<br>
+                                    © 2026 Grooovy. All rights reserved.
                                 </p>
                             </td>
                         </tr>
@@ -102,9 +102,9 @@ def send_test_email():
     
     # Plain text version
     text = """
-    🎉 Success! Your Tikit Email System is Working!
+    🎉 Success! Your Grooovy Email System is Working!
     
-    This is a test email from your Tikit application. If you're reading this, 
+    This is a test email from your Grooovy application. If you're reading this, 
     it means your email system is successfully configured and working!
     
     ✅ Email queueing: Working
@@ -118,8 +118,8 @@ def send_test_email():
     - Password reset emails
     - Event reminders
     
-    Sent from your Tikit application
-    © 2026 Tikit. All rights reserved.
+    Sent from your Grooovy application
+    © 2026 Grooovy. All rights reserved.
     """
     
     # Attach parts

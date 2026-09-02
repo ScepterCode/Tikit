@@ -1,4 +1,4 @@
-# Tikit Event Ticketing Platform
+# Grooovy Event Ticketing Platform
 # Allow all crawlers
 
 User-agent: *
@@ -10,4 +10,4 @@ Disallow: /api/
 Disallow: /dashboard/
 
 # Sitemap location
-Sitemap: https://tikit.ng/sitemap.xml
+Sitemap: https://grooovy.com/sitemap.xml

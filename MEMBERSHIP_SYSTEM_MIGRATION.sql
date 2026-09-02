@@ -94,7 +94,7 @@ INSERT INTO membership_features (tier, feature_key, feature_name, feature_descri
 ('special', 'custom_branding', 'Custom Event Branding', 'Add your logo and custom colors'),
 ('special', 'advanced_analytics', 'Advanced Analytics', 'Detailed insights and reports'),
 ('special', 'email_marketing', 'Email Marketing', 'Send up to 500 emails per month to attendees'),
-('special', 'remove_branding', 'Remove Tikit Branding', 'Remove "Powered by Tikit" from your events');
+('special', 'remove_branding', 'Remove Grooovy Branding', 'Remove "Powered by Grooovy" from your events');
 
 -- Legend Tier Features (includes all Special features)
 INSERT INTO membership_features (tier, feature_key, feature_name, feature_description) VALUES
@@ -107,13 +107,13 @@ INSERT INTO membership_features (tier, feature_key, feature_name, feature_descri
 ('legend', 'custom_branding', 'Custom Event Branding', 'Add your logo and custom colors'),
 ('legend', 'advanced_analytics', 'Advanced Analytics', 'Detailed insights and reports'),
 ('legend', 'email_marketing', 'Email Marketing', 'Unlimited email marketing to attendees'),
-('legend', 'remove_branding', 'Remove Tikit Branding', 'Remove "Powered by Tikit" from your events'),
+('legend', 'remove_branding', 'Remove Grooovy Branding', 'Remove "Powered by Grooovy" from your events'),
 ('legend', 'ai_assistant', 'AI Event Assistant', 'AI-powered event recommendations and automated responses'),
 ('legend', 'marketing_automation', 'Marketing Automation', 'Automated marketing campaigns and workflows'),
 ('legend', 'sms_marketing', 'SMS Marketing', 'Send SMS campaigns to attendees'),
 ('legend', 'ai_analytics', 'AI-Powered Analytics', 'Advanced AI insights and predictions'),
 ('legend', 'priority_support', 'Priority Support', '24/7 priority support'),
-('legend', 'white_label', 'White Label', 'Remove all Tikit branding and use your own'),
+('legend', 'white_label', 'White Label', 'Remove all Grooovy branding and use your own'),
 ('legend', 'api_access', 'API Access', 'Full API access for custom integrations'),
 ('legend', 'custom_domain', 'Custom Domain', 'Use your own domain for event pages');
 

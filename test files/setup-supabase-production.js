@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Supabase Production Setup Helper for Tikit
+ * Supabase Production Setup Helper for Grooovy
  * This script helps you configure Supabase for production deployment
  */
 
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🔥 Tikit Supabase Production Setup\n');
+console.log('🔥 Grooovy Supabase Production Setup\n');
 
 // Check if we're in the right directory
 if (!fs.existsSync('apps/frontend') || !fs.existsSync('apps/backend')) {
@@ -89,6 +89,6 @@ console.log('4. Test real-time features');
 console.log('\n🔗 Useful Links:');
 console.log('- Supabase Dashboard: https://supabase.com/dashboard');
 console.log('- Vercel Dashboard: https://vercel.com/dashboard');
-console.log('- Your App: https://tikit-ik4l.vercel.app');
+console.log('- Your App: https://grooovy-ik4l.vercel.app');
 
 console.log('\n✨ The app is ready for Supabase - just add your credentials!');

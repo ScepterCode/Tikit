@@ -120,7 +120,7 @@ def execute_migration():
 
 def main():
     """Main execution function"""
-    print("🗄️  TIKIT DATABASE MIGRATION")
+    print("🗄️  GROOOVY DATABASE MIGRATION")
     print("Converting in-memory databases to persistent storage")
     print("=" * 50)
     

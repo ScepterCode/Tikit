@@ -514,7 +514,7 @@ async def generate_shareable_link(link_data: ShareableLinkRequest):
     return {
         "success": True,
         "message": "Shareable link generation will be implemented in next phase",
-        "link": f"https://tikit.app/events/{link_data.event_id}?source={link_data.source}"
+        "link": f"https://grooovy.com/events/{link_data.event_id}?source={link_data.source}"
     }
 
 @router.post("/spray-money")

@@ -96,7 +96,7 @@ def main():
     
     # Check if we're in the right directory
     if not Path("apps").exists():
-        print("❌ Please run this script from the Tikit root directory")
+        print("❌ Please run this script from the Grooovy root directory")
         return
     
     print("📋 Pre-flight Checks:")

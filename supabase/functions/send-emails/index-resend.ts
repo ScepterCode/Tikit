@@ -67,7 +67,7 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            from: 'Tikit <noreply@tikit.app>',
+            from: 'Grooovy <noreply@grooovy.com>',
             to: [email.to_email],
             subject: email.subject,
             html: email.html_body,

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fc from 'fast-check';
 
 /**
- * Feature: tikit-webapp, Property 52: Offline scan queueing
+ * Feature: grooovy-webapp, Property 52: Offline scan queueing
  * Validates: Requirements 14.5
  * 
  * For any scan performed while offline, the validation request should be 

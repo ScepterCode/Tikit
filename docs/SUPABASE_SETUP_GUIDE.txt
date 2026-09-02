@@ -75,7 +75,7 @@ FRONTEND CHANGES MADE:
 
 ENVIRONMENT VARIABLES:
 ======================
-File: Tikit/apps/frontend/.env
+File: Grooovy/apps/frontend/.env
 VITE_SUPABASE_URL=https://hwwzbsppzwcyvambeade.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3pic3BwendjeXZhbWJlYWRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NjgyOTYsImV4cCI6MjA4MjM0NDI5Nn0.Cwsvgq1qJ7fAfxT2opSfmnJkShy8F6lcRa4xXLdAbnc
 

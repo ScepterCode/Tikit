@@ -14,7 +14,7 @@ async def health_check():
     """
     health = {
         "status": "ok",
-        "message": "Tikit FastAPI Backend is running",
+        "message": "Grooovy FastAPI Backend is running",
         "supabase": "disconnected",
         "timestamp": datetime.utcnow().isoformat()
     }

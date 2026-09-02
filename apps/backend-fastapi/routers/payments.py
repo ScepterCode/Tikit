@@ -340,7 +340,7 @@ async def initiate_bank_transfer(
         bank_details = {
             "bank_name": "GTBank",
             "account_number": f"90{str(uuid.uuid4().int)[:8]}",  # Generate virtual account
-            "account_name": "Tikit Payments",
+            "account_name": "Grooovy Payments",
             "reference": request.reference,
             "amount": request.amount / 100,
             "expires_at": (datetime.now() + timedelta(hours=24)).isoformat()

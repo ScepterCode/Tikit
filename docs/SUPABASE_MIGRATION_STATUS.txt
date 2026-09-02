@@ -113,19 +113,19 @@ NEXT PHASE:
 
 FILES MODIFIED:
 ===============
-- Tikit/apps/frontend/.env
-- Tikit/apps/frontend/src/App.tsx
-- Tikit/apps/frontend/src/pages/LoginPage.tsx
-- Tikit/apps/frontend/src/pages/RegisterPage.tsx
-- Tikit/apps/frontend/src/components/auth/ProtectedRoute.tsx
-- Tikit/apps/frontend/src/contexts/SupabaseAuthContext.tsx (created)
+- Grooovy/apps/frontend/.env
+- Grooovy/apps/frontend/src/App.tsx
+- Grooovy/apps/frontend/src/pages/LoginPage.tsx
+- Grooovy/apps/frontend/src/pages/RegisterPage.tsx
+- Grooovy/apps/frontend/src/components/auth/ProtectedRoute.tsx
+- Grooovy/apps/frontend/src/contexts/SupabaseAuthContext.tsx (created)
 - 30+ component files (import updates)
 
 FILES CREATED:
 ==============
-- Tikit/setup_supabase_admin.py
-- Tikit/test_supabase_auth.py
-- Tikit/confirm_supabase_emails.py
-- Tikit/disable_email_confirmation.py
-- Tikit/SUPABASE_SETUP_GUIDE.txt
-- Tikit/SUPABASE_MIGRATION_STATUS.txt
+- Grooovy/setup_supabase_admin.py
+- Grooovy/test_supabase_auth.py
+- Grooovy/confirm_supabase_emails.py
+- Grooovy/disable_email_confirmation.py
+- Grooovy/SUPABASE_SETUP_GUIDE.txt
+- Grooovy/SUPABASE_MIGRATION_STATUS.txt

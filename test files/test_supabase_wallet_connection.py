@@ -83,7 +83,7 @@ def test_supabase_connection():
     except ImportError as e:
         print(f"\n❌ ERROR: Could not import required modules")
         print(f"   {e}")
-        print("\n   Make sure you're running from the Tikit directory")
+        print("\n   Make sure you're running from the Grooovy directory")
         print("   and that all dependencies are installed:")
         print("   cd apps/backend-fastapi && pip install -r requirements.txt")
         return False

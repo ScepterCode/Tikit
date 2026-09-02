@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Tikit Deployment Verification Script
+ * Grooovy Deployment Verification Script
  * Checks if the app is properly deployed and configured
  */
 
 import https from 'https';
 
-const APP_URL = 'https://tikit-ik4l.vercel.app';
+const APP_URL = 'https://grooovy-ik4l.vercel.app';
 
-console.log('🔍 Verifying Tikit Deployment...\n');
+console.log('🔍 Verifying Grooovy Deployment...\n');
 
 // Check if app is accessible
 function checkAppStatus() {
@@ -24,7 +24,7 @@ function checkAppStatus() {
         if (data.includes('Supabase Setup Required')) {
           console.log('⚠️  App is showing Supabase setup screen');
           console.log('   → Need to configure Supabase credentials in Vercel');
-        } else if (data.includes('Tikit')) {
+        } else if (data.includes('Grooovy')) {
           console.log('✅ App is loading properly');
         } else {
           console.log('❓ App status unclear');
@@ -50,7 +50,7 @@ async function verifyDeployment() {
     console.log('3. If errors → Check browser console for details');
     
     console.log('\n🔗 Useful Links:');
-    console.log('- App: https://tikit-ik4l.vercel.app');
+    console.log('- App: https://grooovy-ik4l.vercel.app');
     console.log('- Vercel Dashboard: https://vercel.com/dashboard');
     console.log('- Supabase: https://supabase.com');
     

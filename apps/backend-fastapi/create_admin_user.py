@@ -15,7 +15,7 @@ def create_admin():
         "password": "admin123",
         "first_name": "Admin",
         "last_name": "User",
-        "email": "admin@tikit.com",
+        "email": "admin@grooovy.com",
         "state": "Lagos",
         "role": "admin"
     }
@@ -116,7 +116,7 @@ def create_test_users():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  Tikit Admin & Test User Creator")
+    print("  Grooovy Admin & Test User Creator")
     print("=" * 60)
     print()
     

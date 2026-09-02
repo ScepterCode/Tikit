@@ -4,7 +4,7 @@ import type { PaymentMethod } from './PaymentMethodSelector';
 import type { PaymentError } from './PaymentErrorHandler';
 
 /**
- * Feature: tikit-webapp, Property 39: Payment failure error handling
+ * Feature: grooovy-webapp, Property 39: Payment failure error handling
  * Validates: Requirements 11.4
  * 
  * For any failed payment, an error message should be displayed and alternative 

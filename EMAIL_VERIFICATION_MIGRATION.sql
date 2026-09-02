@@ -218,7 +218,7 @@ BEGIN
     RAISE NOTICE '   SMTP_PORT=587';
     RAISE NOTICE '   SMTP_USERNAME=your-email@gmail.com';
     RAISE NOTICE '   SMTP_PASSWORD=your-app-password';
-    RAISE NOTICE '   EMAIL_FROM=noreply@tikit.app';
+    RAISE NOTICE '   EMAIL_FROM=noreply@grooovy.com';
 END $$;
 
 -- =====================================================

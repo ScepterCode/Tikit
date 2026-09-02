@@ -674,7 +674,7 @@ def test_onboarding_preferences():
 
 def main():
     print(f"\n{Colors.BLUE}{'='*60}{Colors.END}")
-    print(f"{Colors.BLUE}TIKIT - COMPREHENSIVE FEATURE TEST SUITE{Colors.END}")
+    print(f"{Colors.BLUE}GROOOVY - COMPREHENSIVE FEATURE TEST SUITE{Colors.END}")
     print(f"{Colors.BLUE}{'='*60}{Colors.END}")
     print(f"{Colors.YELLOW}Testing all 8 features...{Colors.END}\n")
     

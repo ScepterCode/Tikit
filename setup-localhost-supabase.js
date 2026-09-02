@@ -22,7 +22,7 @@ console.log('1. 🌐 CREATE SUPABASE PROJECT (3 minutes):');
 console.log('   - Go to https://supabase.com');
 console.log('   - Sign up/Login with GitHub');
 console.log('   - Click "New Project"');
-console.log('   - Name: tikit-localhost-test');
+console.log('   - Name: grooovy-localhost-test');
 console.log('   - Region: West Europe (Frankfurt)');
 console.log('   - Plan: Free');
 console.log('   - Wait for project to initialize\n');

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
 
 /**
- * Feature: tikit-webapp, Property 1: Language persistence round-trip
+ * Feature: grooovy-webapp, Property 1: Language persistence round-trip
  * Validates: Requirements 1.2
  * 
  * Property: For any selected language from the supported set (English, Hausa, Igbo, Yoruba, Pidgin),

@@ -3,7 +3,7 @@ import * as fc from 'fast-check';
 import type { InstallmentParts } from './InstallmentCalculator';
 
 /**
- * Feature: tikit-webapp, Property 14: Payment option availability
+ * Feature: grooovy-webapp, Property 14: Payment option availability
  * Validates: Requirements 5.1
  * 
  * For any ticket tier selection, the system should display all four installment 

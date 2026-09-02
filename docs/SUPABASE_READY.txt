@@ -96,11 +96,11 @@ This will complete the Supabase migration.
 
 FILES READY:
 ============
-✅ Tikit/apps/frontend/.env (Supabase credentials)
-✅ Tikit/apps/frontend/src/App.tsx (SupabaseAuthProvider)
-✅ Tikit/apps/frontend/src/pages/LoginPage.tsx (Email login)
-✅ Tikit/apps/frontend/src/pages/RegisterPage.tsx (Email signup)
-✅ Tikit/apps/frontend/src/contexts/SupabaseAuthContext.tsx (Auth logic)
+✅ Grooovy/apps/frontend/.env (Supabase credentials)
+✅ Grooovy/apps/frontend/src/App.tsx (SupabaseAuthProvider)
+✅ Grooovy/apps/frontend/src/pages/LoginPage.tsx (Email login)
+✅ Grooovy/apps/frontend/src/pages/RegisterPage.tsx (Email signup)
+✅ Grooovy/apps/frontend/src/contexts/SupabaseAuthContext.tsx (Auth logic)
 ✅ All component imports updated
 
 VERIFICATION SCRIPTS:

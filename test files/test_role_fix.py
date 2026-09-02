@@ -24,7 +24,7 @@ def test_registration_and_login():
         "password": "admin123",
         "first_name": "Admin",
         "last_name": "User",
-        "email": "admin@tikit.com",
+        "email": "admin@grooovy.com",
         "state": "Lagos",
         "role": "admin"
     }

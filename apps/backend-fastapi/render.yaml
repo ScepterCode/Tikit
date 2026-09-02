@@ -1,7 +1,7 @@
 services:
   # FastAPI Backend Service
   - type: web
-    name: tikit-fastapi-backend
+    name: grooovy-fastapi-backend
     env: python
     runtime: python-3.11.9
     region: oregon
@@ -31,12 +31,12 @@ services:
       - key: REDIS_URL
         fromService:
           type: redis
-          name: tikit-redis
+          name: grooovy-redis
           property: connectionString
 
   # Redis Cache Service
   - type: redis
-    name: tikit-redis
+    name: grooovy-redis
     region: oregon
     plan: starter
     maxmemoryPolicy: allkeys-lru

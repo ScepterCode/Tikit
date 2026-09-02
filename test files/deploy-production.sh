@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Tikit Production Deployment Script
+# Grooovy Production Deployment Script
 # Deploys to Railway (backend) + Vercel (frontend)
 
 set -e
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Tikit Production Deployment${NC}"
+echo -e "${BLUE}🚀 Grooovy Production Deployment${NC}"
 echo -e "${BLUE}==============================${NC}"
 
 # Function to print colored output
@@ -186,7 +186,7 @@ main() {
     health_check
     
     echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
-    echo -e "${BLUE}Your Tikit system is now live:${NC}"
+    echo -e "${BLUE}Your Grooovy system is now live:${NC}"
     
     if [ -f ".frontend-url" ]; then
         echo -e "Frontend: ${GREEN}$(cat .frontend-url)${NC}"

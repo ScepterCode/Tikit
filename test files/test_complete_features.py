@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Complete test suite for all new Tikit features
+Complete test suite for all new Grooovy features
 """
 
 import requests

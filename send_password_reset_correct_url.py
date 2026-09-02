@@ -60,14 +60,14 @@ email_html = f"""
                 <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <tr>
                         <td style="padding: 40px 40px 20px; text-align: center;">
-                            <h1 style="color: #667eea; margin: 0; font-size: 32px;">🔐 Tikit</h1>
+                            <h1 style="color: #667eea; margin: 0; font-size: 32px;">🔐 Grooovy</h1>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding: 0 40px 40px;">
                             <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 24px;">Reset Your Password</h2>
                             <p style="color: #6b7280; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">
-                                Click the button below to reset your Tikit password:
+                                Click the button below to reset your Grooovy password:
                             </p>
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
@@ -94,7 +94,7 @@ email_html = f"""
                     <tr>
                         <td style="padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
                             <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-                                © 2026 Tikit. All rights reserved.
+                                © 2026 Grooovy. All rights reserved.
                             </p>
                         </td>
                     </tr>
@@ -108,9 +108,9 @@ email_html = f"""
 
 email_data = {
     'to_email': YOUR_EMAIL,
-    'subject': 'Reset Your Tikit Password',
+    'subject': 'Reset Your Grooovy Password',
     'html_body': email_html,
-    'text_body': f'Reset your Tikit password: {reset_url}\n\nThis link expires in 1 hour.',
+    'text_body': f'Reset your Grooovy password: {reset_url}\n\nThis link expires in 1 hour.',
     'email_type': 'password_reset',
     'status': 'pending',
     'created_at': datetime.utcnow().isoformat(),

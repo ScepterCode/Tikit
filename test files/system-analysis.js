@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * Tikit System Analysis - Backend and Database State
+ * Grooovy System Analysis - Backend and Database State
  */
 
 import fs from 'fs';
 import path from 'path';
 
-console.log('🔍 TIKIT SYSTEM ANALYSIS');
+console.log('🔍 GROOOVY SYSTEM ANALYSIS');
 console.log('=' .repeat(50));
 
 const analysis = {

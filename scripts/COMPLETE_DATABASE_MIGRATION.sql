@@ -1,5 +1,5 @@
 -- =====================================================
--- TIKIT COMPLETE DATABASE MIGRATION
+-- GROOOVY COMPLETE DATABASE MIGRATION
 -- Creates all missing tables for full functionality
 -- Execute this in Supabase SQL Editor
 -- =====================================================

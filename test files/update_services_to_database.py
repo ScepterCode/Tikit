@@ -295,7 +295,7 @@ class TicketService:
         """Generate QR code for ticket"""
         try:
             qr = qrcode.QRCode(version=1, box_size=10, border=5)
-            qr.add_data(f"TIKIT-{ticket_id}")
+            qr.add_data(f"GROOOVY-{ticket_id}")
             qr.make(fit=True)
             
             img = qr.make_image(fill_color="black", back_color="white")

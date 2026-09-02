@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Tikit Render Deployment Script
+# Grooovy Render Deployment Script
 # Deploys FastAPI backend to Render + Frontend to Vercel
 
 set -e
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Tikit Render + Vercel Deployment${NC}"
+echo -e "${BLUE}🚀 Grooovy Render + Vercel Deployment${NC}"
 echo -e "${BLUE}===================================${NC}"
 
 # Function to print colored output
@@ -120,7 +120,7 @@ deploy_render() {
     
     echo ""
     print_warning "Please provide your Render backend URL:"
-    read -p "Backend URL (e.g., https://tikit-fastapi-backend.onrender.com): " BACKEND_URL
+    read -p "Backend URL (e.g., https://grooovy-fastapi-backend.onrender.com): " BACKEND_URL
     
     if [ -z "$BACKEND_URL" ]; then
         print_error "Backend URL is required"
@@ -322,7 +322,7 @@ main() {
     health_check
     
     echo -e "${GREEN}🎉 Deployment setup completed!${NC}"
-    echo -e "${BLUE}Your Tikit system deployment:${NC}"
+    echo -e "${BLUE}Your Grooovy system deployment:${NC}"
     
     if [ -f ".backend-url" ]; then
         echo -e "Backend (Render): ${GREEN}$(cat .backend-url)${NC}"

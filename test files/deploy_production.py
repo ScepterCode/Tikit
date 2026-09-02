@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Production Deployment Script
-Starts the Tikit FastAPI application in production mode
+Starts the Grooovy FastAPI application in production mode
 """
 
 import os
@@ -12,7 +12,7 @@ from pathlib import Path
 def deploy_production():
     """Deploy the application in production mode"""
     
-    print("🚀 TIKIT PRODUCTION DEPLOYMENT")
+    print("🚀 GROOOVY PRODUCTION DEPLOYMENT")
     print("=" * 50)
     
     # Change to backend directory
@@ -48,7 +48,7 @@ def deploy_production():
     print("⚙️  Environment configured for production")
     
     # Start the server
-    print("\n🚀 Starting Tikit FastAPI Server...")
+    print("\n🚀 Starting Grooovy FastAPI Server...")
     print("=" * 50)
     print("📍 Server will be available at: http://localhost:8000")
     print("📖 API Documentation: http://localhost:8000/docs")
@@ -81,7 +81,7 @@ def deploy_production():
 
 def main():
     """Main execution function"""
-    print("🎉 TIKIT PRODUCTION DEPLOYMENT READY")
+    print("🎉 GROOOVY PRODUCTION DEPLOYMENT READY")
     print("All critical issues resolved - deploying to production")
     print()
     

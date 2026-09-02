@@ -47,7 +47,7 @@ class EmailService:
             # In production, you can use Supabase's built-in email or a service like Resend
             email_data = {
                 "to_email": email,
-                "subject": "Verify Your Tikit Account",
+                "subject": "Verify Your Grooovy Account",
                 "html_body": self._get_verification_html(user_name, verification_url),
                 "text_body": self._get_verification_text(user_name, verification_url),
                 "email_type": "verification",
@@ -184,16 +184,16 @@ class EmailService:
                             <!-- Header -->
                             <tr>
                                 <td style="padding: 40px 40px 20px; text-align: center;">
-                                    <h1 style="color: #667eea; margin: 0; font-size: 32px;">Tikit</h1>
+                                    <h1 style="color: #667eea; margin: 0; font-size: 32px;">Grooovy</h1>
                                 </td>
                             </tr>
                             
                             <!-- Content -->
                             <tr>
                                 <td style="padding: 0 40px 40px;">
-                                    <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 24px;">Welcome to Tikit, {user_name}!</h2>
+                                    <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 24px;">Welcome to Grooovy, {user_name}!</h2>
                                     <p style="color: #6b7280; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                                        Thank you for signing up! Please verify your email address to get started with Tikit.
+                                        Thank you for signing up! Please verify your email address to get started with Grooovy.
                                     </p>
                                     <p style="color: #6b7280; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">
                                         Click the button below to verify your email:
@@ -227,7 +227,7 @@ class EmailService:
                             <tr>
                                 <td style="padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
                                     <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-                                        © 2026 Tikit. All rights reserved.
+                                        © 2026 Grooovy. All rights reserved.
                                     </p>
                                 </td>
                             </tr>
@@ -240,7 +240,7 @@ class EmailService:
         """
         
         text_body = f"""
-        Welcome to Tikit, {user_name}!
+        Welcome to Grooovy, {user_name}!
         
         Please verify your email address by clicking this link:
         {verification_url}
@@ -249,12 +249,12 @@ class EmailService:
         
         If you didn't create an account, please ignore this email.
         
-        © 2026 Tikit. All rights reserved.
+        © 2026 Grooovy. All rights reserved.
         """
         
         return await self.send_email(
             to_email=email,
-            subject="Verify Your Tikit Account",
+            subject="Verify Your Grooovy Account",
             html_body=html_body,
             text_body=text_body,
             email_type="verification"
@@ -285,7 +285,7 @@ class EmailService:
                             <!-- Header -->
                             <tr>
                                 <td style="padding: 40px 40px 20px; text-align: center;">
-                                    <h1 style="color: #667eea; margin: 0; font-size: 32px;">Tikit</h1>
+                                    <h1 style="color: #667eea; margin: 0; font-size: 32px;">Grooovy</h1>
                                 </td>
                             </tr>
                             
@@ -318,7 +318,7 @@ class EmailService:
                             <tr>
                                 <td style="padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
                                     <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-                                        © 2026 Tikit. All rights reserved.
+                                        © 2026 Grooovy. All rights reserved.
                                     </p>
                                 </td>
                             </tr>
@@ -331,7 +331,7 @@ class EmailService:
         """
         
         text_body = f"""
-        Your Tikit Verification Code
+        Your Grooovy Verification Code
         
         Your OTP code for {purpose}: {otp_code}
         
@@ -339,12 +339,12 @@ class EmailService:
         
         If you didn't request this code, please ignore this email.
         
-        © 2026 Tikit. All rights reserved.
+        © 2026 Grooovy. All rights reserved.
         """
         
         return await self.send_email(
             to_email=email,
-            subject=f"Your Tikit Verification Code: {otp_code}",
+            subject=f"Your Grooovy Verification Code: {otp_code}",
             html_body=html_body,
             text_body=text_body,
             email_type="otp"
@@ -471,8 +471,8 @@ class EmailService:
                             <tr>
                                 <td style="padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
                                     <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-                                        Need help? Contact us at support@tikit.app<br>
-                                        © 2026 Tikit. All rights reserved.
+                                        Need help? Contact us at support@grooovy.com<br>
+                                        © 2026 Grooovy. All rights reserved.
                                     </p>
                                 </td>
                             </tr>
@@ -547,7 +547,7 @@ class EmailService:
         
         return await self.send_email(
             to_email=email,
-            subject="Reset Your Tikit Password",
+            subject="Reset Your Grooovy Password",
             html_body=html_body,
             email_type="password_reset"
         )

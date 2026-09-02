@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 System Startup Script - Start Backend and Frontend Servers
-Automated startup for the integrated Tikit system
+Automated startup for the integrated Grooovy system
 """
 
 import os
@@ -129,7 +129,7 @@ def check_dependencies():
 
 def main():
     """Main startup function"""
-    print("🎉 TIKIT INTEGRATED SYSTEM STARTUP")
+    print("🎉 GROOOVY INTEGRATED SYSTEM STARTUP")
     print("=" * 50)
     print("🎨 UI Integration: Complete (88.9% success)")
     print("🔧 Backend: FastAPI with Supabase")

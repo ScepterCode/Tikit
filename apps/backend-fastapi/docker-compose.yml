@@ -19,7 +19,7 @@ services:
       - .:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
-      - tikit-network
+      - grooovy-network
 
   # Redis Cache
   redis:
@@ -30,21 +30,21 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
     networks:
-      - tikit-network
+      - grooovy-network
 
   # PostgreSQL Database (Optional - if not using Supabase)
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: tikit
-      POSTGRES_USER: tikit_user
-      POSTGRES_PASSWORD: tikit_password
+      POSTGRES_DB: grooovy
+      POSTGRES_USER: grooovy_user
+      POSTGRES_PASSWORD: grooovy_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - tikit-network
+      - grooovy-network
 
   # Nginx Reverse Proxy (Production)
   nginx:
@@ -58,7 +58,7 @@ services:
     depends_on:
       - api
     networks:
-      - tikit-network
+      - grooovy-network
     profiles:
       - production
 
@@ -76,7 +76,7 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
     networks:
-      - tikit-network
+      - grooovy-network
     profiles:
       - monitoring
 
@@ -92,7 +92,7 @@ services:
     depends_on:
       - prometheus
     networks:
-      - tikit-network
+      - grooovy-network
     profiles:
       - monitoring
 
@@ -103,5 +103,5 @@ volumes:
   grafana_data:
 
 networks:
-  tikit-network:
+  grooovy-network:
     driver: bridge

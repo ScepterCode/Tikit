@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for new Tikit features:
+Test script for new Grooovy features:
 1. Dynamic ticket tiers
 2. Image upload for events
 3. Livestream controls
@@ -268,7 +268,7 @@ def test_event_detail_page(event_id):
 
 def main():
     """Run all tests"""
-    print("🚀 TESTING NEW TIKIT FEATURES")
+    print("🚀 TESTING NEW GROOOVY FEATURES")
     print(f"Backend URL: {BASE_URL}")
     print(f"Frontend URL: {FRONTEND_URL}")
     

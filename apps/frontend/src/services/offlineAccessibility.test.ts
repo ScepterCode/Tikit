@@ -1,6 +1,6 @@
 /**
  * Property-Based Tests for Offline Wallet Accessibility
- * Feature: tikit-webapp, Property 29: Offline wallet accessibility
+ * Feature: grooovy-webapp, Property 29: Offline wallet accessibility
  * Validates: Requirements 9.2
  */
 

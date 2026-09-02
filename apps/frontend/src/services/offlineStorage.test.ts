@@ -1,6 +1,6 @@
 /**
  * Property-Based Tests for Offline Storage Service
- * Feature: tikit-webapp, Property 28: Offline ticket storage
+ * Feature: grooovy-webapp, Property 28: Offline ticket storage
  * Validates: Requirements 9.1
  */
 

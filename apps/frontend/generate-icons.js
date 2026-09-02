@@ -1,4 +1,4 @@
-// Simple PWA icon generator for Tikit
+// Simple PWA icon generator for Grooovy
 // This creates basic placeholder icons for PWA functionality
 
 import fs from 'fs';

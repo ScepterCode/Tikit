@@ -26,7 +26,7 @@ def send_test_email():
     print("\nHow to get App Password:")
     print("1. Go to: https://myaccount.google.com/apppasswords")
     print("2. Select 'Mail' and 'Other (Custom name)'")
-    print("3. Name it 'Tikit Test'")
+    print("3. Name it 'Grooovy Test'")
     print("4. Copy the 16-character password")
     print()
     
@@ -41,7 +41,7 @@ def send_test_email():
     msg = MIMEMultipart('alternative')
     msg['From'] = from_email
     msg['To'] = to_email
-    msg['Subject'] = "🎉 Test Email from Tikit"
+    msg['Subject'] = "🎉 Test Email from Grooovy"
     msg['Date'] = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S +0000')
     
     # HTML body
@@ -59,7 +59,7 @@ def send_test_email():
                         <!-- Header -->
                         <tr>
                             <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px 12px 0 0;">
-                                <h1 style="color: #ffffff; margin: 0; font-size: 32px;">🎉 Tikit Email Test</h1>
+                                <h1 style="color: #ffffff; margin: 0; font-size: 32px;">🎉 Grooovy Email Test</h1>
                             </td>
                         </tr>
                         
@@ -68,7 +68,7 @@ def send_test_email():
                             <td style="padding: 40px;">
                                 <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 24px;">Success!</h2>
                                 <p style="color: #6b7280; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                                    Your Tikit email system is working perfectly! 🚀
+                                    Your Grooovy email system is working perfectly! 🚀
                                 </p>
                                 
                                 <div style="background-color: #f3f4f6; border-left: 4px solid #667eea; padding: 16px; border-radius: 4px; margin: 20px 0;">
@@ -91,7 +91,7 @@ def send_test_email():
                             <td style="padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
                                 <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
                                     Sent at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
-                                    © 2026 Tikit. All rights reserved.
+                                    © 2026 Grooovy. All rights reserved.
                                 </p>
                             </td>
                         </tr>
@@ -105,9 +105,9 @@ def send_test_email():
     
     # Plain text version
     text_body = f"""
-    🎉 Tikit Email Test
+    🎉 Grooovy Email Test
     
-    Success! Your Tikit email system is working perfectly!
+    Success! Your Grooovy email system is working perfectly!
     
     ✅ Email service configured
     
@@ -116,7 +116,7 @@ def send_test_email():
     This is a test of your email delivery system. If you're reading this, everything is working great!
     
     Sent at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
-    © 2026 Tikit. All rights reserved.
+    © 2026 Grooovy. All rights reserved.
     """
     
     msg.attach(MIMEText(text_body, 'plain', 'utf-8'))

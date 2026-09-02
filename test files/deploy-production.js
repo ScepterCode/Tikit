@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Tikit Production Deployment Helper
- * This script helps configure and deploy the Tikit application to production
+ * Grooovy Production Deployment Helper
+ * This script helps configure and deploy the Grooovy application to production
  */
 
 import fs from 'fs';
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🚀 Tikit Production Deployment Helper\n');
+console.log('🚀 Grooovy Production Deployment Helper\n');
 
 // Check if we're in the right directory
 if (!fs.existsSync('apps/frontend') || !fs.existsSync('apps/backend')) {
@@ -59,7 +59,7 @@ console.log('3. ⏳ Update Vercel environment variables');
 console.log('4. ⏳ Configure database and services');
 
 console.log('\n🔗 Useful Links:');
-console.log('- Frontend: https://tikit-ik4l.vercel.app');
+console.log('- Frontend: https://grooovy-ik4l.vercel.app');
 console.log('- Render Dashboard: https://render.com');
 console.log('- Vercel Dashboard: https://vercel.com');
 

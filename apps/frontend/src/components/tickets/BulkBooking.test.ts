@@ -14,7 +14,7 @@ export function calculateBulkBookingCost(seats: number, pricePerSeat: number): n
 describe('Bulk Booking Property Tests', () => {
   it('Property 22: Bulk booking cost calculation', () => {
     /**
-     * Feature: tikit-webapp, Property 22: Bulk booking cost calculation
+     * Feature: grooovy-webapp, Property 22: Bulk booking cost calculation
      * Validates: Requirements 7.2
      * 
      * For any bulk booking of N seats at price P per seat, 

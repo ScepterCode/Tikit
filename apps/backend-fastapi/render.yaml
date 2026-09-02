@@ -1,11 +1,14 @@
+# Render Blueprint for the Grooovy FastAPI backend.
+# Connect this repo as a Blueprint in the Render dashboard; Render redeploys on
+# every push to the default branch. Secrets (sync: false) are set in the
+# dashboard, never committed.
 services:
-  # FastAPI Backend Service
   - type: web
     name: grooovy-fastapi-backend
-    env: python
-    runtime: python-3.11.9
+    runtime: python
     region: oregon
     plan: starter
+    rootDir: apps/backend-fastapi
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -13,30 +16,40 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
-        value: false
+        value: "false"
       - key: PYTHON_VERSION
         value: 3.11.9
+
+      # --- Supabase (set in dashboard) ---
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
+
+      # --- Auth ---
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+
+      # --- Payments: required for POST /api/payments/verify to issue tickets ---
+      - key: FLUTTERWAVE_SECRET_KEY
+        sync: false
+      - key: FLUTTERWAVE_PUBLIC_KEY
+        sync: false
+      - key: FLUTTERWAVE_ENCRYPTION_KEY
+        sync: false
+      - key: FLUTTERWAVE_SECRET_HASH
+        sync: false
+
+      # --- CORS / hosts ---
       - key: FRONTEND_URL
         value: https://grooovy.netlify.app
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: grooovy-redis
-          property: connectionString
+      - key: ALLOWED_HOSTS
+        sync: false
 
-  # Redis Cache Service
-  - type: redis
-    name: grooovy-redis
-    region: oregon
-    plan: starter
-    maxmemoryPolicy: allkeys-lru
+      # --- Optional: caching. Leave unset and the app runs without Redis. ---
+      - key: REDIS_URL
+        sync: false

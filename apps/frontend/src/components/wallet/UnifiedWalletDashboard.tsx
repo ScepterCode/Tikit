@@ -72,7 +72,6 @@ const UnifiedWalletDashboard: React.FC = () => {
     try {
       setLoading(true);
       
-      // Use simple endpoints that exist in simple_main.py
       const [balanceResponse, transactionsResponse] = await Promise.all([
         authenticatedFetch('/api/wallet/balance'),
         authenticatedFetch('/api/wallet/transactions?limit=10')

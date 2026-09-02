@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "test:watch": "vitest",
+    "test:offline": "vitest --run src/services/offlineStorage.test.ts src/services/offlineScanQueue.test.ts",
     "test:integration": "playwright test",
     "test:integration:ui": "playwright test --ui",
     "test:integration:headed": "playwright test --headed",

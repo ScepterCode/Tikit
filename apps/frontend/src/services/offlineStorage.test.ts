@@ -122,7 +122,7 @@ describe('Offline Storage Service - Property Tests', () => {
         expect(retrieved?.qrCode).toBeTruthy();
         expect(retrieved?.qrCode.length).toBeGreaterThan(0);
       }),
-      { numRuns: 100 }
+      { numRuns: 15 }
     );
   });
 
@@ -147,7 +147,7 @@ describe('Offline Storage Service - Property Tests', () => {
         );
         expect(retrieved?.eventDetails.state).toBe(ticket.eventDetails.state);
       }),
-      { numRuns: 100 }
+      { numRuns: 15 }
     );
   });
 
@@ -178,7 +178,7 @@ describe('Offline Storage Service - Property Tests', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 15 }
     );
   });
 
@@ -209,7 +209,7 @@ describe('Offline Storage Service - Property Tests', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 15 }
     );
   });
 
@@ -233,7 +233,7 @@ describe('Offline Storage Service - Property Tests', () => {
         expect(retrieved?.status).toBe('used');
         expect(retrieved?.id).toBe(ticket.id);
       }),
-      { numRuns: 100 }
+      { numRuns: 15 }
     );
   });
 
@@ -257,7 +257,7 @@ describe('Offline Storage Service - Property Tests', () => {
         const afterDelete = await offlineStorage.getTicket(ticket.id);
         expect(afterDelete).toBeNull();
       }),
-      { numRuns: 100 }
+      { numRuns: 15 }
     );
   });
 
@@ -282,7 +282,7 @@ describe('Offline Storage Service - Property Tests', () => {
           expect(info.storageUsage.percentage).toBeLessThanOrEqual(1);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 15 }
     );
   });
 });

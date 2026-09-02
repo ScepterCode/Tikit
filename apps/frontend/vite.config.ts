@@ -168,13 +168,12 @@ export default defineConfig({
     testTimeout: 30000,
     hookTimeout: 30000,
     teardownTimeout: 15000,
-    // TODO(phase5): the offline* fast-check property suites hang against
-    // fake-indexeddb (localStorage mock + un-awaited IDB ops). Excluded from
-    // the default run until the generators/awaits are fixed; run them with
-    // `npm run test:offline`.
-    exclude: [
-      'src/services/offlineStorage.test.ts',
-      'src/services/offlineScanQueue.test.ts',
-    ],
+    // offlineScanQueue.test.ts is stale: it mocks `global.fetch`, but
+    // offlineScanQueue.processScan() was migrated to the Supabase client and
+    // never calls fetch. Every scan therefore fails with "Database connection
+    // not available" and the suite can only pass once it mocks
+    // `../lib/supabase` instead. Excluded until then; `npm run test:offline`
+    // runs it (and offlineStorage) explicitly.
+    exclude: ['src/services/offlineScanQueue.test.ts'],
   },
 });

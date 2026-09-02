@@ -13,6 +13,16 @@ import time
 import logging
 from typing import Dict, Any
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Error tracking must be initialised before the app is constructed so the
+# Starlette/FastAPI integrations attach. No-op unless SENTRY_DSN is set.
+from observability import init_sentry, capture_exception
+
+init_sentry()
+
 # Import routers
 from routers import auth, events, tickets, payments, notifications, analytics, wallet, admin_dashboard, membership, secret_events, anonymous_chat
 # from routers import admin  # Temporarily disabled - missing admin_schemas.py
@@ -20,10 +30,6 @@ from routers import auth, events, tickets, payments, notifications, analytics, w
 from services.supabase_client import get_supabase_client
 # from middleware.rate_limiter import RateLimitMiddleware  # Temporarily disabled - class doesn't exist
 # from middleware.security import SecurityMiddleware  # Temporarily disabled
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -109,6 +115,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
+    # This handler swallows the exception, so report it explicitly - otherwise
+    # Sentry's ASGI integration never sees it.
+    capture_exception(exc)
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,

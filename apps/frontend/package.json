@@ -12,13 +12,14 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "test:offline": "vitest --run src/services/offlineStorage.test.ts src/services/offlineScanQueue.test.ts",
+    "test:offline": "vitest --run --config vitest.offline.config.ts",
     "test:integration": "playwright test",
     "test:integration:ui": "playwright test --ui",
     "test:integration:headed": "playwright test --headed",
     "playwright:install": "playwright install --with-deps"
   },
   "dependencies": {
+    "@sentry/react": "^10.73.0",
     "@supabase/supabase-js": "^2.89.0",
     "@vitejs/plugin-react": "^4.7.0",
     "date-fns": "^4.1.0",

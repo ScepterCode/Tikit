@@ -12,6 +12,7 @@ only builds and tests.
   (see [`apps/frontend/.env.production.example`](apps/frontend/.env.production.example)):
   `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
   `VITE_FLUTTERWAVE_PUBLIC_KEY`, …
+- Optional: `VITE_SENTRY_DSN` enables error tracking. Unset = no reporting.
 - `vercel.json` is kept only as a fallback for a Vercel deploy; Netlify is primary.
 
 ## Backend → Render
@@ -26,6 +27,10 @@ only builds and tests.
 - **`FLUTTERWAVE_SECRET_KEY` is required** — `POST /api/payments/verify` returns
   503 and issues no tickets without it.
 - Redis is optional; leave `REDIS_URL` unset to run without caching.
+- Optional: `SENTRY_DSN` enables error tracking (PII off, credentials scrubbed —
+  see `observability.py`). Unset = no reporting.
+- `/health` pings Supabase and returns **503** when it is unreachable, so a
+  deploy with a broken database fails Render's health check instead of going live.
 
 ## Local
 

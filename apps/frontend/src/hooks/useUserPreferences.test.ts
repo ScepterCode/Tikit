@@ -31,8 +31,8 @@ const languageArbitrary = fc.constantFrom<Language>('en', 'ha', 'ig', 'yo', 'pcm
 const stateArbitrary = fc.record({
   code: fc.string({ minLength: 3, maxLength: 20 }),
   name: fc.string({ minLength: 3, maxLength: 50 }),
-  latitude: fc.double({ min: -90, max: 90 }),
-  longitude: fc.double({ min: -180, max: 180 }),
+  latitude: fc.double({ min: -90, max: 90, noNaN: true, noDefaultInfinity: true }),
+  longitude: fc.double({ min: -180, max: 180, noNaN: true, noDefaultInfinity: true }),
 });
 
 // Generator for user preferences

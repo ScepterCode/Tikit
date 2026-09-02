@@ -3,8 +3,8 @@
  *
  * Every call to the backend must resolve its base URL through here so that a
  * single environment variable controls where the app talks to in every
- * environment. Do not hard-code `http://localhost:8000` anywhere else - the
- * lint rule `no-restricted-syntax` forbids it.
+ * environment. Do not hard-code `http://localhost:8000` anywhere else -
+ * `npm run check:urls` (also run as `prebuild`) fails the build if you do.
  *
  * Precedence: VITE_API_URL -> VITE_API_BASE_URL -> localhost (dev only).
  */

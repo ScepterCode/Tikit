@@ -435,19 +435,31 @@ async def initiate_withdrawal(request: Request, withdrawal_data: WithdrawalReque
         if not security_check["success"]:
             raise HTTPException(status_code=400, detail=security_check["error"])
         
-        # Verify PIN - auto-create default PIN if none exists
+        # SECURITY: a transaction PIN is the second factor on a payout. This
+        # used to auto-create the PIN "000000" for anyone who had not set one,
+        # which made the factor guessable. Refuse instead.
         if user_id not in wallet_security_service.transaction_pins:
-            # Auto-create default PIN for development
-            wallet_security_service.set_transaction_pin(user_id, "000000")
-            print(f"✅ Auto-created default PIN for user: {user_id}")
-        
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "PIN_NOT_SET",
+                        "message": "Set a transaction PIN before withdrawing.",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            )
+
         if not wallet_security_service.verify_pin(user_id, withdrawal_data.pin):
             wallet_security_service.record_failed_attempt(user_id, "pin")
             raise HTTPException(status_code=401, detail="Invalid transaction PIN")
         
         # Generate OTP if required
         if security_check.get("requires_otp", False):
-            otp_result = wallet_security_service.generate_otp(user_id, "withdrawal")
+            otp_result = await wallet_security_service.generate_otp(
+                user_id, "withdrawal", user_email
+            )
             return {
                 "success": False,
                 "requires_otp": True,
@@ -1094,7 +1106,7 @@ async def withdraw_with_flutterwave(request: Request, withdrawal_data: Dict[str,
         amount = float(withdrawal_data.get("amount", 0))
         account_number = withdrawal_data.get("account_number")
         bank_code = withdrawal_data.get("bank_code")
-        pin = withdrawal_data.get("pin", "000000")
+        pin = withdrawal_data.get("pin")
         
         print(f"🔍 Flutterwave withdrawal request from: {user_email}")
         print(f"   Amount: ₦{amount:,.2f}")
@@ -1146,11 +1158,18 @@ async def withdraw_with_flutterwave(request: Request, withdrawal_data: Dict[str,
                 detail=f"Insufficient balance. Available: ₦{current_balance:,.2f}"
             )
         
-        # Verify PIN
+        # SECURITY: the transaction PIN is the second factor on a payout. It
+        # must have been set deliberately and supplied on the request - never
+        # defaulted to a guessable constant.
+        if not pin:
+            raise HTTPException(status_code=400, detail="Transaction PIN is required")
+
         if user_id not in wallet_security_service.transaction_pins:
-            wallet_security_service.set_transaction_pin(user_id, "000000")
-            print(f"✅ Auto-created default PIN for user: {user_id}")
-        
+            raise HTTPException(
+                status_code=403,
+                detail="Set a transaction PIN before withdrawing."
+            )
+
         if not wallet_security_service.verify_pin(user_id, pin):
             wallet_security_service.record_failed_attempt(user_id, "pin")
             raise HTTPException(status_code=401, detail="Invalid transaction PIN")

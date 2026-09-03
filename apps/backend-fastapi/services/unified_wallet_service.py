@@ -863,7 +863,7 @@ class UnifiedWalletService:
             print(f"Error verifying PIN: {e}")
             return False
 
-    def generate_otp(self, user_id: str, purpose: str = "transaction", ip_address: str = None) -> Dict[str, Any]:
+    async def generate_otp(self, user_id: str, purpose: str = "transaction", ip_address: str = None) -> Dict[str, Any]:
         """Generate OTP for verification with rate limiting"""
         try:
             # 1. Input validation
@@ -885,7 +885,7 @@ class UnifiedWalletService:
                 }
             
             # 3. Generate OTP
-            return self.security.generate_otp(user_id, purpose)
+            return await self.security.generate_otp(user_id, purpose)
             
         except Exception as e:
             return {

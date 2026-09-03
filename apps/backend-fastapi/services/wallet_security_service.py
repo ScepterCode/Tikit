@@ -119,7 +119,12 @@ class WalletSecurityService:
             "requires_otp": transaction_data.get("amount", 0) > 10000
         }
 
-    async def generate_otp(self, user_id: str, purpose: str = "transaction") -> Dict[str, Any]:
+    async def generate_otp(
+        self,
+        user_id: str,
+        purpose: str = "transaction",
+        user_email: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Generate OTP for transaction verification and send via email"""
         otp_code = f"{secrets.randbelow(900000) + 100000:06d}"  # 6-digit OTP
         expires_at = time.time() + self.OTP_EXPIRY
@@ -132,18 +137,18 @@ class WalletSecurityService:
             "created_at": time.time()
         }
         
-        # Get user email from database and send OTP
+        # Send the OTP by email. The caller may already have the address, in
+        # which case we skip the database round-trip.
         email_sent = False
         try:
-            from services.supabase_client import get_supabase_client
-            supabase = get_supabase_client()
-            
-            # Get user email
-            user_result = supabase.table('users').select('email, first_name, last_name').eq('id', user_id).execute()
-            
-            if user_result.data and user_result.data[0].get('email'):
-                user_email = user_result.data[0]['email']
-                
+            if not user_email:
+                from services.supabase_client import get_supabase_client
+                supabase = get_supabase_client()
+                user_result = supabase.table('users').select('email, first_name, last_name').eq('id', user_id).execute()
+                if user_result.data:
+                    user_email = user_result.data[0].get('email')
+
+            if user_email:
                 # Send OTP via email
                 from services.email_service import email_service
                 email_result = await email_service.send_otp_email(
@@ -199,8 +204,8 @@ class WalletSecurityService:
                 "error": "Too many failed attempts. Please request a new OTP."
             }
         
-        # Verify code
-        if otp_code != otp_data["code"]:
+        # Verify code (constant-time - an OTP is a secret)
+        if not secrets.compare_digest(str(otp_code), str(otp_data["code"])):
             self.otp_codes[user_id]["attempts"] += 1
             return {
                 "success": False,

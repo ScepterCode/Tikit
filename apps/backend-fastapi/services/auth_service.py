@@ -54,14 +54,15 @@ class AuthService:
             # First try to verify as Supabase token
             if self.supabase:
                 try:
-                    # For Supabase JWT tokens, decode without verification to get user ID
-                    import jwt as jose_jwt
-                    
-                    # Decode token to get payload
-                    unverified_payload = jose_jwt.decode(token, options={"verify_signature": False})
-                    
-                    if 'sub' in unverified_payload:  # Supabase tokens have 'sub' field
-                        user_id = unverified_payload['sub']
+                    # SECURITY: verify the signature before trusting any claim.
+                    # This used to decode with verify_signature=False, so a
+                    # forged token naming any user id was accepted.
+                    from jwt_validator import validate_token
+
+                    verified_claims = validate_token(token)
+
+                    if 'sub' in verified_claims:  # Supabase tokens have 'sub'
+                        user_id = verified_claims['sub']
                         logger.info(f"🔐 Verifying Supabase token for user: {user_id}")
                         
                         # Get user data from our database using Supabase user ID

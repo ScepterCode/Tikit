@@ -3,11 +3,13 @@ Security Middleware
 CSRF protection, security headers, and request validation
 """
 
+import os
 import secrets
 import time
 from typing import Dict, Optional
 from fastapi import Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,6 +21,14 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.csrf_tokens: Dict[str, Dict[str, any]] = {}
         self.csrf_token_expiry = 3600  # 1 hour
+        # CSRF enforcement is OFF by default and must be opted into.
+        #
+        # This API authenticates with `Authorization: Bearer <supabase jwt>`
+        # and sets no cookies, so it carries no ambient authority for a
+        # cross-site request to abuse - CSRF does not apply. Turning this on
+        # also requires every client call site to send X-CSRF-Token and
+        # X-Session-ID, which today only services/api.ts even attempts.
+        self.csrf_enabled = os.getenv("ENABLE_CSRF", "false").lower() == "true"
     
     def generate_csrf_token(self) -> str:
         """Generate a secure CSRF token"""
@@ -58,6 +68,15 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         for session_id in expired_sessions:
             del self.csrf_tokens[session_id]
     
+    @staticmethod
+    def _error(status: int, code: str, message: str) -> JSONResponse:
+        """Middleware runs outside FastAPI's exception handlers, so a raised
+        HTTPException surfaces as a 500. Return the response directly."""
+        return JSONResponse(
+            status_code=status,
+            content={"success": False, "error": {"code": code, "message": message}},
+        )
+
     def add_security_headers(self, response: Response):
         """Add security headers to response"""
         response.headers.update({
@@ -114,7 +133,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         skip_csrf_paths = ["/health", "/docs", "/redoc", "/openapi.json", "/api/webhooks"]
         
         # SECURITY: CSRF validation for all state-changing operations (NO BYPASS)
-        if (request.method not in safe_methods and 
+        if (self.csrf_enabled and
+            request.method not in safe_methods and
             not any(request.url.path.startswith(path) for path in skip_csrf_paths)):
             
             csrf_token = request.headers.get("x-csrf-token")
@@ -123,34 +143,18 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             # SECURITY: Strict CSRF enforcement (removed development bypass)
             if not csrf_token or not session_id:
                 logger.warning(f"CSRF token missing for {request.method} {request.url.path} from {request.client.host if request.client else 'unknown'}")
-                raise HTTPException(
-                    status_code=403,
-                    detail={
-                        "code": "CSRF_TOKEN_MISSING",
-                        "message": "CSRF token required for this operation"
-                    }
-                )
+                return self._error(403, "CSRF_TOKEN_MISSING",
+                                   "CSRF token required for this operation")
             
             if not self.validate_csrf_token(session_id, csrf_token):
                 logger.warning(f"Invalid CSRF token for {request.method} {request.url.path} from {request.client.host if request.client else 'unknown'}")
-                raise HTTPException(
-                    status_code=403,
-                    detail={
-                        "code": "INVALID_CSRF_TOKEN",
-                        "message": "Invalid or expired CSRF token"
-                    }
-                )
+                return self._error(403, "INVALID_CSRF_TOKEN",
+                                   "Invalid or expired CSRF token")
         
         # Validate request size (prevent large payload attacks)
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > 10 * 1024 * 1024:  # 10MB limit
-            raise HTTPException(
-                status_code=413,
-                detail={
-                    "code": "PAYLOAD_TOO_LARGE",
-                    "message": "Request payload too large"
-                }
-            )
+            return self._error(413, "PAYLOAD_TOO_LARGE", "Request payload too large")
         
         # Process request
         response = await call_next(request)

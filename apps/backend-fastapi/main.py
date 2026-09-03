@@ -17,6 +17,8 @@ from typing import Dict, Any
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production").lower()
+
 # Error tracking must be initialised before the app is constructed so the
 # Starlette/FastAPI integrations attach. No-op unless SENTRY_DSN is set.
 from observability import init_sentry, capture_exception
@@ -28,8 +30,8 @@ from routers import auth, events, tickets, payments, notifications, analytics, w
 # from routers import admin  # Temporarily disabled - missing admin_schemas.py
 # from routers import realtime  # Temporarily disabled - missing get_current_user_websocket
 from services.supabase_client import get_supabase_client
-# from middleware.rate_limiter import RateLimitMiddleware  # Temporarily disabled - class doesn't exist
-# from middleware.security import SecurityMiddleware  # Temporarily disabled
+from middleware.rate_limiter import RateLimitMiddleware
+from middleware.security import SecurityMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,15 +39,20 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("🚀 Starting Grooovy FastAPI Backend...")
     
-    # Test Supabase connection
+    # Verify the database is reachable. In production this is fatal: booting
+    # "successfully" with no database lets a broken deploy take traffic.
     try:
         supabase = get_supabase_client()
-        # Test connection with a simple query
-        result = supabase.table('users').select('id').limit(1).execute()
+        if not supabase:
+            raise RuntimeError("Supabase client not configured (check SUPABASE_URL / SUPABASE_SERVICE_KEY)")
+        supabase.table('users').select('id').limit(1).execute()
         logger.info("✅ Supabase connection successful")
     except Exception as e:
         logger.error(f"❌ Supabase connection failed: {e}")
-    
+        if ENVIRONMENT == "production":
+            raise
+        logger.warning("Continuing without a database - development only")
+
     yield
     
     # Shutdown
@@ -61,33 +68,53 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Security middleware
-# app.add_middleware(SecurityMiddleware)  # Temporarily disabled
+def _csv_env(name: str) -> list:
+    """Parse a comma-separated env var into a list, dropping blanks."""
+    return [item.strip() for item in os.getenv(name, "").split(",") if item.strip()]
 
-# Rate limiting middleware
-# app.add_middleware(RateLimitMiddleware)  # Temporarily disabled
+
+# Starlette runs middleware in reverse order of registration, so the list below
+# executes bottom-up: TrustedHost -> CORS -> RateLimit -> Security -> routers.
+# CORS sits outside the limiter so that 429 responses still carry CORS headers.
+
+# Security headers + request size limit. (CSRF enforcement inside this
+# middleware is opt-in via ENABLE_CSRF and off by default - this API is
+# bearer-token authenticated and sets no cookies, so CSRF does not apply.)
+app.add_middleware(SecurityMiddleware)
+
+# IP-based rate limiting on login/registration/OTP endpoints.
+app.add_middleware(RateLimitMiddleware)
 
 # CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://grooovy.vercel.app",
-        "https://grooovy.netlify.app",  # Add your Netlify domain
-        os.getenv("FRONTEND_URL", "")
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["X-Total-Count", "X-Rate-Limit-Remaining"]
+_default_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://grooovy.vercel.app",
+    "https://grooovy.netlify.app",
+]
+_frontend_url = os.getenv("FRONTEND_URL", "").strip()
+_cors_origins = _csv_env("CORS_ORIGINS") or (
+    _default_origins + ([_frontend_url] if _frontend_url else [])
 )
 
-# Trusted host middleware
 app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["*"]  # Configure properly for production
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Session-ID"],
+    expose_headers=["X-Total-Count", "X-Rate-Limit-Remaining", "Retry-After"],
 )
+
+# Trusted host middleware. Set ALLOWED_HOSTS in production; "*" only remains
+# the default so local development and health probes keep working.
+_allowed_hosts = _csv_env("ALLOWED_HOSTS") or ["*"]
+if _allowed_hosts == ["*"] and ENVIRONMENT == "production":
+    logger.warning(
+        "ALLOWED_HOSTS is unset - accepting any Host header. Set it to your "
+        "API domain to protect against Host-header injection."
+    )
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=_allowed_hosts)
 
 # Request timing middleware
 @app.middleware("http")

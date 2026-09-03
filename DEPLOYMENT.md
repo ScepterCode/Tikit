@@ -22,10 +22,17 @@ only builds and tests.
 - Render redeploys on every push to `main`.
 - Set secrets (`sync: false` in the blueprint) in **Render → Environment**:
   `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`,
-  `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_PUBLIC_KEY`,
+  `SUPABASE_JWT_SECRET`, `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_PUBLIC_KEY`,
   `FLUTTERWAVE_ENCRYPTION_KEY`, `FLUTTERWAVE_SECRET_HASH`, `ALLOWED_HOSTS`.
+- **`SUPABASE_JWT_SECRET` is required** — access-token signatures are now
+  verified, so without it *every authenticated request is rejected*. Copy it
+  from Supabase → Project Settings → API → JWT Settings → JWT Secret. (Projects
+  on asymmetric signing keys need nothing here; the JWKS endpoint is used.)
 - **`FLUTTERWAVE_SECRET_KEY` is required** — `POST /api/payments/verify` returns
   503 and issues no tickets without it.
+- Set `ALLOWED_HOSTS` (comma-separated) to your API domain; unset means any
+  `Host` header is accepted and the app logs a warning at startup.
+- `CORS_ORIGINS` (comma-separated) overrides the default origin list.
 - Redis is optional; leave `REDIS_URL` unset to run without caching.
 - Optional: `SENTRY_DSN` enables error tracking (PII off, credentials scrubbed —
   see `observability.py`). Unset = no reporting.

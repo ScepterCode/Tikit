@@ -32,6 +32,11 @@ class Config:
     # Supabase Configuration
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
     SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
+    # Shared secret used by Supabase to sign HS256 access tokens.
+    # Dashboard -> Project Settings -> API -> JWT Settings -> JWT Secret.
+    # Required to verify token signatures unless the project uses asymmetric
+    # keys, in which case the JWKS endpoint is used instead.
+    SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
     SUPABASE_SERVICE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY", "")
     
     # JWT Configuration

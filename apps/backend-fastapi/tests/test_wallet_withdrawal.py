@@ -89,6 +89,26 @@ def env(monkeypatch):
 
     monkeypatch.setattr(email_mod.email_service, "send_otp_email", fake_send_otp_email)
 
+    # PINs are persisted to public.user_security; stand in for that table so
+    # the tests exercise the real read/write path rather than a bare dict.
+    security_rows = {}
+
+    class _SecurityTable:
+        def __init__(self): self._uid = None
+        def select(self, *_a, **_k): return self
+        def eq(self, _field, value): self._uid = value; return self
+        def execute(self):
+            row = security_rows.get(self._uid)
+            return type("R", (), {"data": [row] if row else []})()
+        def upsert(self, record, **_k):
+            security_rows[record["user_id"]] = record
+            return type("Q", (), {"execute": staticmethod(lambda: type("R", (), {"data": [record]})())})()
+
+    monkeypatch.setattr(
+        security, "_db",
+        staticmethod(lambda: type("S", (), {"table": staticmethod(lambda _n: _SecurityTable())})()),
+    )
+
     security.transaction_pins.pop(USER, None)
     security.failed_attempts.pop(USER, None)
     security.otp_codes.pop(USER, None)
@@ -234,3 +254,44 @@ async def test_flutterwave_withdrawal_above_balance_is_refused(env):
 
     assert exc.value.status_code == 400
     assert "insufficient" in str(exc.value.detail).lower()
+
+
+# --- PIN persistence --------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_pin_survives_a_process_restart(env):
+    """Regression: PINs lived only in wallet_security_service.transaction_pins,
+    so every deploy wiped them and - once withdrawals started requiring a
+    deliberately-set PIN - locked every user out of their money."""
+    security.set_transaction_pin(USER, "4321")
+
+    # Simulate a restart: the in-process cache is gone, the table is not.
+    security.transaction_pins.clear()
+
+    assert security.has_transaction_pin(USER), "PIN must be readable after a restart"
+    assert security.verify_pin(USER, "4321")
+    assert not security.verify_pin(USER, "1111")
+
+
+@pytest.mark.asyncio
+async def test_withdrawal_works_after_a_restart(env):
+    security.set_transaction_pin(USER, "4321")
+    security.transaction_pins.clear()
+
+    result = await wallet.initiate_withdrawal(None, _request(5_000, "4321"))
+    assert result["success"] is True
+
+
+def test_setting_a_pin_reports_failure_when_it_cannot_be_saved(env, monkeypatch):
+    """A PIN that was never persisted must not report success - otherwise the
+    user believes they are set up and the next withdrawal 403s."""
+    monkeypatch.setattr(security, "_db", staticmethod(lambda: None))
+    result = security.set_transaction_pin(USER, "4321")
+    assert result["success"] is False
+
+
+def test_pin_is_never_stored_in_plaintext(env):
+    security.set_transaction_pin(USER, "4321")
+    stored = security.transaction_pins[USER]
+    assert "4321" not in stored
+    assert stored.count(":") == 1  # salt:hash

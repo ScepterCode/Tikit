@@ -438,7 +438,7 @@ async def initiate_withdrawal(request: Request, withdrawal_data: WithdrawalReque
         # SECURITY: a transaction PIN is the second factor on a payout. This
         # used to auto-create the PIN "000000" for anyone who had not set one,
         # which made the factor guessable. Refuse instead.
-        if user_id not in wallet_security_service.transaction_pins:
+        if not wallet_security_service.has_transaction_pin(user_id):
             raise HTTPException(
                 status_code=403,
                 detail={
@@ -1164,7 +1164,7 @@ async def withdraw_with_flutterwave(request: Request, withdrawal_data: Dict[str,
         if not pin:
             raise HTTPException(status_code=400, detail="Transaction PIN is required")
 
-        if user_id not in wallet_security_service.transaction_pins:
+        if not wallet_security_service.has_transaction_pin(user_id):
             raise HTTPException(
                 status_code=403,
                 detail="Set a transaction PIN before withdrawing."

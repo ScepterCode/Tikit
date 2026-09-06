@@ -1,6 +1,7 @@
 import { useAuth } from '../../contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import UnifiedWalletDashboard from '../../components/wallet/UnifiedWalletDashboard';
+import WalletSecurity from '../../components/wallet/WalletSecurity';
 
 export function Wallet() {
   const { user, signOut } = useAuth();
@@ -45,6 +46,11 @@ export function Wallet() {
 
           {/* Unified Wallet Dashboard */}
           <UnifiedWalletDashboard />
+
+          {/* Transaction PIN - required before any withdrawal */}
+          <div style={{ marginTop: '32px' }}>
+            <WalletSecurity />
+          </div>
         </main>
       </div>
     </div>

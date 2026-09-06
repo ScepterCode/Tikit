@@ -26,8 +26,9 @@ const WalletSecurity: React.FC = () => {
   const fetchSecurityStatus = async () => {
     try {
       const response = await authenticatedFetch('/api/wallet/security/status');
-      if (response.success) {
-        setSecurityStatus(response.data);
+      const result = await response.json();
+      if (result.success) {
+        setSecurityStatus(result.data);
       }
     } catch (error) {
       console.error('Failed to fetch security status:', error);
@@ -49,17 +50,18 @@ const WalletSecurity: React.FC = () => {
     try {
       const response = await authenticatedFetch('/api/wallet/security/set-pin', {
         method: 'POST',
-        body: { pin, confirm_pin: confirmPin }
+        body: JSON.stringify({ pin, confirm_pin: confirmPin })
       });
+      const result = await response.json();
 
-      if (response.success) {
+      if (result.success) {
         setMessage({type: 'success', text: 'Transaction PIN set successfully'});
         setShowSetPin(false);
         setPin('');
         setConfirmPin('');
         fetchSecurityStatus();
       } else {
-        setMessage({type: 'error', text: response.error || 'Failed to set PIN'});
+        setMessage({type: 'error', text: result.error || 'Failed to set PIN'});
       }
     } catch (error: any) {
       setMessage({type: 'error', text: error.message || 'Failed to set PIN'});

@@ -10,7 +10,9 @@ from middleware.rate_limiter import rate_limiter
 from services.notification_service import notification_service
 import logging
 
-router = APIRouter(prefix="/notifications", tags=["notifications"])
+# NB: the prefix is supplied by main.py (include_router(..., prefix="/api/notifications")).
+# Declaring it here as well produced /api/notifications/notifications/* and 404d every route.
+router = APIRouter(tags=["notifications"])
 logger = logging.getLogger(__name__)
 
 @router.get("/")

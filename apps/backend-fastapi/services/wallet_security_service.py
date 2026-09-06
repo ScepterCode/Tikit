@@ -8,6 +8,9 @@ import time
 import re
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 import json
 
 class WalletSecurityService:
@@ -46,29 +49,95 @@ class WalletSecurityService:
         pin_hash = hashlib.pbkdf2_hmac('sha256', pin.encode(), salt.encode(), 100000)
         return f"{salt}:{pin_hash.hex()}"
 
+    # -- persistence -------------------------------------------------------
+    #
+    # PINs used to live only in self.transaction_pins, so every deploy wiped
+    # them. public.user_security is the store of record; the dict is kept
+    # purely as a read-through cache.
+
+    @staticmethod
+    def _db():
+        """Service-role client, or None when the database is unreachable."""
+        try:
+            from services.supabase_client import get_supabase_client
+            return get_supabase_client()
+        except Exception as e:
+            logger.warning("wallet security: database unavailable (%s)", e)
+            return None
+
+    def _load_pin_hash(self, user_id: str) -> Optional[str]:
+        """Read a user's PIN hash, preferring the cache."""
+        cached = self.transaction_pins.get(user_id)
+        if cached:
+            return cached
+
+        db = self._db()
+        if not db:
+            return None
+        try:
+            result = db.table('user_security').select('pin_hash').eq('user_id', user_id).execute()
+        except Exception as e:
+            logger.error("wallet security: could not read PIN for %s: %s", user_id, e)
+            return None
+
+        if result.data:
+            pin_hash = result.data[0].get('pin_hash')
+            if pin_hash:
+                self.transaction_pins[user_id] = pin_hash
+                return pin_hash
+        return None
+
+    def has_transaction_pin(self, user_id: str) -> bool:
+        """Whether the user has deliberately set a PIN."""
+        return self._load_pin_hash(user_id) is not None
+
     def verify_pin(self, user_id: str, pin: str) -> bool:
-        """Verify transaction PIN"""
-        if user_id not in self.transaction_pins:
+        """Verify transaction PIN against the stored hash."""
+        stored_hash = self._load_pin_hash(user_id)
+        if not stored_hash or ':' not in stored_hash:
             return False
-        
-        stored_hash = self.transaction_pins[user_id]
-        salt, pin_hash = stored_hash.split(':')
-        
+
+        salt, pin_hash = stored_hash.split(':', 1)
         computed_hash = hashlib.pbkdf2_hmac('sha256', pin.encode(), salt.encode(), 100000)
         return secrets.compare_digest(pin_hash, computed_hash.hex())
 
     def set_transaction_pin(self, user_id: str, pin: str) -> Dict[str, Any]:
-        """Set or update transaction PIN"""
-        # Validate PIN format
+        """Set or update transaction PIN. Persisted, not just cached."""
         if not re.match(r'^\d{4,6}$', pin):
             return {
                 "success": False,
                 "error": "PIN must be 4-6 digits"
             }
-        
-        # Hash and store PIN
-        self.transaction_pins[user_id] = self.hash_pin(pin)
-        
+
+        pin_hash = self.hash_pin(pin)
+
+        db = self._db()
+        if not db:
+            return {
+                "success": False,
+                "error": "Could not save your PIN right now. Please try again."
+            }
+
+        try:
+            db.table('user_security').upsert(
+                {
+                    "user_id": user_id,
+                    "pin_hash": pin_hash,
+                    "failed_attempts": 0,
+                    "locked_until": None,
+                },
+                on_conflict="user_id",
+            ).execute()
+        except Exception as e:
+            logger.error("wallet security: could not save PIN for %s: %s", user_id, e)
+            return {
+                "success": False,
+                "error": "Could not save your PIN right now. Please try again."
+            }
+
+        self.transaction_pins[user_id] = pin_hash
+        self.failed_attempts.pop(user_id, None)
+
         return {
             "success": True,
             "message": "Transaction PIN set successfully"
@@ -346,7 +415,7 @@ class WalletSecurityService:
 
     def get_security_status(self, user_id: str) -> Dict[str, Any]:
         """Get user's security status and recommendations"""
-        has_pin = user_id in self.transaction_pins
+        has_pin = self.has_transaction_pin(user_id)
         is_locked = self._is_user_locked_out(user_id)
         failed_attempts = self.failed_attempts.get(user_id, {}).get("count", 0)
         

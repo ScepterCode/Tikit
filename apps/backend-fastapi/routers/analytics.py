@@ -5,7 +5,9 @@ Advanced analytics for secret events and platform metrics
 from fastapi import APIRouter, Request, HTTPException
 from auth_utils import get_user_from_request
 
-router = APIRouter(prefix="/api/analytics", tags=["analytics"])
+# NB: the prefix is supplied by main.py (include_router(..., prefix="/api/analytics")).
+# Declaring it here as well produced /api/analytics/api/analytics/* and 404d every route.
+router = APIRouter(tags=["analytics"])
 
 @router.get("/secret-event/{event_id}")
 async def get_secret_event_analytics(request: Request, event_id: str):

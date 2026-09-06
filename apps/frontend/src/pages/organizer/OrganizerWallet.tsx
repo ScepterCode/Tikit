@@ -3,6 +3,7 @@ import { ArrowLeft, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/SupabaseAuthContext';
 import UnifiedWalletDashboard from '../../components/wallet/UnifiedWalletDashboard';
+import WalletSecurity from '../../components/wallet/WalletSecurity';
 
 const OrganizerWallet: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +30,11 @@ const OrganizerWallet: React.FC = () => {
       {/* Main Content */}
       <div style={styles.content}>
         <UnifiedWalletDashboard />
+
+        {/* Transaction PIN - required before any withdrawal */}
+        <div style={{ marginTop: '32px' }}>
+          <WalletSecurity />
+        </div>
       </div>
     </div>
   );

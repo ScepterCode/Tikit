@@ -48,3 +48,7 @@ Thumbs.db
 .Spotlight-V100
 .Trashes
 ehthumbs.db
+
+# Playwright artifacts
+test-results
+playwright-report

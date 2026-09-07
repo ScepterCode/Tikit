@@ -16,7 +16,8 @@
     "test:integration": "playwright test",
     "test:integration:ui": "playwright test --ui",
     "test:integration:headed": "playwright test --headed",
-    "playwright:install": "playwright install --with-deps"
+    "playwright:install": "playwright install --with-deps",
+    "test:e2e": "playwright test --config playwright.e2e.config.ts"
   },
   "dependencies": {
     "@sentry/react": "^10.73.0",

@@ -10,9 +10,15 @@ order-dependent**, and several were authored against a schema that has since
 drifted, so do not assume a clean checkout can be replayed from empty. On an
 existing database, apply only what is missing.
 
+Apply in the order listed. `000_USERS_TABLE.sql` must be first — everything
+else references `public.users`.
+
 | File | What it adds |
 |---|---|
+| `000_USERS_TABLE.sql` | **`public.users`** — the profile table the whole API depends on. It had never been captured in a migration, so a clean database could not be built from this directory at all. Includes RLS plus column-level grants that stop a user editing their own `role` or `wallet_balance`. |
 | `COMPLETE_DATABASE_MIGRATION.sql` | Baseline tables |
+| `AUTH_USER_PROFILE_TRIGGER.sql` | Creates the profile row on signup. Without it, `supabase.auth.signUp()` leaves `public.users` empty and every organizer resolves as an attendee. |
+| `WALLET_SECURITY_PERSISTENCE.sql` | `public.user_security` — transaction PINs. They previously lived in a Python dict wiped on every deploy. |
 | `PHASE1_CRITICAL_SECURITY_RLS.sql` | Row Level Security policies |
 | `add_ticket_code_column.sql` | `tickets.ticket_code` |
 | `add_ticket_tiers_column.sql` | `events.ticket_tiers` |
